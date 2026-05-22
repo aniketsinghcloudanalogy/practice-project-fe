@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from 'react'
+
 import AntForm from '../antd/Form'
 import { StyledFormWrapper } from './styles'
 import type { AppFormProps } from './types'
@@ -16,7 +18,7 @@ type FormComponent = typeof AntForm & {
 const FormBase = (({ children, variant = 'default', ...props }: AppFormProps) => {
 	return (
 		<StyledFormWrapper $variant={variant}>
-			<AntForm {...props}>{children}</AntForm>
+			<AntForm {...props}>{children as ReactNode}</AntForm>
 		</StyledFormWrapper>
 	)
 }) as FormComponent

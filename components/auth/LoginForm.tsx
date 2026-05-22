@@ -15,7 +15,6 @@ import {
 	LockOutlined,
 	MailOutlined,
 } from '@/components/common/antd/icons'
-import type { AuthMode } from '@/types/auth.types'
 
 type LoginFormValues = {
 	email: string
@@ -23,14 +22,10 @@ type LoginFormValues = {
 	remember: boolean
 }
 
-type LoginFormProps = {
-	mode: AuthMode
-}
-const LoginForm = ({ mode }: LoginFormProps) => {
+const LoginForm = () => {
 
 	const [form] = Form.useForm<LoginFormValues>()
 	const [loading, setLoading] = useState(false)
-	const isSignup = mode === 'signup'
 
 	const handleSubmit = async () => {
 		setLoading(true)
@@ -43,25 +38,23 @@ const LoginForm = ({ mode }: LoginFormProps) => {
 	}
 
 	return (
-		<div className="w-full space-y-8 text-slate-900">
-			<div className="space-y-3 text-center lg:text-left">
-				<div className="mx-auto flex h-14 w-14 items-center justify-center rounded-3xl bg-[linear-gradient(135deg,#7c3aed,#d946ef)] text-white shadow-[0_12px_28px_rgba(124,58,237,0.34)] lg:mx-0"><LockOutlined className="text-xl" /></div>
+		<div className="flex h-full w-full flex-col gap-4 text-slate-900 lg:min-h-[calc(100dvh-6rem)] lg:justify-center lg:gap-6 lg:py-8">
+			<div className="space-y-1.5 text-center">
+				<div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#7c3aed,#d946ef)] text-white shadow-[0_12px_28px_rgba(124,58,237,0.34)]"><LockOutlined className="text-lg" /></div>
 
-				<div className="space-y-2">
-					<Typography.Title level={2} className="mb-0! text-[2rem]! font-semibold! text-slate-900! sm:text-[2.2rem]!" >{isSignup ? 'Create your account' : 'Welcome back'}</Typography.Title>
-					<Typography.Text className="block  text-[15px] leading-6 text-slate-500 sm:text-[16px]">{isSignup
-						? 'Create a secure account to get started.'
-						: 'Sign in to continue to your secure workspace.'}</Typography.Text>
+				<div className="space-y-1">
+					<Typography.Title level={2} className="mb-0! text-[1.65rem]! font-semibold! text-slate-900! sm:text-[1.8rem]!" >Welcome back</Typography.Title>
+					<Typography.Text className="block text-[13px] leading-5 text-slate-500 sm:text-[14px]">Sign in to continue to your secure workspace.</Typography.Text>
 				</div>
 			</div>
-			<div className="grid gap-3 sm:grid-cols-2">
-				<Button variant='auth' className='h-12 w-full text-[15px] font-medium transition-all duration-300 hover:-translate-y-0.5' size="large">
+			<div className="grid grid-cols-1 gap-2">
+				<Button variant='auth' className='h-10 w-full px-4 text-[13px] font-medium' size="large">
 					<span className='inline-flex items-center justify-center gap-3'>
 						<Image src="/googlelogo.svg" alt="Google" width={18} height={18} priority />
 						<span>Continue with Google</span>
 					</span>
 				</Button>
-				<Button variant="auth" className="h-12 w-full text-[15px] font-medium transition-all duration-300 hover:-translate-y-0.5" size="large">
+				<Button variant="auth" className="h-10 w-full px-4 text-[13px] font-medium" size="large">
 					<span className="inline-flex items-center justify-center gap-3">
 						<Image src="/mslogo.svg" alt="Microsoft" width={18} height={18} priority />
 						<span>Continue with Microsoft</span>
@@ -73,19 +66,18 @@ const LoginForm = ({ mode }: LoginFormProps) => {
 				OR
 			</Divider>
 
-
-			<Form <LoginFormValues>
-				form={form}
-				layout="vertical"
-				requiredMark={false}
-				onFinish={handleSubmit}
-				initialValues={{ remember: true }}
-				className="w-full"
-			>
-
-				<div className="space-y-5">
+			<div className="flex flex-col gap-4 lg:gap-6">
+				<Form <LoginFormValues>
+					form={form}
+					layout="vertical"
+					requiredMark={false}
+					onFinish={handleSubmit}
+					initialValues={{ remember: false }}
+					className="w-full"
+				>
+					<div className="space-y-2.5">
 					<Form.Item
-						label={<span className="text-[15px] font-medium text-slate-700">Email address</span>}
+						label={<span className="text-[13px] font-medium text-slate-700">Email address</span>}
 						name="email"
 						rules={[
 							{ required: true, message: 'Please enter your email address.' },
@@ -99,13 +91,13 @@ const LoginForm = ({ mode }: LoginFormProps) => {
 							prefix={<MailOutlined className="text-slate-400" />}
 							placeholder="Enter your email address"
 							size="large"
-							className="h-13 rounded-2xl px-4 text-[15px] transition-all duration-300"
+							className="h-10 rounded-xl px-4 text-[13px] transition-all duration-300"
 
 						/>
 					</Form.Item>
 
 					<Form.Item
-						label={<span className="text-[15px] font-medium text-slate-700">Password</span>}
+						label={<span className="text-[13px] font-medium text-slate-700">Password</span>}
 						name="password"
 						rules={[
 							{ required: true, message: 'Please enter your password.' },
@@ -126,17 +118,17 @@ const LoginForm = ({ mode }: LoginFormProps) => {
 									<EyeInvisibleOutlined className="text-slate-400" />
 								)
 							}
-							className="h-13 rounded-2xl px-4 text-[15px] transition-all duration-300"
+							className="h-10 rounded-xl px-4 text-[13px] transition-all duration-300"
 						/>
 					</Form.Item>
 
-					<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+					<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
 
 						<Form.Item name="remember" valuePropName="checked" className="mb-0">
-							<Checkbox className="text-[14px] text-slate-600">Remember me</Checkbox>
+							<Checkbox className="text-[12px] text-slate-600">Remember me</Checkbox>
 						</Form.Item>
 
-						<Link href="#" className="text-[14px] font-medium text-violet-600 transition-colors hover:text-violet-500">
+						<Link href="#" className="text-[12px] font-medium text-violet-600 transition-colors hover:text-violet-500">
 							Forgot password?
 						</Link>
 					</div>
@@ -147,20 +139,21 @@ const LoginForm = ({ mode }: LoginFormProps) => {
 						type="primary"
 						htmlType="submit"
 						loading={loading}
-						className="h-12 w-full text-[15px] font-semibold transition-all duration-300 hover:-translate-y-0.5"
+						className="mt-2 h-10 w-full text-[13px] font-semibold transition-all duration-300 hover:-translate-y-0.5"
 					>
-						{isSignup ? 'Create account' : 'Sign in'}
+						Sign in
 					</Button>
-				</div>
-			</Form>
+					</div>
+				</Form>
 
-			<div className="text-center">
-				<Typography.Text className="text-[15px] text-slate-500">
-					{isSignup ? 'Already have an account? ' : "Don't have an account? "}
-					<Link href={isSignup ? '/login' : '/signup'} className="font-semibold text-violet-600 transition-colors hover:text-violet-500">
-						{isSignup ? 'Sign in' : 'Sign up'}
-					</Link>
-				</Typography.Text>
+				<div className="text-center">
+					<Typography.Text className="text-[13px] text-slate-500">
+						Don't have an account?{' '}
+						<Link href="/signup" className="font-semibold text-violet-600 transition-colors hover:text-violet-500">
+							Sign up
+						</Link>
+					</Typography.Text>
+				</div>
 			</div>
 
 

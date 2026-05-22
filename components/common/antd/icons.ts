@@ -3,4 +3,5 @@ export {
 	EyeOutlined,
 	LockOutlined,
 	MailOutlined,
+	UserOutlined,
 } from '@ant-design/icons'

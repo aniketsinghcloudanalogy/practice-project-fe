@@ -16,6 +16,7 @@ export const StyledButtonWrapper = styled.div<{ $variant: string }>`
 			background: #1677ff;
 			border-color: #1677ff;
 			color: #ffffff;
+			
 		}
 	`}
 
@@ -43,20 +44,23 @@ export const StyledButtonWrapper = styled.div<{ $variant: string }>`
 		$variant === 'auth' &&
 		`
 		.ant-btn {
-			background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
-			border-color: #93c5fd;
-			color: #1d4ed8;
-			box-shadow: 0 10px 22px rgba(59, 130, 246, 0.12);
+			background: #ffffff;
+			border-color: #cbd5e1;
+			color: #1e293b;		
+			border-radius: 9999px;
+			box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+			transition: all 0.2s ease;
 		}
 
 		.ant-btn:hover,
 		.ant-btn:focus {
-			background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
-			border-color: #1e40af !important;
-			color: #1e40af !important;
-			box-shadow: 0 14px 28px rgba(29, 78, 216, 0.18) !important;
+			background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+			border-color: #93c5fd !important;
+			color: #1e293b !important;
+			box-shadow: 0 10px 22px rgba(59, 130, 246, 0.12) !important;
 			outline: none !important;
-			-webkit-box-shadow: 0 14px 28px rgba(29, 78, 216, 0.18) !important;
+			transform: translateY(-1px);
+			-webkit-box-shadow: 0 10px 22px rgba(59, 130, 246, 0.12) !important;
 		}
 	`}
 
@@ -67,6 +71,8 @@ export const StyledButtonWrapper = styled.div<{ $variant: string }>`
 			background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%);
 			border-color: #2563eb;
 			color: #ffffff;
+			width: 100%;
+			border-radius: 9999px;
 			box-shadow: 0 14px 30px rgba(37, 99, 235, 0.22);
 		}
 
@@ -75,6 +81,7 @@ export const StyledButtonWrapper = styled.div<{ $variant: string }>`
 			background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
 			border-color: #1d4ed8;
 			color: #ffffff;
+			width: 100%;
 			box-shadow: 0 18px 34px rgba(37, 99, 235, 0.26);
 		}
 	`}
