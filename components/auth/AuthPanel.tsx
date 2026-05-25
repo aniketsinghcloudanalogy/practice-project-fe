@@ -3,8 +3,7 @@ import Image from 'next/image';
 import Card from '@/components/common/Card'
 import ConfigProvider from '@/components/common/ConfigProvider'
 import type { AuthMode } from '@/types/auth.types'
-import LoginForm from '@/components/auth/LoginForm';
-// import SignupForm from '@/components/auth/SignupForm';
+import SignupForm from '@/components/auth/SignupForm';
 import { authTheme } from '@/components/common/antd/theme'
 
 
@@ -54,7 +53,7 @@ const AuthPanel = ({ mode }: AuthPanelProps) => {
                                 }`}
                             >
                                 <div className="w-full max-w-md sm:max-w-140">
-                                    {mode === 'signup' ? <LoginForm/> : <LoginForm />}
+                                    {mode === 'signup' ? <SignupForm /> : <SignupForm />}
                                 </div>
                             </div>
                         </div>
