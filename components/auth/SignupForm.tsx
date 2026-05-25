@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
@@ -23,38 +23,31 @@ const SignupForm = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // OAuth sign in (Google / Microsoft)
   const handleOAuthSignIn = (provider: "google" | "Microsoft") => {
     signIn(provider, { callbackUrl: "/" });
   };
 
-  // Email / password sign up
   const handleSubmit = async (values: SignupValues) => {
     setLoading(true);
     setError(null);
 
     try {
-      // 1. Register the user via your backend
-     const res = await api.post("/api/users/register", {
+      const res = await api.post("/api/users/signup", {
         name: values.name,
         email: values.email,
         password: values.password,
       });
 
-    if (res.status >= 200 && res.status < 300) {
-        console.log('success');
-    }
+      if (res.status >= 200 && res.status < 300) {
+        console.log("success");
+      }
 
-            
-      // 2. Automatically sign in after successful registration
-       await signIn("credentials", {
+      await signIn("credentials", {
         redirect: true,
         email: values.email,
         password: values.password,
         callbackUrl: "/",
       });
-
-     
     } catch (err: any) {
       const message =
         err?.response?.data?.message || "Signup failed. Please try again.";
@@ -72,7 +65,8 @@ const SignupForm = () => {
         <div>
           <h1 className="text-2xl font-bold">Create an account</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Sign up with Google, Microsoft, or your email to get started quickly.
+            Sign up with Google, Microsoft, or your email to get started
+            quickly.
           </p>
         </div>
       </div>
@@ -82,7 +76,9 @@ const SignupForm = () => {
         <Button
           variant="auth"
           className="w-full justify-center"
-          icon={<img src="/googlelogo.svg" alt="Google" width={18} height={18} />}
+          icon={
+            <img src="/googlelogo.svg" alt="Google" width={18} height={18} />
+          }
           onClick={() => handleOAuthSignIn("google")}
         >
           Continue with Google
@@ -90,7 +86,9 @@ const SignupForm = () => {
         <Button
           variant="auth"
           className="w-full justify-center"
-          icon={<img src="/mslogo.svg" alt="Microsoft" width={18} height={18} />}
+          icon={
+            <img src="/mslogo.svg" alt="Microsoft" width={18} height={18} />
+          }
           onClick={() => handleOAuthSignIn("Microsoft")}
         >
           Continue with Microsoft
@@ -112,7 +110,12 @@ const SignupForm = () => {
       )}
 
       {/* Signup form */}
-      <Form className="space-y-3" onFinish={handleSubmit} layout="vertical" autoComplete="off">
+      <Form
+        className="space-y-3"
+        onFinish={handleSubmit}
+        layout="vertical"
+        autoComplete="off"
+      >
         <Form.Item
           label="Email Address"
           name="email"
@@ -140,7 +143,12 @@ const SignupForm = () => {
           <Input.Password placeholder="Enter your password" />
         </Form.Item>
 
-        <Button variant="signin" className="w-full" htmlType="submit" loading={loading}>
+        <Button
+          variant="signin"
+          className="w-full"
+          htmlType="submit"
+          loading={loading}
+        >
           {loading ? "Creating account..." : "Sign Up"}
         </Button>
       </Form>
@@ -155,9 +163,27 @@ const SignupForm = () => {
 
       {/* Provider logos */}
       <div className="flex items-center justify-center gap-4 text-slate-400">
-        <Image src="/googlelogo.svg" alt="google" width={20} height={20} style={{ height: "auto" }} />
-        <Image src="/mslogo.svg" alt="microsoft" width={20} height={20} style={{ height: "auto" }} />
-        <Image src="/githublogo.svg" alt="github" width={20} height={20} style={{ height: "auto" }} />
+        <Image
+          src="/googlelogo.svg"
+          alt="google"
+          width={20}
+          height={20}
+          style={{ height: "auto" }}
+        />
+        <Image
+          src="/mslogo.svg"
+          alt="microsoft"
+          width={20}
+          height={20}
+          style={{ height: "auto" }}
+        />
+        <Image
+          src="/githublogo.svg"
+          alt="github"
+          width={20}
+          height={20}
+          style={{ height: "auto" }}
+        />
       </div>
     </div>
   );
