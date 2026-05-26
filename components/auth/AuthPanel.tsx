@@ -5,6 +5,7 @@ import ConfigProvider from '@/components/common/ConfigProvider'
 import type { AuthMode } from '@/types/auth.types'
 import SignupForm from '@/components/auth/SignupForm';
 import { authTheme } from '@/components/common/antd/theme'
+import LoginForm from './LoginForm';
 
 
 type AuthPanelProps = {
@@ -53,7 +54,7 @@ const AuthPanel = ({ mode }: AuthPanelProps) => {
                                 }`}
                             >
                                 <div className="w-full max-w-md sm:max-w-140">
-                                    {mode === 'signup' ? <SignupForm /> : <SignupForm />}
+                                    {mode === 'signup' ? <SignupForm /> : <LoginForm />}
                                 </div>
                             </div>
                         </div>

@@ -75,14 +75,13 @@ export const StyledButtonWrapper = styled.div<{ $variant: string }>`
 			border-radius: 9999px;
 			box-shadow: 0 14px 30px rgba(37, 99, 235, 0.22);
 		}
-
+					
 		.ant-btn:hover,
-		.ant-btn:focus {
-			background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
-			border-color: #1d4ed8;
-			color: #ffffff;
-			width: 100%;
-			box-shadow: 0 18px 34px rgba(37, 99, 235, 0.26);
+		.ant-btn:focus,
+		.ant-btn:hover *,
+		.ant-btn:focus * {
+			color: #000000 !important;
+			font-weight: 700 !important;
 		}
 	`}
 `
