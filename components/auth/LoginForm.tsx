@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { signIn } from 'next-auth/react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import Button from '@/components/common/Button'
 import Checkbox from '@/components/common/Checkbox'
 import Divider from '@/components/common/Divider'
@@ -26,15 +28,41 @@ const LoginForm = () => {
 
 	const [form] = Form.useForm<LoginFormValues>()
 	const [loading, setLoading] = useState(false)
+	const [error, setError] = useState<string | null>(null)
+	const router = useRouter()
 
-	const handleSubmit = async () => {
+	const handleOAuthSignIn = (provider: 'google' | 'azure-ad') => {
+		signIn(provider, { callbackUrl: '/dashboard' })
+	}
+
+	const handleSubmit = async (values: LoginFormValues) => {
 		setLoading(true)
+		setError(null)
 
-		await new Promise((resolve) => {
-			window.setTimeout(resolve, 1200)
-		})
+		try {
+			const result = await signIn('credentials', {
+				email: values.email,
+				password: values.password,
+				callbackUrl: '/dashboard',
+				redirect: false,
+			})
 
-		setLoading(false)
+			if (result?.error) {
+				setError('Invalid email or password. Please try again.')
+				return
+			}
+
+			if (result?.ok) {
+				router.push('/dashboard')
+				return
+			}
+
+			setError('Login failed. Please try again.')
+		} catch {
+			setError('Login failed. Please try again.')
+		} finally {
+			setLoading(false)
+		}
 	}
 
 	return (
@@ -48,13 +76,23 @@ const LoginForm = () => {
 				</div>
 			</div>
 			<div className="grid grid-cols-1 gap-2">
-				<Button variant='auth' className='h-10 w-full px-4 text-[13px] font-medium' size="large">
+				<Button
+					variant='auth'
+					className='h-10 w-full px-4 text-[13px] font-medium'
+					size="large"
+					onClick={() => handleOAuthSignIn('google')}
+				>
 					<span className='inline-flex items-center justify-center gap-3'>
 						<Image src="/googlelogo.svg" alt="Google" width={18} height={18} priority />
 						<span>Continue with Google</span>
 					</span>
 				</Button>
-				<Button variant="auth" className="h-10 w-full px-4 text-[13px] font-medium" size="large">
+				<Button
+					variant="auth"
+					className="h-10 w-full px-4 text-[13px] font-medium"
+					size="large"
+					onClick={() => handleOAuthSignIn('azure-ad')}
+				>
 					<span className="inline-flex items-center justify-center gap-3">
 						<Image src="/mslogo.svg" alt="Microsoft" width={18} height={18} priority />
 						<span>Continue with Microsoft</span>
@@ -65,6 +103,12 @@ const LoginForm = () => {
 			<Divider className="font-normal! text-slate-500">
 				OR
 			</Divider>
+
+			{error && (
+				<p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-[13px] text-rose-600">
+					{error}
+				</p>
+			)}
 
 			<div className="flex flex-col gap-4 lg:gap-6">
 				<Form <LoginFormValues>
