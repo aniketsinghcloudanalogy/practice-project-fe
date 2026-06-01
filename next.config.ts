@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
   },
   images: {
     qualities: [75, 100],
+    remotePatterns: [
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
+      { protocol: "https", hostname: "graph.microsoft.com" },
+    ],
   },
 };
 
