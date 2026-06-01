@@ -11,6 +11,11 @@ export const login = async (data: { email: string; password: string }) => {
   return res.data?.data?.user ?? null;
 };
 
+export const logout = async () => {
+  const res = await api.post("/api/users/logout");
+  return res.data;
+};
+
 type OAuthPayload = {
   user: User;
   account: Account;

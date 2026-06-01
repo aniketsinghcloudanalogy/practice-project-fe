@@ -1,11 +1,9 @@
 "use client";
 
-import DashboardCharts from '@/components/dashboard/DashboardCharts'
-import { store } from '@/store/store'
-import type { DashboardState } from '@/store/features/dashboard/dashboardSlice'
+import { useAppSelector } from '@/store/hooks'
 
 const Page = () => {
-  const dashboard = store.getState().dashboard as DashboardState
+  const dashboard = useAppSelector((state) => state.dashboard)
   const {
     summaryCards,
     salesStats,
@@ -57,15 +55,7 @@ const Page = () => {
         ))}
       </section>
 
-      <DashboardCharts
-        salesStats={salesStats}
-        salesChartData={salesChartData}
-        usersData={usersData}
-        usersChartData={usersChartData}
-        projectsData={projectsData}
-        projectsChartData={projectsChartData}
-        downloadsData={downloadsData}
-      />
+      {/* Charts removed - implementation deleted */}
 
       <section className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
         <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">

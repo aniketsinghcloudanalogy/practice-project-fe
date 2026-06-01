@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { useMemo, useState } from 'react'
 import {
@@ -41,7 +42,18 @@ const sidebarItems: SidebarItem[] = [
 
 const Sidebar = () => {
   const pathname = usePathname() ?? ''
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(true)
+
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      '--sidebar-width',
+      collapsed ? '92px' : '288px',
+    )
+    document.documentElement.style.setProperty(
+      '--navbar-offset',
+      collapsed ? '92px' : '0px',
+    )
+  }, [collapsed])
 
   const activeKey = useMemo(() => {
     if (pathname.startsWith('/dashboard')) {
