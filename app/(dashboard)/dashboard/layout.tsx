@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import Sidebar from '@/components/shared/Sidebar'
+import Sidebar from '@/components/core/Sidebar'
 import { Metadata } from 'next';
 
 type DashboardLayoutProps = {
