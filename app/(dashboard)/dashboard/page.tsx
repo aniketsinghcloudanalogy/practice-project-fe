@@ -1,10 +1,9 @@
 "use client";
 
-import { store } from '@/store/store'
-import type { DashboardState } from '@/store/features/dashboard/dashboardSlice'
+import { useAppSelector } from '@/store/hooks'
 
 const Page = () => {
-  const dashboard = store.getState().dashboard as DashboardState
+  const dashboard = useAppSelector((state) => state.dashboard)
   const {
     summaryCards,
     salesStats,
