@@ -5,10 +5,10 @@ import Button from '@/components/common/Button'
 import Form from '@/components/common/Form'
 import Input from '@/components/common/Input'
 import Message from '@/components/common/Message'
+import {  Phone } from 'lucide-react';
 import {
 	MailOutlined,
 	MessageOutlined,
-	PhoneOutlined,
 	SendOutlined,
 	UserOutlined,
 } from '@/components/common/antd/icons'
@@ -117,7 +117,7 @@ const ContactForm = () => {
 					>
 						<Input
 							appearance="soft"
-							prefix={<PhoneOutlined className="text-slate-400" />}
+							prefix={<Phone className="text-slate-400" />}
 							placeholder="+1 555 000 0000"
 							size="large"
 						/>
@@ -129,7 +129,7 @@ const ContactForm = () => {
 					>
 						<Input
 							appearance="soft"
-							prefix={<PhoneOutlined className="text-slate-400" />}
+							prefix={<Phone className="text-slate-400" />}
 							placeholder="Optional"
 							size="large"
 						/>

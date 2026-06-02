@@ -41,6 +41,30 @@ export const StyledButtonWrapper = styled.div<{ $variant: string }>`
 	`}
 
 	${({ $variant }) =>
+		$variant === 'logout' &&
+		`
+		.ant-btn {
+			background: #fff1f2;
+			border-color: #fecdd3;
+			color: #be123c;
+			border-radius: 9999px;
+			box-shadow: 0 1px 2px rgba(190, 18, 60, 0.08);
+			transition: all 0.2s ease;
+		}
+
+		.ant-btn:hover,
+		.ant-btn:focus {
+			background: linear-gradient(180deg, #fb7185 0%, #e11d48 100%);
+			border-color: #e11d48 !important;
+			color: #ffffff !important;
+			box-shadow: 0 10px 22px rgba(225, 29, 72, 0.18) !important;
+			outline: none !important;
+			transform: translateY(-1px);
+			-webkit-box-shadow: 0 10px 22px rgba(225, 29, 72, 0.18) !important;
+		}
+	`}
+
+	${({ $variant }) =>
 		$variant === 'auth' &&
 		`
 		.ant-btn {

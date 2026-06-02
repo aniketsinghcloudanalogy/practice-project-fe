@@ -29,11 +29,7 @@ const contactItems = [
 		label: 'Phone',
 		value: '+91 7048937789',
 	},
-	{
-		icon: <ClockCircleOutlined />,
-		label: 'Hours',
-		value: 'Mon to Fri, 9:00 AM - 6:00 PM',
-	},
+
 ]
 
 const ContactHero = () => {

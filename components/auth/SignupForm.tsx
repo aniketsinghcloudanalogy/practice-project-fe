@@ -6,10 +6,17 @@ import Link from "next/link";
 import Image from "next/image";
 
 import Button from "@/components/common/Button";
-import Input from "@/components/common/Input";
+import Divider from "@/components/common/Divider";
 import Form from "@/components/common/Form";
-import { LockOutlined } from "@/components/common/antd/icons";
-import api from "@/lib/axios/axios";
+import Input from "@/components/common/Input";
+import Typography from "@/components/common/Typography";
+import {
+  EyeInvisibleOutlined,
+  EyeOutlined,
+  LockOutlined,
+  MailOutlined,
+  UserOutlined,
+} from "@/components/common/antd/icons";
 import { signup } from "@/lib/api/auth.api";
 
 type SignupValues = {
@@ -19,6 +26,7 @@ type SignupValues = {
 };
 
 const SignupForm = () => {
+  const [form] = Form.useForm<SignupValues>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,7 +39,7 @@ const SignupForm = () => {
     setError(null);
 
     try {
-      const res = await signup( {
+      const res = await signup({
         name: values.name,
         email: values.email,
         password: values.password,
@@ -47,11 +55,21 @@ const SignupForm = () => {
         password: values.password,
         callbackUrl: "/dashboard",
       });
-
-        
-    } catch (err: any) {
+    } catch (err) {
       const message =
-        err?.response?.data?.message || "Signup failed. Please try again.";
+        err &&
+        typeof err === "object" &&
+        "response" in err &&
+        typeof err.response === "object" &&
+        err.response &&
+        "data" in err.response &&
+        typeof err.response.data === "object" &&
+        err.response.data &&
+        "message" in err.response.data &&
+        typeof err.response.data.message === "string"
+          ? err.response.data.message
+          : "Signup failed. Please try again.";
+
       setError(message);
     } finally {
       setLoading(false);
@@ -60,131 +78,146 @@ const SignupForm = () => {
 
   return (
     <div className="flex h-full w-full flex-col gap-4 text-slate-900 lg:min-h-[calc(100dvh-6rem)] lg:justify-center lg:gap-6 lg:py-8">
-      {/* Header */}
-      <div className="flex flex-col items-center gap-2 text-center">
-        <LockOutlined className="text-violet-600" />
-        <div>
-          <h1 className="text-2xl font-bold">Create an account</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Sign up with Google, Microsoft, or your email to get started
-            quickly.
-          </p>
+      <div className="space-y-1.5 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#7c3aed,#d946ef)] text-white shadow-[0_12px_28px_rgba(124,58,237,0.34)]">
+          <LockOutlined className="text-lg" />
+        </div>
+
+        <div className="space-y-1">
+          <Typography.Title level={2} className="mb-0! text-[1.65rem]! font-semibold! text-slate-900! sm:text-[1.8rem]!">
+            Create an account
+          </Typography.Title>
+          <Typography.Text className="block text-[13px] leading-5 text-slate-500 sm:text-[14px]">
+            Sign up to continue to your secure workspace.
+          </Typography.Text>
         </div>
       </div>
 
-      {/* OAuth buttons */}
-      <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-1 gap-2">
         <Button
           variant="auth"
-          className="w-full justify-center"
-          icon={
-            <img src="/googlelogo.svg" alt="Google" width={18} height={18} />
-          }
+          className="h-10 w-full px-4 text-[13px] font-medium"
+          size="large"
           onClick={() => handleOAuthSignIn("google")}
         >
-          Continue with Google
+          <span className="inline-flex items-center justify-center gap-3">
+            <Image src="/googlelogo.svg" alt="Google" width={18} height={18} priority />
+            <span>Continue with Google</span>
+          </span>
         </Button>
         <Button
           variant="auth"
-          className="w-full justify-center"
-          icon={
-            <img src="/mslogo.svg" alt="Microsoft" width={18} height={18} />
-          }
+          className="h-10 w-full px-4 text-[13px] font-medium"
+          size="large"
           onClick={() => handleOAuthSignIn("azure-ad")}
         >
-          Continue with Microsoft
+          <span className="inline-flex items-center justify-center gap-3">
+            <Image src="/mslogo.svg" alt="Microsoft" width={18} height={18} priority />
+            <span>Continue with Microsoft</span>
+          </span>
         </Button>
       </div>
 
-      {/* Divider */}
-      <div className="flex items-center gap-3 text-xs text-slate-400">
-        <span className="h-px flex-1 bg-slate-200" />
-        <span>Or continue with email</span>
-        <span className="h-px flex-1 bg-slate-200" />
-      </div>
+      <Divider className="font-normal! text-slate-500">OR</Divider>
 
-      {/* Error message */}
       {error && (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-[13px] text-rose-600">
           {error}
         </p>
       )}
 
-      {/* Signup form */}
-      <Form
-        className="space-y-3"
-        onFinish={handleSubmit}
-        layout="vertical"
-        autoComplete="off"
-      >
-        <Form.Item
-          label="Email Address"
-          name="email"
-          rules={[
-            { required: true, message: "Please enter your email" },
-            { type: "email", message: "Please enter a valid email" },
-          ]}
-        >
-          <Input type="email" placeholder="Enter email address" />
-        </Form.Item>
-
-        <Form.Item
-          label="Name"
-          name="name"
-          rules={[{ required: true, message: "Please enter your full name" }]}
-        >
-          <Input placeholder="Enter your full name" />
-        </Form.Item>
-
-        <Form.Item
-          label="Password"
-          name="password"
-          rules={[{ required: true, message: "Please enter your password" }]}
-        >
-          <Input.Password placeholder="Enter your password" />
-        </Form.Item>
-
-        <Button
-          variant="signin"
+      <div className="flex flex-col gap-4 lg:gap-6">
+        <Form<SignupValues>
+          form={form}
           className="w-full"
-          htmlType="submit"
-          loading={loading}
+          onFinish={handleSubmit}
+          layout="vertical"
+          requiredMark={false}
+          autoComplete="off"
         >
-          {loading ? "Creating account..." : "Sign Up"}
-        </Button>
-      </Form>
+          <div className="space-y-2.5">
+            <Form.Item
+              label={<span className="text-[13px] font-medium text-slate-700">Email address</span>}
+              name="email"
+              rules={[
+                { required: true, message: "Please enter your email address." },
+                { type: "email", message: "Enter a valid email address." },
+              ]}
+              validateTrigger="onBlur"
+              className="mb-0!"
+            >
+              <Input
+                type="email"
+                appearance="soft"
+                prefix={<MailOutlined className="text-slate-400" />}
+                placeholder="Enter your email address"
+                size="large"
+                className="h-10 rounded-xl px-4 text-[13px] transition-all duration-300"
+              />
+            </Form.Item>
 
-      {/* Login link */}
-      <div className="text-center text-sm text-slate-500">
-        Already have an account?{" "}
-        <Link className="font-semibold text-violet-600 underline" href="/login">
-          Login
-        </Link>
-      </div>
+            <Form.Item
+              label={<span className="text-[13px] font-medium text-slate-700">Name</span>}
+              name="name"
+              rules={[{ required: true, message: "Please enter your full name." }]}
+              validateTrigger="onBlur"
+              className="mb-0!"
+            >
+              <Input
+                appearance="soft"
+                prefix={<UserOutlined className="text-slate-400" />}
+                placeholder="Enter your full name"
+                size="large"
+                className="h-10 rounded-xl px-4 text-[13px] transition-all duration-300"
+              />
+            </Form.Item>
 
-      {/* Provider logos */}
-      <div className="flex items-center justify-center gap-4 text-slate-400">
-        <Image
-          src="/googlelogo.svg"
-          alt="google"
-          width={20}
-          height={20}
-          style={{ height: "auto" }}
-        />
-        <Image
-          src="/mslogo.svg"
-          alt="microsoft"
-          width={20}
-          height={20}
-          style={{ height: "auto" }}
-        />
-        <Image
-          src="/githublogo.svg"
-          alt="github"
-          width={20}
-          height={20}
-          style={{ height: "auto" }}
-        />
+            <Form.Item
+              label={<span className="text-[13px] font-medium text-slate-700">Password</span>}
+              name="password"
+              rules={[
+                { required: true, message: "Please enter your password." },
+                { min: 8, message: "Password must be at least 8 characters long." },
+              ]}
+              validateTrigger="onBlur"
+              className="mb-0!"
+            >
+              <Input.Password
+                appearance="soft"
+                prefix={<LockOutlined className="text-slate-400" />}
+                placeholder="Enter your password"
+                size="large"
+                iconRender={(visible) =>
+                  visible ? (
+                    <EyeOutlined className="text-slate-400" />
+                  ) : (
+                    <EyeInvisibleOutlined className="text-slate-400" />
+                  )
+                }
+                className="h-10 rounded-xl px-4 text-[13px] transition-all duration-300"
+              />
+            </Form.Item>
+
+            <Button
+              variant="signin"
+              type="primary"
+              className="mt-2 h-10 w-full text-[13px] font-semibold transition-all duration-300 hover:-translate-y-0.5"
+              htmlType="submit"
+              loading={loading}
+            >
+              {loading ? "Creating account..." : "Sign up"}
+            </Button>
+          </div>
+        </Form>
+
+        <div className="text-center">
+          <Typography.Text className="text-[13px] text-slate-500">
+            Already have an account?{" "}
+            <Link className="font-semibold text-violet-600 transition-colors hover:text-violet-500" href="/login">
+              Login
+            </Link>
+          </Typography.Text>
+        </div>
       </div>
     </div>
   );

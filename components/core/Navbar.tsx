@@ -1,14 +1,13 @@
 "use client";
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import Button from '@/components/common/Button'
 import { logout } from '@/lib/api/auth.api'
 
 const Navbar = () => {
   const router = useRouter()
-  const pathname = usePathname() ?? ''
   const { status } = useSession()
   const isLoggedIn = status === 'authenticated'
 
@@ -21,7 +20,7 @@ const Navbar = () => {
       console.error('Logout API Error:', error)
     }
 
-    router.push('/login')
+    router.push('/')
     router.refresh()
   }
 
@@ -32,20 +31,30 @@ const Navbar = () => {
         style={{ paddingLeft: 'var(--navbar-offset)' }}
       >
         <Link
-          href="/dashboard"
+          href="/"
           className="text-left text-lg font-semibold tracking-tight text-slate-900 transition-colors hover:text-slate-600 sm:text-xl"
         >
           Practise Project
         </Link>
 
         <div className="flex w-full flex-col gap-3 sm:ml-auto sm:w-auto sm:flex-row sm:items-center sm:justify-end sm:gap-3">
-           <Button variant= "secondary" href="/contact" className="w-full sm:w-auto">
+          <Button variant="secondary" href="/contact" className="w-full sm:w-auto">
             Contact Us
           </Button>
           {isLoggedIn ? (
-            <Button variant="auth" className="w-full sm:w-auto" onClick={handleLogout}>
-              Logout
-            </Button>
+            <>
+              <Button
+                variant="auth"
+                href="/dashboard"
+                className="w-full sm:w-auto"
+              >
+                Dashboard
+              </Button>
+              <Button variant="logout" className="w-full sm:w-auto" onClick={handleLogout}>
+                Logout
+              </Button>
+            </>
+
           ) : (
             <>
               <Button href="/login" variant="auth" className="w-full sm:w-auto">
