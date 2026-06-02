@@ -25,11 +25,8 @@ const Navbar = () => {
   }
 
   return (
-    <header className="relative z-20 w-full border-b border-slate-200/80 bg-white/90 backdrop-blur">
-      <div
-        className="mx-auto flex w-full max-w-360 flex-col gap-4 px-4 py-3 sm:flex-row sm:items-center sm:gap-6 sm:px-6 lg:px-8"
-        style={{ paddingLeft: 'var(--navbar-offset)' }}
-      >
+    <header className="fixed inset-x-0 top-0 z-50 w-full border-b border-slate-200/80 bg-white/90 backdrop-blur">
+      <div className="mx-auto flex w-full max-w-360 flex-col gap-4 px-2 py-3 sm:flex-row sm:items-center sm:gap-6 sm:px-3 lg:px-4">
         <Link
           href="/"
           className="text-left text-lg font-semibold tracking-tight text-slate-900 transition-colors hover:text-slate-600 sm:text-xl"

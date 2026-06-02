@@ -49,10 +49,6 @@ const Sidebar = () => {
       '--sidebar-width',
       collapsed ? '92px' : '288px',
     )
-    document.documentElement.style.setProperty(
-      '--navbar-offset',
-      collapsed ? '92px' : '0px',
-    )
   }, [collapsed])
 
   const activeKey = useMemo(() => {

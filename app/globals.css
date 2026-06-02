@@ -5,6 +5,7 @@
   --foreground: #0f172a;
   --sidebar-width: 92px;
   --navbar-offset: 92px;
+  --navbar-height: 212px;
 }
 
 body {
@@ -21,4 +22,10 @@ body {
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --navbar-height: 69px;
+  }
 }
