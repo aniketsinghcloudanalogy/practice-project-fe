@@ -16,6 +16,29 @@ export const logout = async () => {
   return res.data;
 };
 
+export const getUsers = async (accessToken: string) => {
+  const res = await api.get("/api/users/list", {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  return res.data?.data as UserRow[];
+};
+
+export const toggleUserActive = async (userId: string, isActive: boolean, accessToken: string) => {
+  const res = await api.patch(`/api/users/${userId}/active`, { isActive }, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  return res.data?.data as UserRow;
+};
+
+export type UserRow = {
+  id: string;
+  name: string | null;
+  email: string;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+};
+
 type OAuthPayload = {
   user: User;
   account: Account;

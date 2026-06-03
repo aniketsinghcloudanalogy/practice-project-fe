@@ -53,6 +53,7 @@ const LoginForm = () => {
 			}
 
 			if (result?.ok) {
+				// Middleware will redirect ADMIN → /admin, USER/SUPER_ADMIN → /dashboard
 				router.push('/dashboard')
 				return
 			}

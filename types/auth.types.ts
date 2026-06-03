@@ -26,10 +26,23 @@ export type AuthMode = 'login' | 'signup';
 //   }
 // }
 
-declare module "next-auth"{
+declare module "next-auth" {
   interface Session {
-    user : {
-      id : string;
+    user: {
+      id: string;
+      role: string;
     } & DefaultSession["user"]
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    user?: {
+      id: string;
+      role: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+    };
   }
 }
