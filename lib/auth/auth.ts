@@ -7,14 +7,13 @@ import { login, oauth } from "../api/auth.api";
 export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login",
-    error: "/random",
+    error: "/login",
   },
 
   providers: [
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        name: { label: "Name", type: "text" },
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
@@ -33,8 +32,10 @@ export const authOptions: NextAuthOptions = {
           if (!user) return null;
 
           return user;
-        } catch {
-          return null;
+        } catch (error: any) {
+          // Pass through specific error messages from backend
+          const errorMessage = error?.response?.data?.message || error?.message || "Login failed";
+          throw new Error(errorMessage);
         }
       },
     }),
@@ -45,7 +46,7 @@ export const authOptions: NextAuthOptions = {
     }),
 
     AzureADProvider({
-      clientId: process.env.MICROSOFT_CLIENT_ID as string,
+      clientId: process.env.MICROSOFT_CLIENT_ID as string, 
       clientSecret: process.env.MICROSOFT_CLIENT_SECRET as string,
       tenantId: process.env.MICROSOFT_TENANT_ID as string,
     }),
@@ -68,7 +69,7 @@ export const authOptions: NextAuthOptions = {
         const backendUser = await oauth({
           user,
           account,
-          providerAccountId,
+          providerAccountId, 
         });
 
         if (!backendUser) return false;
@@ -88,9 +89,11 @@ export const authOptions: NextAuthOptions = {
       }
     },
 
-    async jwt({ token, user, account }) {
-      if (user) token.user = user as any;
-      if (account) token.accessToken = (account as any).access_token;
+    async jwt({ token, user }) {
+      if (user) {
+        token.user = user as any;
+        token.accessToken = (user as any).accessToken ?? token.accessToken;
+      }
       return token;
     },
 

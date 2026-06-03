@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn } from 'next-auth/react'
+import { signIn, getSession } from 'next-auth/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -48,13 +48,16 @@ const LoginForm = () => {
 			})
 
 			if (result?.error) {
-				setError('Invalid email or password. Please try again.')
+				// Display specific error message from backend
+				setError(result.error || 'Invalid email or password. Please try again.')
 				return
 			}
 
-			if (result?.ok) {
-				// Middleware will redirect ADMIN → /admin, USER/SUPER_ADMIN → /dashboard
-				router.push('/dashboard')
+		if (result?.ok) {
+				const session = await getSession()
+				const role = (session?.user as any)?.role
+				const isAdminRole = role === 'ADMIN' || role === 'SUPER_ADMIN'
+				router.push(isAdminRole ? '/admin' : '/dashboard')
 				return
 			}
 

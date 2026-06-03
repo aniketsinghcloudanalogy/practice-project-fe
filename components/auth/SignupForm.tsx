@@ -45,10 +45,7 @@ const SignupForm = () => {
         password: values.password,
       });
 
-      if (res.status >= 200 && res.status < 300) {
-        console.log("success");
-      }
-
+      if (!res) throw new Error('Signup failed.');
       await signIn("credentials", {
         redirect: true,
         email: values.email,

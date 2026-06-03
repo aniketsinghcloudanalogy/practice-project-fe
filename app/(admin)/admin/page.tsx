@@ -14,20 +14,43 @@ const roleColors: Record<string, string> = {
 };
 
 export default function AdminPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const accessToken = (session as any)?.accessToken as string | undefined;
   const currentUserId = session?.user?.id;
 
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [toggling, setToggling] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!accessToken) return;
+    console.log('Session status:', status);
+    console.log('Session data:', session);
+    console.log('AccessToken:', accessToken);
+    
+    if (status === 'loading') {
+      return;
+    }
+    
+    if (!accessToken) {
+      setLoading(false);
+      setError('No access token found. Please log in.');
+      return;
+    }
+    
+    setLoading(true);
+    setError(null);
     getUsers(accessToken)
-      .then(setUsers)
+      .then((data) => {
+        console.log('Users fetched:', data);
+        setUsers(data);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch users:', err);
+        setError(err.response?.data?.message || err.message || 'Failed to fetch users');
+      })
       .finally(() => setLoading(false));
-  }, [accessToken]);
+  }, [accessToken, status, session]);
 
   const handleToggle = async (user: UserRow, checked: boolean) => {
     if (!accessToken) return;
@@ -111,6 +134,12 @@ export default function AdminPage() {
         <h1 className="text-2xl font-semibold text-slate-900">User Management</h1>
         <p className="mt-1 text-sm text-slate-500">Activate or deactivate users from this panel.</p>
       </div>
+
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-800 text-sm">{error}</p>
+        </div>
+      )}
 
       <Table<UserRow>
         columns={columns}

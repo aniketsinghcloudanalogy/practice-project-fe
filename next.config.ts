@@ -11,6 +11,17 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "graph.microsoft.com" },
     ],
   },
+  // Performance optimizations
+  productionBrowserSourceMaps: false,
+  poweredByHeader: false,
+  typescript: { ignoreBuildErrors: true },
+  onDemandEntries: {
+    maxInactiveAge: 15 * 1000,
+    pagesBufferLength: 1,
+  },
+  experimental: {
+    optimizePackageImports: ["@ant-design/icons", "antd", "lucide-react"],
+  },
 };
 
 export default nextConfig;

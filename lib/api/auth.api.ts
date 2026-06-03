@@ -11,7 +11,7 @@ export const login = async (data: { email: string; password: string }) => {
 
   return {
     ...res.data?.data?.user,
-    accessToken: res.data?.data?.token  ?? null,
+    accessToken: res.data?.data?.accessToken ?? null,
   };
 };
 
@@ -69,6 +69,6 @@ export const oauth = async ({ user, account, providerAccountId }: OAuthPayload) 
 
   return {
     ...res.data?.data?.user,
-    accessToken: res.data?.data?.token ?? null,
+    accessToken: res.data?.data?.accessToken ?? null,
   };
 };
