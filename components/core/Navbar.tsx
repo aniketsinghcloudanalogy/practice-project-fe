@@ -5,11 +5,17 @@ import { useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import Button from '@/components/common/Button'
 import { logout } from '@/lib/api/auth.api'
+import Avatar from '@/components/common/Avatar'
+import { UserOutlined } from '@ant-design/icons'
+import React from 'react'
+import Dropdown from '@/components/common/Dropdown'
 
 const Navbar = () => {
   const router = useRouter()
-  const { status } = useSession()
+  const { data: session, status } = useSession()
   const isLoggedIn = status === 'authenticated'
+  const username = session?.user?.name
+  const userImage = session?.user?.image
 
   const handleLogout = async () => {
     await signOut({ redirect: false })
@@ -23,6 +29,12 @@ const Navbar = () => {
     router.push('/')
     router.refresh()
   }
+
+  const menuItems = [
+    { key: 'profile', label: <Button variant="dropdown">Profile</Button> },
+    { key: 'dashboard', label: <Button variant="dropdown" href="/dashboard">Dashboard</Button> },
+    { key: 'logout', label: <Button variant="logout" onClick={handleLogout}>Logout</Button> },
+  ]
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 w-full border-b border-slate-200/80 bg-white/90 backdrop-blur">
@@ -40,18 +52,15 @@ const Navbar = () => {
           </Button>
           {isLoggedIn ? (
             <>
-              <Button
-                variant="auth"
-                href="/dashboard"
-                className="w-full sm:w-auto"
-              >
-                Dashboard
-              </Button>
-              <Button variant="logout" className="w-full sm:w-auto" onClick={handleLogout}>
-                Logout
-              </Button>
+              <div className="flex items-center gap-2">
+                {username && <span className="text-sm hidden sm:inline text-slate-800">{username}</span>}
+                <Dropdown menuItems={menuItems} trigger={["hover"]} placement="bottomRight">
+                  <div className="flex items-center cursor-pointer gap-2 rounded px-2 py-1 hover:bg-slate-100">
+                    <Avatar size={32} src={userImage ?? undefined} icon={!userImage && <UserOutlined />} />
+                  </div>
+                </Dropdown>
+              </div>
             </>
-
           ) : (
             <>
               <Button href="/login" variant="auth" className="w-full sm:w-auto">
