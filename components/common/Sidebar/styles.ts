@@ -29,7 +29,7 @@ export const SidebarHeader = styled.div<{ $collapsed: boolean }>`
 	align-items: center;
 	justify-content: ${({ $collapsed }) => ($collapsed ? 'center' : 'space-between')};
 	gap: 12px;
-	padding: 20px ${({ $collapsed }) => ($collapsed ? '0' : '18px')} 16px;
+	padding: 8px ${({ $collapsed }) => ($collapsed ? '0' : '18px')} 16px;
 `
 
 export const BrandBlock = styled.div<{ $collapsed: boolean }>`

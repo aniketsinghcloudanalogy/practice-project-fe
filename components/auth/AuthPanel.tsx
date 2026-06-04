@@ -1,5 +1,10 @@
 
+"use client";
+
+import { useEffect } from 'react'
 import Image from 'next/image';
+import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import Card from '@/components/common/Card'
 import ConfigProvider from '@/components/common/ConfigProvider'
 import type { AuthMode } from '@/types/auth.types'
@@ -13,6 +18,21 @@ type AuthPanelProps = {
 }
 
 const AuthPanel = ({ mode }: AuthPanelProps) => {
+    const router = useRouter()
+    const { status } = useSession()
+    const isCheckingSession = status === 'loading'
+    const isLoggedIn = status === 'authenticated'
+
+    useEffect(() => {
+        if (isLoggedIn) {
+            router.replace('/dashboard')
+        }
+    }, [isLoggedIn, router])
+
+    if (isCheckingSession || isLoggedIn) {
+        return null
+    }
+
     return (
         <ConfigProvider theme={authTheme}>
             <main className="relative h-dvh overflow-hidden bg-[radial-gradient(circle_at_top,rgba(124,58,237,0.18),transparent_34%),linear-gradient(135deg,#f5f3ff_0%,#fafafa_45%,#ede9fe_100%)] px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
