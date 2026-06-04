@@ -45,8 +45,18 @@ export const login = async (data: { email: string; password: string }) => {
 };
 
 
-export const logout = async () => {
-  const res = await api.post("/api/users/logout");
+export const logout = async (token?: string) => {
+  const res = await api.post(
+    "/api/users/logout",
+    undefined,
+    {
+      headers: token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : {},
+    }
+  );
   return res.data;
 };
 

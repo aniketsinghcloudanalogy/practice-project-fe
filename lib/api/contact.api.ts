@@ -27,7 +27,7 @@ export const createContact = async (data: ContactPayload): Promise<ContactRespon
   };
 
   const res = await api.post(
-    "/api/contacts",
+    "/api/contact",
     payload,
     {
       headers: session?.token

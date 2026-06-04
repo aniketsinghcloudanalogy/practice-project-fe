@@ -18,12 +18,12 @@ const Navbar = () => {
   const userImage = session?.user?.image
 
   const handleLogout = async () => {
-    await signOut({ redirect: false })
-
     try {
-      await logout()
+      await logout(session?.token)
     } catch (error) {
       console.error('Logout API Error:', error)
+    } finally {
+      await signOut({ redirect: false })
     }
 
     router.push('/')
