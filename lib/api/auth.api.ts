@@ -16,9 +16,20 @@ export const login = async (data: { email: string; password: string }) => {
 };
 
 
-export const logout = async () => {
-  const res = await api.post("/api/users/logout");
+export const logout = async (accessToken: string) => {
+  const res = await api.post("/api/users/logout", null, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
   return res.data;
+};
+
+export const refreshToken = async (userId: string) => {
+  const res = await api.post(
+    "/api/users/refresh",
+    { userId },
+    { headers: { "x-internal-secret": process.env.INTERNAL_AUTH_SECRET } }
+  );
+  return res.data?.data as { user: any; accessToken: string };
 };
 
 export const getUsers = async (accessToken: string) => {

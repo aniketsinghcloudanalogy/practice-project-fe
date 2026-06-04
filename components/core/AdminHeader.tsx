@@ -12,8 +12,9 @@ const AdminHeader = () => {
   const role = (session?.user as any)?.role as string | undefined;
 
   const handleLogout = async () => {
+    const token = session?.accessToken ?? "";
     await signOut({ redirect: false });
-    try { await logout(); } catch {}
+    if (token) { try { await logout(token); } catch {} }
     router.push("/login");
     router.refresh();
   };

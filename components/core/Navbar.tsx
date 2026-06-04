@@ -14,13 +14,9 @@ const Navbar = () => {
   const isAdminRole = role === 'ADMIN' || role === 'SUPER_ADMIN'
 
   const handleLogout = async () => {
-    try {
-      await logout()
-    } catch (error) {
-      console.error('Logout API Error:', error)
-    }
-
+    const token = session?.accessToken ?? ''
     await signOut({ redirect: false })
+    if (token) { try { await logout(token); } catch (error) { console.error('Logout API Error:', error) } }
     router.push('/')
     router.refresh()
   }

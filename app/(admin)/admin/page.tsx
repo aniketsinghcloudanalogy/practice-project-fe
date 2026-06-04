@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Tag, Switch, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Table from "@/components/common/Table";
+import Tag from "@/components/common/Tag";
+import Switch from "@/components/common/Switch";
+import Tooltip from "@/components/common/Tooltip";
 import { getUsers, toggleUserActive, type UserRow } from "@/lib/api/auth.api";
 
 const roleColors: Record<string, string> = {
@@ -17,6 +19,7 @@ export default function AdminPage() {
   const { data: session, status } = useSession();
   const accessToken = (session as any)?.accessToken as string | undefined;
   const currentUserId = session?.user?.id;
+  const currentRole = (session?.user as any)?.role as string | undefined;
 
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,33 +27,21 @@ export default function AdminPage() {
   const [toggling, setToggling] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('Session status:', status);
-    console.log('Session data:', session);
-    console.log('AccessToken:', accessToken);
-    
-    if (status === 'loading') {
-      return;
-    }
-    
+    if (status === 'loading') return;
+
     if (!accessToken) {
       setLoading(false);
       setError('No access token found. Please log in.');
       return;
     }
-    
+
     setLoading(true);
     setError(null);
     getUsers(accessToken)
-      .then((data) => {
-        console.log('Users fetched:', data);
-        setUsers(data);
-      })
-      .catch((err) => {
-        console.error('Failed to fetch users:', err);
-        setError(err.response?.data?.message || err.message || 'Failed to fetch users');
-      })
+      .then((data) => setUsers(data))
+      .catch((err) => setError(err.response?.data?.message || err.message || 'Failed to fetch users'))
       .finally(() => setLoading(false));
-  }, [accessToken, status, session]);
+  }, [accessToken, status]);
 
   const handleToggle = async (user: UserRow, checked: boolean) => {
     if (!accessToken) return;
@@ -85,7 +76,7 @@ export default function AdminPage() {
         { text: "Super Admin", value: "SUPER_ADMIN" },
       ],
       onFilter: (value, record) => record.role === value,
-      render: (role) => <Tag color={roleColors[role] ?? "default"}>{role}</Tag>,
+      render: (role) => <Tag variant="status" color={roleColors[role] ?? "default"}>{role}</Tag>,
     },
     {
       title: "Active",
@@ -97,7 +88,7 @@ export default function AdminPage() {
       ],
       onFilter: (value, record) => record.isActive === value,
       render: (isActive, record) => (
-        <Tag color={isActive ? "success" : "error"}>{isActive ? "Active" : "Inactive"}</Tag>
+        <Tag variant="status" color={isActive ? "success" : "error"}>{isActive ? "Active" : "Inactive"}</Tag>
       ),
     },
     {
@@ -112,12 +103,19 @@ export default function AdminPage() {
       key: "action",
       render: (_, record) => {
         const isSelf = record.id === currentUserId;
+        const isAdminTarget = record.role === 'ADMIN' || record.role === 'SUPER_ADMIN';
+        const canToggle = !isSelf && (!isAdminTarget || currentRole === 'SUPER_ADMIN');
+        const tooltipMsg = isSelf
+          ? 'Cannot deactivate yourself'
+          : isAdminTarget && currentRole !== 'SUPER_ADMIN'
+          ? 'Only Super Admin can manage admin accounts'
+          : record.isActive ? 'Deactivate' : 'Activate';
         return (
-          <Tooltip title={isSelf ? "Cannot deactivate yourself" : record.isActive ? "Deactivate" : "Activate"}>
+          <Tooltip title={tooltipMsg}>
             <Switch
               checked={record.isActive}
               loading={toggling === record.id}
-              disabled={isSelf}
+              disabled={!canToggle}
               onChange={(checked) => handleToggle(record, checked)}
               checkedChildren="ON"
               unCheckedChildren="OFF"

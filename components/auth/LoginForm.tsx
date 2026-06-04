@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn, getSession } from 'next-auth/react'
+import { signIn, signOut, getSession } from 'next-auth/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -40,6 +40,7 @@ const LoginForm = () => {
 		setError(null)
 
 		try {
+			await signOut({ redirect: false })
 			const result = await signIn('credentials', {
 				email: values.email,
 				password: values.password,

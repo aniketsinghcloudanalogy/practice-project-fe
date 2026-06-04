@@ -10,8 +10,9 @@ const DashboardHeader = () => {
   const { data: session } = useSession();
 
   const handleLogout = async () => {
-    try { await logout(); } catch {}
+    const token = session?.accessToken ?? "";
     await signOut({ redirect: false });
+    if (token) { try { await logout(token); } catch {} }
     router.push("/login");
     router.refresh();
   };
