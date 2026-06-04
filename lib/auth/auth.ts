@@ -7,7 +7,7 @@ import { login, oauth } from "../api/auth.api";
 export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login",
-    error: "/random",
+    error: "/login",
   },
 
   providers: [
@@ -79,7 +79,7 @@ export const authOptions: NextAuthOptions = {
         user.image = backendUser.image;
         user.role = backendUser.role;
         user.authProvider = backendUser.authProvider;
-        user.accessToken = backendUser.accessToken;
+        user.token = backendUser.token;
 
         return true;
       } catch (error) {
@@ -91,7 +91,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, account }) {
       if (user) {
         token.user = user;
-        token.accessToken = user.accessToken;
+        token.token = user.token;
       }
 
       if (account?.access_token) {
@@ -106,7 +106,7 @@ export const authOptions: NextAuthOptions = {
         session.user = token.user;
       }
 
-      session.accessToken = token.accessToken;
+      session.token = token.token;
 
       return session;
     },

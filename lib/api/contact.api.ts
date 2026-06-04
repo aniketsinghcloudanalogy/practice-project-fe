@@ -30,9 +30,9 @@ export const createContact = async (data: ContactPayload): Promise<ContactRespon
     "/api/contacts",
     payload,
     {
-      headers: session?.accessToken
+      headers: session?.token
         ? {
-            Authorization: `Bearer ${session.accessToken}`,
+            Authorization: `Bearer ${session.token}`,
           }
         : {},
     }

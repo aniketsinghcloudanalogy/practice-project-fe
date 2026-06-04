@@ -1,5 +1,29 @@
 import type { Account, User } from "next-auth";
+import { isAxiosError } from "axios";
 import api from "@/lib/axios/axios";
+
+type AuthenticatedUser = User & {
+  token?: string;
+};
+
+type AuthData = {
+  user?: AuthenticatedUser;
+  token?: string | null;
+};
+
+const getAuthData = (data: unknown) => {
+  if (
+    data &&
+    typeof data === "object" &&
+    "data" in data &&
+    data.data &&
+    typeof data.data === "object"
+  ) {
+    return data.data as AuthData;
+  }
+
+  return null;
+};
 
 export const signup = async (data: { name: string; email: string; password: string }) => {
   const res = await api.post("/api/users/signup", data);
@@ -8,10 +32,15 @@ export const signup = async (data: { name: string; email: string; password: stri
 
 export const login = async (data: { email: string; password: string }) => {
   const res = await api.post("/api/users/login", data);
+  const authData = getAuthData(res.data);
+
+  if (!authData?.user) {
+    return null;
+  }
 
   return {
-    ...res.data?.data?.user,
-    accessToken: res.data?.data?.token  ?? null,
+    ...authData.user,
+    token: authData.token ?? undefined,
   };
 };
 
@@ -28,24 +57,49 @@ type OAuthPayload = {
 };
 
 export const oauth = async ({ user, account, providerAccountId }: OAuthPayload) => {
-  const res = await api.post(
-    "/api/users/oauth",
-    {
-      provider: account.provider,
-      providerAccountId,
-      email: user.email,
-      name: user.name,
-      image: user.image,
+  const internalSecret = process.env.INTERNAL_AUTH_SECRET;
+
+  if (!internalSecret) {
+    throw new Error("INTERNAL_AUTH_SECRET is not configured");
+  }
+
+  const payload = {
+    provider: account.provider,
+    providerAccountId,
+    email: user.email,
+    name: user.name,
+    image: user.image,
+  };
+
+  const res = await api.post("/api/users/oauth", payload, {
+    headers: {
+      "x-internal-secret": internalSecret,
     },
-    {
-      headers: {
-        "x-internal-secret": process.env.INTERNAL_AUTH_SECRET,
-      },
+  }).catch((error: unknown) => {
+    if (isAxiosError(error)) {
+      console.error("Backend OAuth API Error:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        payload: {
+          provider: payload.provider,
+          providerAccountId: payload.providerAccountId,
+          email: payload.email,
+          hasName: Boolean(payload.name),
+          hasImage: Boolean(payload.image),
+        },
+      });
     }
-  );
+
+    throw error;
+  });
+  const authData = getAuthData(res.data);
+
+  if (!authData?.user) {
+    return null;
+  }
 
   return {
-    ...res.data?.data?.user,
-    accessToken: res.data?.data?.token ?? null,
+    ...authData.user,
+    token: authData.token ?? undefined,
   };
 };
