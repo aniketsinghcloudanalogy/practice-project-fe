@@ -35,7 +35,7 @@ const sidebarItems: SidebarItem[] = [
   { key: 'home', label: 'Home', icon: <HomeOutlined />, href: '/dashboard' },
   { key: 'quote', label: 'Quote', icon: <FileTextOutlined /> },
   { key: 'accounts', label: 'Accounts', icon: <TeamOutlined /> },
-  { key: 'contacts', label: 'Contacts', icon: <UserOutlined /> },
+  { key: 'contacts', label: 'Contacts', icon: <UserOutlined /> , href: '/contact'},
   { key: 'opportunity', label: 'Opportunity', icon: <RiseOutlined /> },
   { key: 'order', label: 'Order', icon: <ShoppingOutlined /> },
 ]
@@ -52,7 +52,16 @@ const Sidebar = () => {
   }, [collapsed])
 
   const activeKey = useMemo(() => {
-    if (pathname.startsWith('/dashboard')) {
+    const activeItem = sidebarItems.find((item) => {
+      if (!item.href) return false
+      return pathname === item.href || pathname.startsWith(`${item.href}/`)
+    })
+
+    if (activeItem) {
+      return activeItem.key
+    }
+
+    if (pathname === '/dashboard' || pathname.startsWith('/dashboard/')) {
       return 'home'
     }
 

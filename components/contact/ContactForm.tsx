@@ -12,7 +12,7 @@ import {
 	SendOutlined,
 	UserOutlined,
 } from '@/components/common/antd/icons'
-import { createContact, type ContactPayload } from '@/lib/api/contact.api'
+import { createContact, type ContactPayload } from '@/lib/api/contactus.api'
 import {
 	FieldGrid,
 	FormDescription,

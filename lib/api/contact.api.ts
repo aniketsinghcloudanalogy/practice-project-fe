@@ -7,36 +7,68 @@ export type ContactPayload = {
   email: string;
   primaryContact: string;
   secondaryContact?: string | null;
-  subject: string;
-  message: string;
+  company?: string | null;
+  notes?: string | null;
 };
 
-export type ContactResponse = {
+export type ContactResponse<T = unknown> = {
   success?: boolean;
   message?: string;
-  data?: unknown;
+  data?: T;
+};
+
+const getAuthHeaders = async () => {
+  const session = await getSession();
+
+  return session?.token
+    ? {
+        Authorization: `Bearer ${session.token}`,
+      }
+    : {};
 };
 
 export const createContact = async (data: ContactPayload): Promise<ContactResponse> => {
-  const session = await getSession();
+  const res = await api.post("/api/contacts", data, {
+    headers: await getAuthHeaders(),
+  });
 
-  const payload: ContactPayload = {
-    ...data,
-    lastName: data.lastName || null,
-    secondaryContact: data.secondaryContact || null,
-  };
+  return res.data;
+};
 
-  const res = await api.post(
-    "/api/contact",
-    payload,
-    {
-      headers: session?.token
-        ? {
-            Authorization: `Bearer ${session.token}`,
-          }
-        : {},
-    }
-  );
+export const getContacts = async (): Promise<ContactResponse> => {
+  const res = await api.get("/api/users/me/contacts", {
+    headers: await getAuthHeaders(),
+  });
+
+  const resData = res.data;
+  const contacts = resData?.data?.contacts ?? resData?.data ?? resData;
+
+  return Array.isArray(contacts) ? { success: true, data: contacts } : resData;
+};
+
+export const getContact = async (contactId: string): Promise<ContactResponse> => {
+  const res = await api.get(`/api/contacts/${contactId}`, {
+    headers: await getAuthHeaders(),
+  });
+
+  return res.data;
+};
+
+export const updateContact = async (
+  contactId: string,
+  data: Partial<ContactPayload>
+): Promise<ContactResponse> => {
+  const res = await api.patch(`/api/contacts/${contactId}`, data, {
+    headers: await getAuthHeaders(),
+  });
+
+  return res.data;
+};
+
+export const deleteContact = async (contactId: string): Promise<ContactResponse> => {
+  const res = await api.delete(`/api/contacts/${contactId}`, {
+    headers: await getAuthHeaders(),
+  });
 
   return res.data;
 };

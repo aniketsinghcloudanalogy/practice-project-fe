@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import Sidebar from '@/components/core/Sidebar'
+import Sidebar from '@/components/layout/Sidebar'
 import { Metadata } from 'next';
 
 type DashboardLayoutProps = {
@@ -15,8 +15,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <Sidebar />
       <main
-        className="w-full overflow-x-hidden transition-[padding-left] duration-200"
-        style={{ paddingLeft: 'var(--sidebar-width)' }}
+        className="w-full overflow-x-hidden overflow-y-auto transition-[padding-left] duration-200"
+        style={{ paddingLeft: 'var(--sidebar-width, 92px)', paddingTop: '8px', height: '100vh' }}
       >
         {children}
       </main>
