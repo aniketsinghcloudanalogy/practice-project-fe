@@ -8,10 +8,10 @@ import type { SidebarProps } from './types'
 export const SidebarShell = styled(Layout.Sider)<SidebarProps>`
 	display: flex;
 	position: fixed;
-	top: 0;
+	top: var(--navbar-height);
 	left: 0;
 	z-index: 30;
-	height: 100vh;
+	height: calc(100vh - var(--navbar-height));
 	overflow-y: auto;
 	width: ${({ $collapsed }) => ($collapsed ? '92px' : '288px')};
 	flex-shrink: 0;
