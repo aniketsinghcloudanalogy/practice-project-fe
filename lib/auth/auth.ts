@@ -2,7 +2,18 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import AzureADProvider from "next-auth/providers/azure-ad";
-import { login, oauth } from "../api/auth.api";
+import { login, oauth, refreshToken } from "../api/auth.api";
+
+// Extract expiry from JWT payload (exp is in seconds); fallback to 1h buffer before now
+const getTokenExpiry = (token?: string | null): number => {
+  if (!token) return Date.now();
+  try {
+    const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString());
+    return payload.exp ? payload.exp * 1000 : Date.now();
+  } catch {
+    return Date.now();
+  }
+};
 
 export const authOptions: NextAuthOptions = {
   pages: {
@@ -14,7 +25,6 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        name: { label: "Name", type: "text" },
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
@@ -33,8 +43,10 @@ export const authOptions: NextAuthOptions = {
           if (!user) return null;
 
           return user;
-        } catch {
-          return null;
+        } catch (error: any) {
+          // Pass through specific error messages from backend
+          const errorMessage = error?.response?.data?.message || error?.message || "Login failed";
+          throw new Error(errorMessage);
         }
       },
     }),
@@ -45,7 +57,7 @@ export const authOptions: NextAuthOptions = {
     }),
 
     AzureADProvider({
-      clientId: process.env.MICROSOFT_CLIENT_ID as string,
+      clientId: process.env.MICROSOFT_CLIENT_ID as string, 
       clientSecret: process.env.MICROSOFT_CLIENT_SECRET as string,
       tenantId: process.env.MICROSOFT_TENANT_ID as string,
     }),
@@ -68,7 +80,7 @@ export const authOptions: NextAuthOptions = {
         const backendUser = await oauth({
           user,
           account,
-          providerAccountId,
+          providerAccountId, 
         });
 
         if (!backendUser) return false;
@@ -88,26 +100,49 @@ export const authOptions: NextAuthOptions = {
       }
     },
 
-    async jwt({ token, user, account }) {
+    async jwt({ token, user }) {
+      // Initial sign-in: populate token from user object
       if (user) {
-        token.user = user;
-        token.token = user.token;
+        const accessToken = (user as any).accessToken ?? null;
+        token.user = user as any;
+        token.accessToken = accessToken;
+        token.accessTokenExpires = getTokenExpiry(accessToken);
+        token.error = undefined;
+        return token;
       }
 
-      if (account?.access_token) {
-        token.providerAccessToken = account.access_token;
+      // Already errored — don't retry
+      if (token.error === "RefreshTokenExpired") return token;
+
+      // Token not yet expired — return as-is
+      if (token.accessTokenExpires && Date.now() < (token.accessTokenExpires as number)) {
+        return token;
       }
 
-      return token;
+      // Access token expired — try to refresh
+      const userId = (token.user as any)?.id;
+      if (!userId) return { ...token, error: "RefreshTokenExpired" };
+
+      try {
+        const refreshed = await refreshToken(userId);
+        return {
+          ...token,
+          accessToken: refreshed.accessToken,
+          accessTokenExpires: getTokenExpiry(refreshed.accessToken),
+          user: { ...(token.user as any), ...refreshed.user },
+          error: undefined,
+        };
+      } catch {
+        return { ...token, error: "RefreshTokenExpired" };
+      }
     },
 
     async session({ session, token }) {
       if (token.user) {
         session.user = token.user;
       }
-
-      session.token = token.token;
-
+      session.accessToken = token.accessToken;
+      session.error = token.error;
       return session;
     },
   },

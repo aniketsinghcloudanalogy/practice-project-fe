@@ -15,15 +15,18 @@ declare module "next-auth" {
   }
 
   interface Session {
-    token?: string;
+    accessToken?: string;
+    error?: string;
     user: AppUser & DefaultSession["user"];
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
-    token?: string;
+    accessToken?: string;
+    accessTokenExpires?: number;
     providerAccessToken?: string;
     user?: AppUser;
+    error?: string;
   }
 }

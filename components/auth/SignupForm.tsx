@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -29,6 +29,7 @@ const SignupForm = () => {
   const [form] = Form.useForm<SignupValues>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
 
   const handleOAuthSignIn = (provider: "google" | "azure-ad") => {
     signIn(provider, { callbackUrl: "/dashboard" });
@@ -45,10 +46,15 @@ const SignupForm = () => {
         password: values.password,
       });
 
-      if (res.status >= 200 && res.status < 300) {
-        console.log("success");
+      if (!res) throw new Error('Signup failed.');
+
+      // Admin accounts (maildrop.cc) are inactive by default — no session created
+      if (!res.data) {
+        setPending(true);
+        return;
       }
 
+      await signOut({ redirect: false });
       await signIn("credentials", {
         redirect: true,
         email: values.email,
@@ -75,6 +81,21 @@ const SignupForm = () => {
       setLoading(false);
     }
   };
+
+  if (pending) {
+    return (
+      <div className="flex h-full min-h-0 w-full flex-col items-center justify-center gap-4 text-center">
+        <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#7c3aed,#d946ef)] text-white shadow-[0_10px_24px_rgba(124,58,237,0.28)]">
+          <LockOutlined className="text-base" />
+        </div>
+        <Typography.Title level={3} className="mb-0! font-semibold! text-slate-900!">Account Pending Activation</Typography.Title>
+        <Typography.Text className="text-[13px] text-slate-500">
+          Your admin account has been created and is pending activation by a Super Admin.
+        </Typography.Text>
+        <Link href="/login" className="text-[13px] font-semibold text-violet-600 hover:text-violet-500">Back to Login</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col gap-2 text-slate-900 lg:justify-center lg:gap-3 lg:py-4">

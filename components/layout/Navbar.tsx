@@ -12,6 +12,7 @@ import Dropdown from '@/components/common/Dropdown'
 
 const Navbar = () => {
   const router = useRouter()
+<<<<<<< HEAD:components/layout/Navbar.tsx
   const { data: session, status } = useSession()
   const isLoggedIn = status === 'authenticated'
   const username = session?.user?.name
@@ -26,6 +27,17 @@ const Navbar = () => {
       await signOut({ redirect: false })
     }
 
+=======
+  const { status, data: session } = useSession()
+  const isLoggedIn = status === 'authenticated'
+  const role = (session?.user as any)?.role as string | undefined
+  const isAdminRole = role === 'ADMIN' || role === 'SUPER_ADMIN'
+
+  const handleLogout = async () => {
+    const token = session?.accessToken ?? ''
+    await signOut({ redirect: false })
+    if (token) { try { await logout(token); } catch (error) { console.error('Logout API Error:', error) } }
+>>>>>>> d4d97c8cfe0e76373c61bdb4bf704957e1595650:components/core/Navbar.tsx
     router.push('/')
     router.refresh()
   }
@@ -52,6 +64,7 @@ const Navbar = () => {
           </Button>
           {isLoggedIn ? (
             <>
+<<<<<<< HEAD:components/layout/Navbar.tsx
               <div className="flex items-center gap-2">
                 {username && <span className="text-sm hidden sm:inline text-slate-800">{username}</span>}
                 <Dropdown menuItems={menuItems} trigger={["hover"]} placement="bottomRight">
@@ -60,6 +73,18 @@ const Navbar = () => {
                   </div>
                 </Dropdown>
               </div>
+=======
+              <Button
+                variant="auth"
+                href={isAdminRole ? '/admin' : '/dashboard'}
+                className="w-full sm:w-auto"
+              >
+                {isAdminRole ? 'Admin Panel' : 'Dashboard'}
+              </Button>
+              <Button variant="logout" className="w-full sm:w-auto" onClick={handleLogout}>
+                Logout
+              </Button>
+>>>>>>> d4d97c8cfe0e76373c61bdb4bf704957e1595650:components/core/Navbar.tsx
             </>
           ) : (
             <>
