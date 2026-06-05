@@ -12,7 +12,7 @@ const Avatar = ({ src, size = 32, alt, className, icon }: AppAvatarProps) => {
 
   return (
     <StyledAvatarWrapper className={className}>
-      <AntdAvatar size={size as any} src={src ?? undefined} icon={resolvedIcon as any} alt={alt} />
+      <AntdAvatar size={size} src={src ?? undefined} icon={resolvedIcon} alt={alt} />
     </StyledAvatarWrapper>
   )
 }

@@ -54,9 +54,9 @@ const LoginForm = () => {
 				return
 			}
 
-		if (result?.ok) {
+			if (result?.ok) {
 				const session = await getSession()
-				const role = (session?.user as any)?.role
+				const role = session?.user?.role
 				const isAdminRole = role === 'ADMIN' || role === 'SUPER_ADMIN'
 				router.push(isAdminRole ? '/admin' : '/dashboard')
 				return
@@ -197,7 +197,7 @@ const LoginForm = () => {
 
 				<div className="text-center">
 					<Typography.Text className="text-[13px] text-slate-500">
-						Don't have an account?{' '}
+						Don&apos;t have an account?{' '}
 						<Link href="/signup" className="font-semibold text-violet-600 transition-colors hover:text-violet-500">
 							Sign up
 						</Link>

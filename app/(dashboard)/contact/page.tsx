@@ -63,6 +63,7 @@ const ContactPage = () => {
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
   const [form] = Form.useForm();
 
   const fetchContacts = useCallback(async () => {
@@ -79,7 +80,14 @@ const ContactPage = () => {
     }
   }, []);
 
-  useEffect(() => { void fetchContacts(); }, [fetchContacts]);
+  useEffect(() => {
+    const timerId = window.setTimeout(() => {
+      setCurrentTime(Date.now());
+      void fetchContacts();
+    }, 0);
+
+    return () => window.clearTimeout(timerId);
+  }, [fetchContacts]);
 
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
@@ -192,10 +200,11 @@ const ContactPage = () => {
 
   const recentCount = useMemo(() =>
     contacts.filter((c) => {
+      if (!currentTime) return false;
       if (!c.createdAt) return false;
-      return Date.now() - new Date(c.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000;
+      return currentTime - new Date(c.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000;
     }).length,
-  [contacts]);
+  [contacts, currentTime]);
 
   const companyCount = useMemo(() => contacts.filter((c) => c.company).length, [contacts]);
 
@@ -214,6 +223,7 @@ const ContactPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
         <StatCard emoji="👥" label="Total Contacts" value={contacts.length} bg="bg-blue-100" color="text-blue-600" />
         <StatCard emoji="🆕" label="Added This Week" value={recentCount} bg="bg-green-100" color="text-green-600" />
+        <StatCard emoji="🏢" label="Companies" value={companyCount} bg="bg-violet-100" color="text-violet-600" />
       </div>
 
       {/* Table — horizontally scrollable on small screens */}

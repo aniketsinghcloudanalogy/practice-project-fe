@@ -3,89 +3,71 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
-import Button from '@/components/common/Button'
-import { logout } from '@/lib/api/auth.api'
-import Avatar from '@/components/common/Avatar'
 import { UserOutlined } from '@ant-design/icons'
-import React from 'react'
+import Avatar from '@/components/common/Avatar'
+import Button from '@/components/common/Button'
 import Dropdown from '@/components/common/Dropdown'
+import { logout } from '@/lib/api/auth.api'
 
 const Navbar = () => {
   const router = useRouter()
-<<<<<<< HEAD:components/layout/Navbar.tsx
   const { data: session, status } = useSession()
   const isLoggedIn = status === 'authenticated'
   const username = session?.user?.name
   const userImage = session?.user?.image
+  const role = session?.user?.role
+  const isAdminRole = role === 'ADMIN' || role === 'SUPER_ADMIN'
+  const dashboardHref = isAdminRole ? '/admin' : '/dashboard'
 
   const handleLogout = async () => {
     try {
-      await logout(session?.token)
+      await logout(session?.accessToken ?? '')
     } catch (error) {
       console.error('Logout API Error:', error)
     } finally {
       await signOut({ redirect: false })
     }
 
-=======
-  const { status, data: session } = useSession()
-  const isLoggedIn = status === 'authenticated'
-  const role = (session?.user as any)?.role as string | undefined
-  const isAdminRole = role === 'ADMIN' || role === 'SUPER_ADMIN'
-
-  const handleLogout = async () => {
-    const token = session?.accessToken ?? ''
-    await signOut({ redirect: false })
-    if (token) { try { await logout(token); } catch (error) { console.error('Logout API Error:', error) } }
->>>>>>> d4d97c8cfe0e76373c61bdb4bf704957e1595650:components/core/Navbar.tsx
     router.push('/')
     router.refresh()
   }
 
   const menuItems = [
     { key: 'profile', label: <Button variant="dropdown">Profile</Button> },
-    { key: 'dashboard', label: <Button variant="dropdown" href="/dashboard">Dashboard</Button> },
+    {
+      key: 'dashboard',
+      label: (
+        <Button variant="dropdown" href={dashboardHref}>
+          {isAdminRole ? 'Admin Panel' : 'Dashboard'}
+        </Button>
+      ),
+    },
     { key: 'logout', label: <Button variant="logout" onClick={handleLogout}>Logout</Button> },
   ]
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 w-full border-b border-slate-200/80 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-360 flex-col gap-4 px-2 py-3 sm:flex-row sm:items-center sm:gap-6 sm:px-3 lg:px-4">
+    <header className="fixed inset-x-0 top-0 z-50 h-[var(--navbar-height)] w-full border-b border-slate-200/80 bg-white/90 backdrop-blur">
+      <div className="mx-auto flex h-full w-full max-w-360 flex-col justify-center gap-1.5 px-2 py-1.5 sm:flex-row sm:items-center sm:gap-3 sm:px-3 sm:py-0 lg:px-4">
         <Link
           href="/"
-          className="text-left text-lg font-semibold tracking-tight text-slate-900 transition-colors hover:text-slate-600 sm:text-xl"
+          className="text-left text-base font-semibold tracking-tight text-slate-900 transition-colors hover:text-slate-600 sm:text-lg"
         >
           Practise Project
         </Link>
 
-        <div className="flex w-full flex-col gap-3 sm:ml-auto sm:w-auto sm:flex-row sm:items-center sm:justify-end sm:gap-3">
-          <Button variant="secondary" href="/contact" className="w-full sm:w-auto">
+        <div className="flex w-full flex-col gap-2 sm:ml-auto sm:w-auto sm:flex-row sm:items-center sm:justify-end sm:gap-3">
+          <Button variant="secondary" href="/contactus" className="w-full sm:w-auto">
             Contact Us
           </Button>
           {isLoggedIn ? (
-            <>
-<<<<<<< HEAD:components/layout/Navbar.tsx
-              <div className="flex items-center gap-2">
-                {username && <span className="text-sm hidden sm:inline text-slate-800">{username}</span>}
-                <Dropdown menuItems={menuItems} trigger={["hover"]} placement="bottomRight">
-                  <div className="flex items-center cursor-pointer gap-2 rounded px-2 py-1 hover:bg-slate-100">
-                    <Avatar size={32} src={userImage ?? undefined} icon={!userImage && <UserOutlined />} />
-                  </div>
-                </Dropdown>
-              </div>
-=======
-              <Button
-                variant="auth"
-                href={isAdminRole ? '/admin' : '/dashboard'}
-                className="w-full sm:w-auto"
-              >
-                {isAdminRole ? 'Admin Panel' : 'Dashboard'}
-              </Button>
-              <Button variant="logout" className="w-full sm:w-auto" onClick={handleLogout}>
-                Logout
-              </Button>
->>>>>>> d4d97c8cfe0e76373c61bdb4bf704957e1595650:components/core/Navbar.tsx
-            </>
+            <div className="flex items-center gap-2">
+              {username && <span className="hidden text-sm text-slate-800 sm:inline">{username}</span>}
+              <Dropdown menuItems={menuItems} trigger={["hover"]} placement="bottomRight">
+                <div className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-slate-100">
+                  <Avatar size={32} src={userImage ?? undefined} icon={!userImage && <UserOutlined />} />
+                </div>
+              </Dropdown>
+            </div>
           ) : (
             <>
               <Button href="/login" variant="auth" className="w-full sm:w-auto">

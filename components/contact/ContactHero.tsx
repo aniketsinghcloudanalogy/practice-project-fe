@@ -1,7 +1,6 @@
 "use client";
 
 import {
-	ClockCircleOutlined,
 	CustomerServiceOutlined,
 	MailFilled,
 	PhoneOutlined,

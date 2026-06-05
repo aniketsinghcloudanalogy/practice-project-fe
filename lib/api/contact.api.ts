@@ -20,9 +20,9 @@ export type ContactResponse<T = unknown> = {
 const getAuthHeaders = async () => {
   const session = await getSession();
 
-  return session?.token
+  return session?.accessToken
     ? {
-        Authorization: `Bearer ${session.token}`,
+        Authorization: `Bearer ${session.accessToken}`,
       }
     : {};
 };

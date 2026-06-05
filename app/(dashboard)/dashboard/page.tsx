@@ -6,13 +6,6 @@ const Page = () => {
   const dashboard = useAppSelector((state) => state.dashboard)
   const {
     summaryCards,
-    salesStats,
-    salesChartData,
-    usersData,
-    usersChartData,
-    projectsData,
-    projectsChartData,
-    downloadsData,
     ticketsData,
     updatesData,
   } = dashboard

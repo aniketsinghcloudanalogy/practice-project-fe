@@ -17,9 +17,9 @@ const roleColors: Record<string, string> = {
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
-  const accessToken = (session as any)?.accessToken as string | undefined;
+  const accessToken = session?.accessToken ?? undefined;
   const currentUserId = session?.user?.id;
-  const currentRole = (session?.user as any)?.role as string | undefined;
+  const currentRole = session?.user?.role;
 
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,18 +29,24 @@ export default function AdminPage() {
   useEffect(() => {
     if (status === 'loading') return;
 
-    if (!accessToken) {
-      setLoading(false);
-      setError('No access token found. Please log in.');
-      return;
-    }
+    const timerId = window.setTimeout(() => {
+      if (!accessToken) {
+        setLoading(false);
+        setError('No access token found. Please log in.');
+        return;
+      }
 
-    setLoading(true);
-    setError(null);
-    getUsers(accessToken)
-      .then((data) => setUsers(data))
-      .catch((err) => setError(err.response?.data?.message || err.message || 'Failed to fetch users'))
-      .finally(() => setLoading(false));
+      setLoading(true);
+      setError(null);
+      getUsers(accessToken)
+        .then((data) => setUsers(data))
+        .catch((error: unknown) => {
+          setError(error instanceof Error ? error.message : 'Failed to fetch users');
+        })
+        .finally(() => setLoading(false));
+    }, 0);
+
+    return () => window.clearTimeout(timerId);
   }, [accessToken, status]);
 
   const handleToggle = async (user: UserRow, checked: boolean) => {
@@ -87,7 +93,7 @@ export default function AdminPage() {
         { text: "Inactive", value: false },
       ],
       onFilter: (value, record) => record.isActive === value,
-      render: (isActive, record) => (
+      render: (isActive) => (
         <Tag variant="status" color={isActive ? "success" : "error"}>{isActive ? "Active" : "Inactive"}</Tag>
       ),
     },

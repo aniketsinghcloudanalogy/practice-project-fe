@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import AdminHeader from "@/components/core/AdminHeader";
+import AdminHeader from "@/components/layout/AdminHeader";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {

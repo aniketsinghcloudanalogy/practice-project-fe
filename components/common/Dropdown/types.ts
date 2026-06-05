@@ -1,8 +1,8 @@
-import type { MenuProps } from 'antd'
+import type { DropdownProps, MenuProps } from '@/components/common/antd/Dropdown'
 
 export type AppDropdownProps = {
   menuItems: MenuProps['items']
   trigger?: ('hover' | 'click' | 'contextMenu')[]
-  placement?: any
+  placement?: DropdownProps['placement']
   children: React.ReactNode
 }

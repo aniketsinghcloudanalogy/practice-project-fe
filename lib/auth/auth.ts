@@ -4,6 +4,27 @@ import Google from "next-auth/providers/google";
 import AzureADProvider from "next-auth/providers/azure-ad";
 import { login, oauth, refreshToken } from "../api/auth.api";
 
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof Error) return error.message;
+
+  if (
+    error &&
+    typeof error === "object" &&
+    "response" in error &&
+    error.response &&
+    typeof error.response === "object" &&
+    "data" in error.response &&
+    error.response.data &&
+    typeof error.response.data === "object" &&
+    "message" in error.response.data &&
+    typeof error.response.data.message === "string"
+  ) {
+    return error.response.data.message;
+  }
+
+  return "Login failed";
+};
+
 // Extract expiry from JWT payload (exp is in seconds); fallback to 1h buffer before now
 const getTokenExpiry = (token?: string | null): number => {
   if (!token) return Date.now();
@@ -43,10 +64,9 @@ export const authOptions: NextAuthOptions = {
           if (!user) return null;
 
           return user;
-        } catch (error: any) {
+        } catch (error: unknown) {
           // Pass through specific error messages from backend
-          const errorMessage = error?.response?.data?.message || error?.message || "Login failed";
-          throw new Error(errorMessage);
+          throw new Error(getErrorMessage(error));
         }
       },
     }),
@@ -91,7 +111,7 @@ export const authOptions: NextAuthOptions = {
         user.image = backendUser.image;
         user.role = backendUser.role;
         user.authProvider = backendUser.authProvider;
-        user.token = backendUser.token;
+        user.accessToken = backendUser.accessToken;
 
         return true;
       } catch (error) {
@@ -103,8 +123,8 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       // Initial sign-in: populate token from user object
       if (user) {
-        const accessToken = (user as any).accessToken ?? null;
-        token.user = user as any;
+        const accessToken = user.accessToken ?? null;
+        token.user = user;
         token.accessToken = accessToken;
         token.accessTokenExpires = getTokenExpiry(accessToken);
         token.error = undefined;
@@ -120,7 +140,7 @@ export const authOptions: NextAuthOptions = {
       }
 
       // Access token expired — try to refresh
-      const userId = (token.user as any)?.id;
+      const userId = token.user?.id;
       if (!userId) return { ...token, error: "RefreshTokenExpired" };
 
       try {
@@ -129,7 +149,7 @@ export const authOptions: NextAuthOptions = {
           ...token,
           accessToken: refreshed.accessToken,
           accessTokenExpires: getTokenExpiry(refreshed.accessToken),
-          user: { ...(token.user as any), ...refreshed.user },
+          user: { ...token.user, ...refreshed.user },
           error: undefined,
         };
       } catch {

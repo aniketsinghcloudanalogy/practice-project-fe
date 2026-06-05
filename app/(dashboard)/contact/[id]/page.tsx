@@ -49,7 +49,16 @@ const ContactDetailPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
   const [form] = Form.useForm();
+
+  useEffect(() => {
+    const timerId = window.setTimeout(() => {
+      setCurrentTime(Date.now());
+    }, 0);
+
+    return () => window.clearTimeout(timerId);
+  }, []);
 
   useEffect(() => {
     if (!contactId) return;
@@ -128,10 +137,10 @@ const ContactDetailPage = () => {
   [contact]);
 
   const daysSince = useMemo(() =>
-    contact?.createdAt
-      ? Math.floor((Date.now() - new Date(contact.createdAt).getTime()) / (1000 * 60 * 60 * 24))
+    contact?.createdAt && currentTime
+      ? Math.floor((currentTime - new Date(contact.createdAt).getTime()) / (1000 * 60 * 60 * 24))
       : 0,
-  [contact]);
+  [contact, currentTime]);
 
   const phoneCount = useMemo(() =>
     [contact?.primaryContact, contact?.secondaryContact].filter(Boolean).length,

@@ -1,10 +1,11 @@
 import { withAuth } from "next-auth/middleware";
+import type { NextRequestWithAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
 export default withAuth(
-  function middleware(req) {
+  function middleware(req: NextRequestWithAuth) {
     const { pathname } = req.nextUrl;
-    const role = (req.nextauth.token?.user as any)?.role as string | undefined;
+    const role = req.nextauth.token?.user?.role;
     const isAdminRole = role === "ADMIN" || role === "SUPER_ADMIN";
 
     // ADMIN / SUPER_ADMIN visiting /dashboard → redirect to /admin
@@ -30,5 +31,5 @@ export default withAuth(
 );
 
 export const config = {
-  matcher: ["/dashboard", "/admin"],
+  matcher: ["/dashboard/:path*", "/admin/:path*", "/contact/:path*"],
 };

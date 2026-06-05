@@ -58,7 +58,7 @@ export const refreshToken = async (userId: string) => {
     { userId },
     { headers: { "x-internal-secret": process.env.INTERNAL_AUTH_SECRET } }
   );
-  return res.data?.data as { user: any; accessToken: string };
+  return res.data?.data as { user: User; accessToken: string };
 };
 
 export const getUsers = async (accessToken: string) => {

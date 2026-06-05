@@ -11,11 +11,11 @@ type AppUser = {
 
 declare module "next-auth" {
   interface User extends AppUser {
-    token?: string;
+    accessToken?: string | null;
   }
 
   interface Session {
-    accessToken?: string;
+    accessToken?: string | null;
     error?: string;
     user: AppUser & DefaultSession["user"];
   }
@@ -23,7 +23,7 @@ declare module "next-auth" {
 
 declare module "next-auth/jwt" {
   interface JWT {
-    accessToken?: string;
+    accessToken?: string | null;
     accessTokenExpires?: number;
     providerAccessToken?: string;
     user?: AppUser;

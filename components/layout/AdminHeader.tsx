@@ -9,7 +9,7 @@ import { UserOutlined, SettingOutlined } from "@ant-design/icons";
 const AdminHeader = () => {
   const router = useRouter();
   const { data: session } = useSession();
-  const role = (session?.user as any)?.role as string | undefined;
+  const role = session?.user?.role;
 
   const handleLogout = async () => {
     const token = session?.accessToken ?? "";
