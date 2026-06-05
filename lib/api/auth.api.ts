@@ -40,7 +40,7 @@ export const login = async (data: { email: string; password: string }) => {
 
   return {
     ...res.data?.data?.user,
-    accessToken: res.data?.data?.accessToken ?? null,
+    accessToken: res.data?.data?.token ?? null,
   };
 };
 
@@ -58,7 +58,8 @@ export const refreshToken = async (userId: string) => {
     { userId },
     { headers: { "x-internal-secret": process.env.INTERNAL_AUTH_SECRET } }
   );
-  return res.data?.data as { user: User; accessToken: string };
+  const d = res.data?.data as { user: User; token: string };
+  return { user: d.user, accessToken: d.token };
 };
 
 export const getUsers = async (accessToken: string) => {
@@ -134,6 +135,6 @@ export const oauth = async ({ user, account, providerAccountId }: OAuthPayload) 
 
   return {
     ...res.data?.data?.user,
-    accessToken: res.data?.data?.accessToken ?? null,
+    accessToken: res.data?.data?.token ?? null,
   };
 };
