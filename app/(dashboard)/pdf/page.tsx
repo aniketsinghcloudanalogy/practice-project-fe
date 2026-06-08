@@ -68,7 +68,6 @@ const Page = () => {
         : "PDF extracted successfully";
 
       messageApi.success(res?.message ? `${res.message} ${summaryText}` : summaryText);
-      messageApi.success(res?.message ?? "PDF extracted successfully");
     } catch (err: unknown) {
       messageApi.error(getErrorMessage(err, "Failed to upload PDF"));
     }
@@ -142,64 +141,50 @@ const Page = () => {
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Upload PDF</p>
-            <h3 className="mt-2 text-xl font-semibold text-slate-950">Add more extracted tables</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-500">Only PDF files up to 1MB are accepted.</p>
-      <section className="pdf-page-hero">
-        <div className="pdf-page-hero__inner">
-          <div>
-            <p className="pdf-page-kicker">Document Intelligence</p>
-            <h2 className="pdf-page-title">PDF Extraction</h2>
-            <p className="pdf-page-copy">
-              Upload a PDF to extract structured rows, browse past uploads, and open the merged table view for each file.
-            </p>
-          </div>
+              {/* right column intentionally left empty; upload card moved below for full-width layout */}
+        </div>
+      </section>
 
-          <div className="pdf-upload-card">
-            <p className="pdf-upload-card__label">Upload</p>
-            <h3 className="pdf-upload-card__title">Add a new PDF</h3>
-            <p className="pdf-upload-card__copy">Only PDF files up to 1MB are accepted.</p>
-            <Input
-              ref={fileInputRef}
-              type="file"
-              accept="application/pdf"
-              onChange={onFileChange}
-              className="hidden"
-              style={{ display: "none" }}
-            />
-            <div className="mt-5 flex flex-col gap-3">
-              <Button type="primary" loading={uploading} onClick={openFilePicker} className="w-full">
-                Upload PDF
-              </Button>
-              <Button type="default" onClick={() => router.push('/pdf/merged')} className="w-full">
-                Show Extracted Tables
-              </Button>
+
+      <section className="mt-6 w-full rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.04)]">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Upload PDF</p>
+        <h3 className="mt-2 text-xl font-semibold text-slate-950">Add more extracted tables</h3>
+        <p className="mt-2 text-sm leading-6 text-slate-500">Only PDF files up to 1MB are accepted.</p>
+        <section className="pdf-page-hero bg-gradient-to-b from-white to-slate-50 p-8 rounded-2xl border border-slate-100 mt-4">
+          <div className="pdf-page-hero__inner flex flex-col md:flex-row items-start gap-8">
+            <div className="flex-1 pr-6">
+              <p className="pdf-page-kicker text-xs uppercase tracking-wider text-slate-400">Document Intelligence</p>
+              <h2 className="pdf-page-title text-2xl font-bold mt-2">PDF Extraction</h2>
+              <p className="pdf-page-copy mt-2 text-sm text-slate-600">
+                Upload a PDF to extract structured rows, browse past uploads, and open the merged table view for each file.
+              </p>
+            </div>
+
+            <div className="pdf-upload-card bg-white rounded-xl p-5 shadow-sm border border-slate-100 w-full md:w-1/3">
+              <p className="pdf-upload-card__label text-xs uppercase tracking-wider text-slate-400">Upload</p>
+              <h3 className="pdf-upload-card__title font-semibold mt-2">Add a new PDF</h3>
+              <p className="pdf-upload-card__copy text-sm text-slate-500">Only PDF files up to 1MB are accepted.</p>
+              <Input
+                ref={fileInputRef}
+                type="file"
+                accept="application/pdf"
+                onChange={onFileChange}
+                className="hidden"
+                style={{ display: "none" }}
+              />
+              <div className="mt-5 flex flex-col gap-3">
+                <Button type="primary" loading={uploading} onClick={openFilePicker} className="w-full">
+                  Upload PDF
+                </Button>
+                <Button type="default" onClick={() => router.push('/pdf/merged')} className="w-full">
+                  Show Extracted Tables
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
       </section>
 
-          </div>
-        </div>
-      </section>
-
-      <section className="pdf-list-card">
-        <div className="pdf-list-card__header">
-          <div>
-            <h3 className="pdf-list-card__title">Uploaded PDFs</h3>
-            <p className="pdf-list-card__subtitle">Track processed files and open a document to see the merged table rows across uploads.</p>
-          </div>
-        </div>
-
-        <PdfList
-          pdfs={pdfs}
-          loading={showInitialLoading}
-          deletingId={deletingId}
-          onView={handleView}
-          onDelete={handleDelete}
-        />
-      </section>
     </StyledPdfPage>
   );
 };
