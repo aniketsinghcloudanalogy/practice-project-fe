@@ -152,7 +152,7 @@ const Page = () => {
             <p className="pdf-page-kicker">Document Intelligence</p>
             <h2 className="pdf-page-title">PDF Extraction</h2>
             <p className="pdf-page-copy">
-              Upload a PDF to extract structured rows, browse past uploads, and jump into each file’s parsed table view.
+              Upload a PDF to extract structured rows, browse past uploads, and open the merged table view for each file.
             </p>
           </div>
 
@@ -188,7 +188,7 @@ const Page = () => {
         <div className="pdf-list-card__header">
           <div>
             <h3 className="pdf-list-card__title">Uploaded PDFs</h3>
-            <p className="pdf-list-card__subtitle">Track the files that have already been processed and inspect their extracted tables.</p>
+            <p className="pdf-list-card__subtitle">Track processed files and open a document to see the merged table rows across uploads.</p>
           </div>
         </div>
 
