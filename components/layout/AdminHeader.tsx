@@ -13,8 +13,8 @@ const AdminHeader = () => {
 
   const handleLogout = async () => {
     const token = session?.accessToken ?? "";
-    await signOut({ redirect: false });
     if (token) { try { await logout(token); } catch {} }
+    await signOut({ redirect: false });
     router.push("/login");
     router.refresh();
   };

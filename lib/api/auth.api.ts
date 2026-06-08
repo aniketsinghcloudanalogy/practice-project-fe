@@ -46,7 +46,7 @@ export const login = async (data: { email: string; password: string }) => {
 
 
 export const logout = async (accessToken: string) => {
-  const res = await api.post("/api/users/logout", null, {
+  const res = await api.post("/api/users/logout", {}, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   return res.data;

@@ -4,25 +4,23 @@ import Google from "next-auth/providers/google";
 import AzureADProvider from "next-auth/providers/azure-ad";
 import { login, oauth, refreshToken } from "../api/auth.api";
 
-const getErrorMessage = (error: unknown) => {
-  if (error instanceof Error) return error.message;
+const REFRESH_BUFFER_MS = 15 * 1000; // refresh 15s before expiry
+const refreshLocks = new Map<string, Promise<{ user: any; accessToken: string }>>();
 
+const getErrorMessage = (error: unknown): string => {
+  // Axios error — extract backend message first
   if (
     error &&
     typeof error === "object" &&
     "response" in error &&
-    error.response &&
-    typeof error.response === "object" &&
-    "data" in error.response &&
-    error.response.data &&
-    typeof error.response.data === "object" &&
-    "message" in error.response.data &&
-    typeof error.response.data.message === "string"
+    (error as any).response?.data?.message
   ) {
-    return error.response.data.message;
+    return (error as any).response.data.message;
   }
 
-  return "Login failed";
+  if (error instanceof Error) return error.message;
+
+  return "Login failed. Please try again.";
 };
 
 // Extract expiry from JWT payload (exp is in seconds); fallback to 1h buffer before now
@@ -65,7 +63,6 @@ export const authOptions: NextAuthOptions = {
 
           return user;
         } catch (error: unknown) {
-          // Pass through specific error messages from backend
           throw new Error(getErrorMessage(error));
         }
       },
@@ -132,19 +129,25 @@ export const authOptions: NextAuthOptions = {
       }
 
       // Already errored — don't retry
-      if (token.error === "RefreshTokenExpired") return token;
+      if (token.error === "RefreshTokenExpired" || token.error === "AccountDeactivated") return token;
 
-      // Token not yet expired — return as-is
-      if (token.accessTokenExpires && Date.now() < (token.accessTokenExpires as number)) {
+      // Token not yet expired (with buffer) — return as-is
+      if (token.accessTokenExpires && Date.now() < (token.accessTokenExpires as number) - REFRESH_BUFFER_MS) {
         return token;
       }
 
-      // Access token expired — try to refresh
+      // Access token expired — try to refresh (per-user deduplicated)
       const userId = token.user?.id;
       if (!userId) return { ...token, error: "RefreshTokenExpired" };
 
       try {
-        const refreshed = await refreshToken(userId);
+        if (!refreshLocks.has(userId)) {
+          refreshLocks.set(
+            userId,
+            refreshToken(userId).finally(() => { refreshLocks.delete(userId); })
+          );
+        }
+        const refreshed = await refreshLocks.get(userId)!;
         return {
           ...token,
           accessToken: refreshed.accessToken,
@@ -152,7 +155,9 @@ export const authOptions: NextAuthOptions = {
           user: { ...token.user, ...refreshed.user },
           error: undefined,
         };
-      } catch {
+      } catch (err: any) {
+        const status = err?.response?.status;
+        if (status === 403) return { ...token, error: "AccountDeactivated" };
         return { ...token, error: "RefreshTokenExpired" };
       }
     },
@@ -169,7 +174,7 @@ export const authOptions: NextAuthOptions = {
 
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60,
+    maxAge: 24 * 60 * 60, // 1 day — matches JWT_REFRESH_EXPIRES_IN_DAYS
   },
 
   secret: process.env.NEXTAUTH_SECRET,

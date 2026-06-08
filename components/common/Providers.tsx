@@ -14,7 +14,7 @@ type ProvidersProps = {
 const Providers = ({ children }: ProvidersProps) => {
   return (
     <ReduxProvider store={store}>
-      <SessionProvider refetchInterval={50} refetchOnWindowFocus={true}>
+      <SessionProvider refetchInterval={0} refetchOnWindowFocus={false}>
         <SessionGuard />
         <MessageStyles />
         {children}

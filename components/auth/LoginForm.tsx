@@ -49,8 +49,7 @@ const LoginForm = () => {
 			})
 
 			if (result?.error) {
-				// Display specific error message from backend
-				setError(result.error || 'Invalid email or password. Please try again.')
+				setError(decodeURIComponent(result.error))
 				return
 			}
 

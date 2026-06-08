@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
   // Performance optimizations
   productionBrowserSourceMaps: false,
   poweredByHeader: false,
-  typescript: { ignoreBuildErrors: true },
+  typescript: { ignoreBuildErrors: false },
   onDemandEntries: {
     maxInactiveAge: 15 * 1000,
     pagesBufferLength: 1,

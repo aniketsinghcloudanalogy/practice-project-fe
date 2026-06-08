@@ -7,7 +7,7 @@ const SessionGuard = () => {
   const { data: session } = useSession();
 
   useEffect(() => {
-    if (session?.error === "RefreshTokenExpired" || session?.error === "RefreshTokenExpired") {
+    if (session?.error === "AccountDeactivated" || session?.error === "RefreshTokenExpired") {
       signOut({ redirect: true, callbackUrl: "/login" });
     }
   }, [session?.error]);
