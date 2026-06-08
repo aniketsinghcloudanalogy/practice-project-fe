@@ -1,0 +1,10 @@
+
+> practice-project@0.1.0 dev
+> cross-env NODE_OPTIONS=--max_old_space_size=4096 next dev
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.31.97:3001
+- Environments: .env
+✓ Ready in 425ms
+[?25h
