@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import message from "@/components/common/Message";
-import PdfList from "@/components/pdf/PdfList";
 import { StyledPdfPage } from "@/components/pdf/PdfPage.styles";
 import {
   useDeletePdfMutation,
@@ -46,6 +45,21 @@ const Page = () => {
   const showInitialLoading = listLoading && pdfs.length === 0;
   const [uploadPdf, { isLoading: uploading }] = useUploadPdfMutation();
   const [deletePdf] = useDeletePdfMutation();
+  const extractedTableCount = pdfs.reduce((count, pdf) => {
+    const extractedData = pdf.extractedData;
+
+    if (extractedData && typeof extractedData === "object" && !Array.isArray(extractedData) && "tables" in extractedData && Array.isArray((extractedData as { tables?: unknown[] }).tables)) {
+      return count + (extractedData as { tables: unknown[] }).tables.length;
+    }
+
+    if (extractedData && typeof extractedData === "object" && !Array.isArray(extractedData) && "columns" in extractedData && "rows" in extractedData) {
+      return count + 1;
+    }
+
+    return count;
+  }, 0);
+
+  const latestUploadLabel = pdfs[0] ? new Date(pdfs[0].createdAt).toLocaleString() : "No uploads yet";
 
   useEffect(() => {
     if (error) {
@@ -106,20 +120,40 @@ const Page = () => {
   return (
     <StyledPdfPage className="mx-auto max-w-7xl px-6 py-6">
       {contextHolder}
-      <section className="pdf-page-hero">
-        <div className="pdf-page-hero__inner">
-          <div>
-            <p className="pdf-page-kicker">Document Intelligence</p>
-            <h2 className="pdf-page-title">PDF Extraction</h2>
-            <p className="pdf-page-copy">
-              Upload a PDF to extract structured rows, browse past uploads, and open the merged table view for each file.
+      <section className="overflow-hidden rounded-[32px] border border-slate-200/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.94))] shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
+        <div className="grid gap-6 p-6 md:p-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+          <div className="space-y-4">
+            <p className="inline-flex rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-700">
+              Extraction Status
             </p>
+            <div className="space-y-3">
+              <h2 className="text-3xl font-semibold tracking-tight text-slate-950 md:text-5xl">All extracted tables in one place</h2>
+              <p className="max-w-2xl text-sm leading-7 text-slate-600 md:text-base">
+                Upload PDFs to keep adding extracted tables. Use the button on the right to open the merged tables screen for the current user.
+                The source filename list has been removed so the interface stays focused on extraction status.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-[24px] border border-slate-200 bg-white px-4 py-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Uploads</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-950">{pdfs.length}</p>
+              </div>
+              <div className="rounded-[24px] border border-slate-200 bg-white px-4 py-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Extracted tables</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-950">{extractedTableCount}</p>
+              </div>
+              <div className="rounded-[24px] border border-slate-200 bg-white px-4 py-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Latest upload</p>
+                <p className="mt-2 text-sm font-medium leading-6 text-slate-950">{latestUploadLabel}</p>
+              </div>
+            </div>
           </div>
 
-          <div className="pdf-upload-card">
-            <p className="pdf-upload-card__label">Upload</p>
-            <h3 className="pdf-upload-card__title">Add a new PDF</h3>
-            <p className="pdf-upload-card__copy">Only PDF files up to 1MB are accepted.</p>
+          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Upload PDF</p>
+            <h3 className="mt-2 text-xl font-semibold text-slate-950">Add more extracted tables</h3>
+            <p className="mt-2 text-sm leading-6 text-slate-500">Only PDF files up to 1MB are accepted.</p>
             <Input
               ref={fileInputRef}
               type="file"
@@ -128,28 +162,16 @@ const Page = () => {
               className="hidden"
               style={{ display: "none" }}
             />
-            <Button type="primary" loading={uploading} onClick={openFilePicker} className="w-full">
-              Upload PDF
-            </Button>
+            <div className="mt-5 flex flex-col gap-3">
+              <Button type="primary" loading={uploading} onClick={openFilePicker} className="w-full">
+                Upload PDF
+              </Button>
+              <Button type="default" onClick={() => router.push('/pdf/merged')} className="w-full">
+                Show Extracted Tables
+              </Button>
+            </div>
           </div>
         </div>
-      </section>
-
-      <section className="pdf-list-card">
-        <div className="pdf-list-card__header">
-          <div>
-            <h3 className="pdf-list-card__title">Uploaded PDFs</h3>
-            <p className="pdf-list-card__subtitle">Track processed files and open a document to see the merged table rows across uploads.</p>
-          </div>
-        </div>
-
-        <PdfList
-          pdfs={pdfs}
-          loading={showInitialLoading}
-          deletingId={deletingId}
-          onView={handleView}
-          onDelete={handleDelete}
-        />
       </section>
     </StyledPdfPage>
   );
