@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import message from "@/components/common/Message";
+import PdfList from "@/components/pdf/PdfList";
 import { StyledPdfPage } from "@/components/pdf/PdfPage.styles";
 import {
   useDeletePdfMutation,
@@ -77,6 +78,7 @@ const Page = () => {
         : "PDF extracted successfully";
 
       messageApi.success(res?.message ? `${res.message} ${summaryText}` : summaryText);
+      messageApi.success(res?.message ?? "PDF extracted successfully");
     } catch (err: unknown) {
       messageApi.error(getErrorMessage(err, "Failed to upload PDF"));
     }
@@ -154,6 +156,20 @@ const Page = () => {
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Upload PDF</p>
             <h3 className="mt-2 text-xl font-semibold text-slate-950">Add more extracted tables</h3>
             <p className="mt-2 text-sm leading-6 text-slate-500">Only PDF files up to 1MB are accepted.</p>
+      <section className="pdf-page-hero">
+        <div className="pdf-page-hero__inner">
+          <div>
+            <p className="pdf-page-kicker">Document Intelligence</p>
+            <h2 className="pdf-page-title">PDF Extraction</h2>
+            <p className="pdf-page-copy">
+              Upload a PDF to extract structured rows, browse past uploads, and jump into each file’s parsed table view.
+            </p>
+          </div>
+
+          <div className="pdf-upload-card">
+            <p className="pdf-upload-card__label">Upload</p>
+            <h3 className="pdf-upload-card__title">Add a new PDF</h3>
+            <p className="pdf-upload-card__copy">Only PDF files up to 1MB are accepted.</p>
             <Input
               ref={fileInputRef}
               type="file"
@@ -172,6 +188,27 @@ const Page = () => {
             </div>
           </div>
         </div>
+      </section>
+
+          </div>
+        </div>
+      </section>
+
+      <section className="pdf-list-card">
+        <div className="pdf-list-card__header">
+          <div>
+            <h3 className="pdf-list-card__title">Uploaded PDFs</h3>
+            <p className="pdf-list-card__subtitle">Track the files that have already been processed and inspect their extracted tables.</p>
+          </div>
+        </div>
+
+        <PdfList
+          pdfs={pdfs}
+          loading={showInitialLoading}
+          deletingId={deletingId}
+          onView={handleView}
+          onDelete={handleDelete}
+        />
       </section>
     </StyledPdfPage>
   );
