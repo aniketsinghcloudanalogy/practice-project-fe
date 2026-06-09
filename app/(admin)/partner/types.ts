@@ -8,7 +8,19 @@ export type PartnerProgramRow = {
 	"Login Script": string;
 }
 
-export type ModalType = 'partner' | 'program' | null
+export type ModalType = 'partner' | 'program' | 'edit-partner' | null;
+
+export type PartnerRow = {
+    Id: number;
+    "External id": number | null;
+    "partner Name": string | null;
+    "parent Partner": string | null;
+    "PM Id": string | null;
+    URL: string | null;
+    Email: string | null;
+}
+
+
 
 export type PartnerFormValues = {
 	'External id': number | null;

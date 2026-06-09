@@ -1,8 +1,7 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
-import { LuClock4, LuPencil, LuTrash2 } from "react-icons/lu";
-import { GoXCircle } from "react-icons/go";
+import {  LuPencil, LuTrash2 } from "react-icons/lu";
 
 import Button from "@/components/common/Button";
 import Form from "@/components/common/Form";
@@ -14,86 +13,6 @@ import Switch from "@/components/common/Switch";
 import { PartnerRow } from "@/lib/api/auth.api";
 import { partnerStats } from "./partner";
 import type { ModalType, PartnerFormValues, PartnerProgramRow, ProgramFormValues } from "./types";
-
-const partnerColumns = [
-  {
-    title: "ID",
-    dataIndex: "Id",
-    key: "Id",
-    width: 90,
-  },
-  {
-    title: "External ID",
-    dataIndex: "External id",
-    key: "External id",
-    width: 150,
-    render: (value: number | null) => value ?? "-",
-  },
-  {
-    title: "Partner Name",
-    dataIndex: "partner Name",
-    key: "partner Name",
-    width: 170,
-    render: (value: string | null) => value ?? "-",
-  },
-  {
-    title: "Parent Partner",
-    dataIndex: "parent Partner",
-    key: "parent Partner",
-    width: 180,
-    render: (value: string | null) => value ?? "-",
-  },
-  {
-    title: "PM ID",
-    dataIndex: "PM Id",
-    key: "PM Id",
-    width: 150,
-    render: (value: string | null) => value ?? "-",
-  },
-  {
-    title: "URL",
-    dataIndex: "URL",
-    key: "URL",
-    width: 170,
-    render: (value: string | null) =>
-      value ? (
-        <a
-          href={value}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-600 hover:underline"
-        >
-          Open
-        </a>
-      ) : (
-        "-"
-      ),
-  },
-  {
-    title: "Email",
-    dataIndex: "Email",
-    key: "Email",
-    width: 210,
-    render: (value: string | null) => value ?? "-",
-  },
-  {
-    title: "Actions",
-    key: "actions",
-    width: 120,
-    render: () => (
-      <div className="flex items-center gap-2">
-        <Button variant="soft" aria-label="Edit partner">
-          <LuPencil size={16} />
-        </Button>
-        <Button variant="soft" aria-label="Delete partner">
-          <LuTrash2 size={16} className="text-red-600" />
-        </Button>
-      </div>
-    ),
-  },
-];
-
-const columns = [Table.EXPAND_COLUMN, ...partnerColumns];
 
 const childColumns = [
   {
@@ -144,6 +63,7 @@ const childColumns = [
   },
 ];
 
+
 const expandedDataSource: Record<number, PartnerProgramRow[]> = {
   1: [
     {
@@ -169,7 +89,7 @@ const expandedDataSource: Record<number, PartnerProgramRow[]> = {
   ],
 };
 
-const dataSource: PartnerRow[] = [
+const initialData: PartnerRow[] = [
   {
     Id: 1,
     "External id": 1001,
@@ -190,9 +110,25 @@ const dataSource: PartnerRow[] = [
   },
 ];
 
+
 export default function PartnerPage() {
+  const [dataSource, setDataSource] = useState<PartnerRow[]>(initialData);
   const [modalType, setModalType] = useState<ModalType>(null);
   const [programVerification, setProgramVerification] = useState(true);
+  const [editingPartner, setEditingPartner] = useState<PartnerRow | null>(null);
+  const [form] = Form.useForm<PartnerFormValues>();
+
+
+  const isPartnerModalOpen = modalType === "partner";
+  const isProgramModalOpen = modalType === "program";
+  const isEditPartnerModalOpen = modalType === "edit-partner";
+
+  const modalTitle =
+    modalType === "partner"
+      ? "Add Partner"
+      : modalType === "edit-partner"
+        ? "Edit Partner"
+        : "Add Partner Program";
 
   const partnerNameOptions = useMemo(
     () =>
@@ -200,17 +136,35 @@ export default function PartnerPage() {
         label: partner["partner Name"] ?? "Unknown partner",
         value: partner["partner Name"] ?? "",
       })),
-    [],
+    [dataSource],
   );
 
-  const isPartnerModalOpen = modalType === "partner";
-  const isProgramModalOpen = modalType === "program";
-
-  const modalTitle = modalType === "partner" ? "Add Partner" : "Add Partner Program";
 
   const closeModal = () => {
     setModalType(null);
+    setEditingPartner(null);
     setProgramVerification(true);
+    form.resetFields();
+  };
+
+
+  const handleEditClick = (record: PartnerRow) => {
+    setEditingPartner(record);
+    setModalType("edit-partner");
+    setTimeout(() => {
+      form.setFieldsValue({
+        "External id": record["External id"],
+        "partner Name": record["partner Name"] ?? "",
+        "parent Partner": record["parent Partner"] ?? "",
+        "PM Id": record["PM Id"] ?? "",
+        URL: record.URL ?? "",
+        Email: record.Email ?? "",
+      });
+    }, 0);
+  };
+
+  const handleDeleteClick = (record: PartnerRow) => {
+    setDataSource((prev) => prev.filter((p) => p.Id !== record.Id));
   };
 
   const handlePartnerSubmit = (values: PartnerFormValues) => {
@@ -218,10 +172,122 @@ export default function PartnerPage() {
     closeModal();
   };
 
+  const handleEditPartnerSubmit = (values: PartnerFormValues) => {
+    if (!editingPartner) return;
+    setDataSource((prev) =>
+      prev.map((p) =>
+        p.Id === editingPartner.Id
+          ? {
+              ...p,
+              "External id": values["External id"],
+              "partner Name": values["partner Name"],
+              "parent Partner": values["parent Partner"],
+              "PM Id": values["PM Id"],
+              URL: values.URL,
+              Email: values.Email,
+            }
+          : p,
+      ),
+    );
+    closeModal();
+  };
+
   const handleProgramSubmit = (values: ProgramFormValues) => {
     console.log("Program form submit", values);
     closeModal();
   };
+
+
+
+  const partnerColumns = [
+    {
+      title: "ID",
+      dataIndex: "Id",
+      key: "Id",
+      width: 90,
+    },
+    {
+      title: "External ID",
+      dataIndex: "External id",
+      key: "External id",
+      width: 150,
+      render: (value: number | null) => value ?? "-",
+    },
+    {
+      title: "Partner Name",
+      dataIndex: "partner Name",
+      key: "partner Name",
+      width: 170,
+      render: (value: string | null) => value ?? "-",
+    },
+    {
+      title: "Parent Partner",
+      dataIndex: "parent Partner",
+      key: "parent Partner",
+      width: 180,
+      render: (value: string | null) => value ?? "-",
+    },
+    {
+      title: "PM ID",
+      dataIndex: "PM Id",
+      key: "PM Id",
+      width: 150,
+      render: (value: string | null) => value ?? "-",
+    },
+    {
+      title: "URL",
+      dataIndex: "URL",
+      key: "URL",
+      width: 170,
+      render: (value: string | null) =>
+        value ? (
+          <a
+            href={value}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline"
+          >
+            Open
+          </a>
+        ) : (
+          "-"
+        ),
+    },
+    {
+      title: "Email",
+      dataIndex: "Email",
+      key: "Email",
+      width: 210,
+      render: (value: string | null) => value ?? "-",
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 120,
+      render: (_: unknown, record: PartnerRow) => (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="soft"
+            aria-label="Edit partner"
+            onClick={() => handleEditClick(record)}
+          >
+            <LuPencil size={16} />
+          </Button>
+          <Button
+            variant="soft"
+            aria-label="Delete partner"
+            onClick={() => handleDeleteClick(record)}
+          >
+            <LuTrash2 size={16} className="text-red-600" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  const columns = [Table.EXPAND_COLUMN, ...partnerColumns];
+
+  // -- Render -----------------------------------------------
 
   return (
     <div className="w-full space-y-6 px-2 sm:px-4 lg:px-6">
@@ -333,8 +399,9 @@ export default function PartnerPage() {
         </div>
       </section>
 
+      {/* ------ Modals ------ */}
       <Modal
-        open={isPartnerModalOpen || isProgramModalOpen}
+        open={isPartnerModalOpen || isProgramModalOpen || isEditPartnerModalOpen}
         onCancel={closeModal}
         title={<span className="text-base font-semibold text-slate-900">{modalTitle}</span>}
         variant="compact"
@@ -342,6 +409,7 @@ export default function PartnerPage() {
         destroyOnHidden
         footer={null}
       >
+        {/* Add Partner */}
         {isPartnerModalOpen && (
           <Form<PartnerFormValues>
             layout="vertical"
@@ -388,6 +456,47 @@ export default function PartnerPage() {
           </Form>
         )}
 
+      
+        {isEditPartnerModalOpen && (
+          <Form<PartnerFormValues>
+            form={form}
+            layout="vertical"
+            onFinish={handleEditPartnerSubmit}
+            className="mt-4"
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Form.Item label="External ID" name="External id">
+                <Input placeholder="Enter external id" />
+              </Form.Item>
+              <Form.Item label="Partner Name" name="partner Name" rules={[{ required: true, message: "Partner name is required" }]}>
+                <Input placeholder="Enter partner name" />
+              </Form.Item>
+              <Form.Item label="Parent Partner" name="parent Partner">
+                <Input placeholder="Enter parent partner" />
+              </Form.Item>
+              <Form.Item label="PM ID" name="PM Id">
+                <Input placeholder="Enter PM ID" />
+              </Form.Item>
+              <Form.Item label="URL" name="URL">
+                <Input placeholder="https://example.com" />
+              </Form.Item>
+              <Form.Item label="Email" name="Email">
+                <Input placeholder="partner@example.com" />
+              </Form.Item>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <Button variant="secondary" htmlType="button" onClick={closeModal}>
+                Cancel
+              </Button>
+              <Button variant="primary" htmlType="submit">
+                Update Partner
+              </Button>
+            </div>
+          </Form>
+        )}
+
+        {/* Add Partner Program (unchanged) */}
         {isProgramModalOpen && (
           <div className="rounded-3xl bg-[#f7fbff] p-1">
             <div className="rounded-[22px] border border-[#dbe6f3] bg-white p-5 shadow-[0_12px_32px_rgba(15,23,42,0.04)] sm:p-6">
@@ -399,7 +508,9 @@ export default function PartnerPage() {
 
               <Form<ProgramFormValues>
                 layout="vertical"
-                onFinish={(values) => handleProgramSubmit({ ...values, "Verification Step": programVerification })}
+                onFinish={(values) =>
+                  handleProgramSubmit({ ...values, "Verification Step": programVerification })
+                }
                 initialValues={{
                   "Partner Program Name": "",
                   Description: "",
@@ -410,7 +521,11 @@ export default function PartnerPage() {
                 className="space-y-5"
               >
                 <div className="flex flex-col gap-4 sm:grid-cols-2">
-                  <Form.Item label="Partner Name" name="Partner Name" rules={[{ required: true, message: "Program name is required" }]}>
+                  <Form.Item
+                    label="Partner Name"
+                    name="Partner Name"
+                    rules={[{ required: true, message: "Program name is required" }]}
+                  >
                     <Select
                       variant="panel"
                       placeholder="Select partner name"
@@ -427,7 +542,6 @@ export default function PartnerPage() {
                   </Form.Item>
                 </div>
 
-                
                 <div className="flex justify-end gap-3 pt-1">
                   <Button variant="secondary" htmlType="button" onClick={closeModal}>
                     Cancel
