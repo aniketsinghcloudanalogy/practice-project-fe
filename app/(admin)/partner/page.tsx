@@ -1,8 +1,9 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
-import {  LuPencil, LuTrash2 } from "react-icons/lu";
+import { LuPencil, LuTrash2 } from "react-icons/lu";
 
+import Drawer from "@/components/common/Drawer";
 import Button from "@/components/common/Button";
 import Form from "@/components/common/Form";
 import Input from "@/components/common/Input";
@@ -15,24 +16,9 @@ import { partnerStats } from "./partner";
 import type { ModalType, PartnerFormValues, PartnerProgramRow, ProgramFormValues } from "./types";
 
 const childColumns = [
-  {
-    title: "ID",
-    dataIndex: "Id",
-    key: "Id",
-    width: 90,
-  },
-  {
-    title: "Partner Program Name",
-    dataIndex: "Partner Program Name",
-    key: "Partner Program Name",
-    width: 220,
-  },
-  {
-    title: "Description",
-    dataIndex: "Description",
-    key: "Description",
-    width: 260,
-  },
+  { title: "ID", dataIndex: "Id", key: "Id", width: 90 },
+  { title: "Partner Program Name", dataIndex: "Partner Program Name", key: "Partner Program Name", width: 220 },
+  { title: "Description", dataIndex: "Description", key: "Description", width: 260 },
   {
     title: "Verification Step",
     dataIndex: "Verification Step",
@@ -40,29 +26,10 @@ const childColumns = [
     width: 170,
     render: (value: boolean) => <Switch variant="compact" defaultChecked={value} />,
   },
-  {
-    title: "Template",
-    dataIndex: "Template",
-    key: "Template",
-    width: 130,
-    render: (value: string) => value,
-  },
-  {
-    title: "Login Template",
-    dataIndex: "Login Template",
-    key: "Login Template",
-    width: 190,
-    render: (value: string) => value,
-  },
-  {
-    title: "Login Script",
-    dataIndex: "Login Script",
-    key: "Login Script",
-    width: 170,
-    render: (value: string) => value,
-  },
+  { title: "Template", dataIndex: "Template", key: "Template", width: 130 },
+  { title: "Login Template", dataIndex: "Login Template", key: "Login Template", width: 190 },
+  { title: "Login Script", dataIndex: "Login Script", key: "Login Script", width: 170 },
 ];
-
 
 const expandedDataSource: Record<number, PartnerProgramRow[]> = {
   1: [
@@ -110,7 +77,6 @@ const initialData: PartnerRow[] = [
   },
 ];
 
-
 export default function PartnerPage() {
   const [dataSource, setDataSource] = useState<PartnerRow[]>(initialData);
   const [modalType, setModalType] = useState<ModalType>(null);
@@ -118,17 +84,9 @@ export default function PartnerPage() {
   const [editingPartner, setEditingPartner] = useState<PartnerRow | null>(null);
   const [form] = Form.useForm<PartnerFormValues>();
 
-
   const isPartnerModalOpen = modalType === "partner";
   const isProgramModalOpen = modalType === "program";
-  const isEditPartnerModalOpen = modalType === "edit-partner";
-
-  const modalTitle =
-    modalType === "partner"
-      ? "Add Partner"
-      : modalType === "edit-partner"
-        ? "Edit Partner"
-        : "Add Partner Program";
+  const isEditDrawerOpen = modalType === "edit-partner";
 
   const partnerNameOptions = useMemo(
     () =>
@@ -139,14 +97,12 @@ export default function PartnerPage() {
     [dataSource],
   );
 
-
   const closeModal = () => {
     setModalType(null);
     setEditingPartner(null);
     setProgramVerification(true);
     form.resetFields();
   };
-
 
   const handleEditClick = (record: PartnerRow) => {
     setEditingPartner(record);
@@ -175,19 +131,7 @@ export default function PartnerPage() {
   const handleEditPartnerSubmit = (values: PartnerFormValues) => {
     if (!editingPartner) return;
     setDataSource((prev) =>
-      prev.map((p) =>
-        p.Id === editingPartner.Id
-          ? {
-              ...p,
-              "External id": values["External id"],
-              "partner Name": values["partner Name"],
-              "parent Partner": values["parent Partner"],
-              "PM Id": values["PM Id"],
-              URL: values.URL,
-              Email: values.Email,
-            }
-          : p,
-      ),
+      prev.map((p) => (p.Id === editingPartner.Id ? { ...p, ...values } : p)),
     );
     closeModal();
   };
@@ -197,15 +141,8 @@ export default function PartnerPage() {
     closeModal();
   };
 
-
-
   const partnerColumns = [
-    {
-      title: "ID",
-      dataIndex: "Id",
-      key: "Id",
-      width: 90,
-    },
+    { title: "ID", dataIndex: "Id", key: "Id", width: 90 },
     {
       title: "External ID",
       dataIndex: "External id",
@@ -241,17 +178,10 @@ export default function PartnerPage() {
       width: 170,
       render: (value: string | null) =>
         value ? (
-          <a
-            href={value}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline"
-          >
+          <a href={value} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
             Open
           </a>
-        ) : (
-          "-"
-        ),
+        ) : "-",
     },
     {
       title: "Email",
@@ -266,18 +196,10 @@ export default function PartnerPage() {
       width: 120,
       render: (_: unknown, record: PartnerRow) => (
         <div className="flex items-center gap-2">
-          <Button
-            variant="soft"
-            aria-label="Edit partner"
-            onClick={() => handleEditClick(record)}
-          >
+          <Button variant="soft" aria-label="Edit partner" onClick={() => handleEditClick(record)}>
             <LuPencil size={16} />
           </Button>
-          <Button
-            variant="soft"
-            aria-label="Delete partner"
-            onClick={() => handleDeleteClick(record)}
-          >
+          <Button variant="soft" aria-label="Delete partner" onClick={() => handleDeleteClick(record)}>
             <LuTrash2 size={16} className="text-red-600" />
           </Button>
         </div>
@@ -287,16 +209,11 @@ export default function PartnerPage() {
 
   const columns = [Table.EXPAND_COLUMN, ...partnerColumns];
 
-  // -- Render -----------------------------------------------
-
   return (
     <div className="w-full space-y-6 px-2 sm:px-4 lg:px-6">
-      {/* Stats */}
       <section>
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-slate-900">
-            Partner Management
-          </h1>
+          <h1 className="text-2xl font-semibold text-slate-900">Partner Management</h1>
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-6">
@@ -304,22 +221,14 @@ export default function PartnerPage() {
             {partnerStats.map((stat, i) => (
               <Fragment key={stat.label}>
                 <div className="flex items-center gap-3">
-                  <div
-                    className={`flex h-12 w-12 items-center justify-center rounded-lg ${stat.bg}`}
-                  >
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${stat.bg}`}>
                     {stat.icon}
                   </div>
-
                   <div>
-                    <p className="m-0 text-2xl font-semibold text-slate-900">
-                      {stat.value}
-                    </p>
-                    <p className="m-0 text-sm text-slate-500">
-                      {stat.label}
-                    </p>
+                    <p className="m-0 text-2xl font-semibold text-slate-900">{stat.value}</p>
+                    <p className="m-0 text-sm text-slate-500">{stat.label}</p>
                   </div>
                 </div>
-
                 {i < partnerStats.length - 1 && (
                   <div className="hidden h-12 w-px bg-slate-200 lg:block" />
                 )}
@@ -329,25 +238,14 @@ export default function PartnerPage() {
         </div>
       </section>
 
-      {/* Table */}
       <section className="mt-6">
         <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-2xl font-semibold text-slate-900">
-            All Partners
-          </h2>
-
+          <h2 className="text-2xl font-semibold text-slate-900">All Partners</h2>
           <div className="flex flex-wrap gap-3">
             <Button variant="secondary" onClick={() => setModalType("partner")}>
               Add Partner
             </Button>
-
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setProgramVerification(true);
-                setModalType("program");
-              }}
-            >
+            <Button variant="secondary" onClick={() => { setProgramVerification(true); setModalType("program"); }}>
               Add Partner Program
             </Button>
           </div>
@@ -360,11 +258,7 @@ export default function PartnerPage() {
               dataSource={dataSource}
               rowKey="Id"
               loading={false}
-              pagination={{
-                pageSize: 5,
-                showSizeChanger: true,
-                size: "small",
-              }}
+              pagination={{ pageSize: 5, showSizeChanger: true, size: "small" }}
               scroll={{ x: 1200 }}
               size="small"
               expandable={{
@@ -399,29 +293,24 @@ export default function PartnerPage() {
         </div>
       </section>
 
-      {/* ------ Modals ------ */}
       <Modal
-        open={isPartnerModalOpen || isProgramModalOpen || isEditPartnerModalOpen}
+        open={isPartnerModalOpen || isProgramModalOpen}
         onCancel={closeModal}
-        title={<span className="text-base font-semibold text-slate-900">{modalTitle}</span>}
+        title={
+          <span className="text-base font-semibold text-slate-900">
+            {isPartnerModalOpen ? "Add Partner" : "Add Partner Program"}
+          </span>
+        }
         variant="compact"
         width={isProgramModalOpen ? "min(920px, 96vw)" : "min(760px, 96vw)"}
         destroyOnHidden
         footer={null}
       >
-        {/* Add Partner */}
         {isPartnerModalOpen && (
           <Form<PartnerFormValues>
             layout="vertical"
             onFinish={handlePartnerSubmit}
-            initialValues={{
-              "External id": null,
-              "partner Name": "",
-              "parent Partner": "",
-              "PM Id": "",
-              URL: "",
-              Email: "",
-            }}
+            initialValues={{ "External id": null, "partner Name": "", "parent Partner": "", "PM Id": "", URL: "", Email: "" }}
             className="mt-4"
           >
             <div className="grid gap-4 sm:grid-cols-2">
@@ -444,95 +333,28 @@ export default function PartnerPage() {
                 <Input placeholder="partner@example.com" />
               </Form.Item>
             </div>
-
             <div className="mt-6 flex justify-end gap-3">
-              <Button variant="secondary" htmlType="button" onClick={closeModal}>
-                Cancel
-              </Button>
-              <Button variant="primary" htmlType="submit">
-                Save Partner
-              </Button>
+              <Button variant="secondary" htmlType="button" onClick={closeModal}>Cancel</Button>
+              <Button variant="primary" htmlType="submit">Save Partner</Button>
             </div>
           </Form>
         )}
 
-      
-        {isEditPartnerModalOpen && (
-          <Form<PartnerFormValues>
-            form={form}
-            layout="vertical"
-            onFinish={handleEditPartnerSubmit}
-            className="mt-4"
-          >
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Form.Item label="External ID" name="External id">
-                <Input placeholder="Enter external id" />
-              </Form.Item>
-              <Form.Item label="Partner Name" name="partner Name" rules={[{ required: true, message: "Partner name is required" }]}>
-                <Input placeholder="Enter partner name" />
-              </Form.Item>
-              <Form.Item label="Parent Partner" name="parent Partner">
-                <Input placeholder="Enter parent partner" />
-              </Form.Item>
-              <Form.Item label="PM ID" name="PM Id">
-                <Input placeholder="Enter PM ID" />
-              </Form.Item>
-              <Form.Item label="URL" name="URL">
-                <Input placeholder="https://example.com" />
-              </Form.Item>
-              <Form.Item label="Email" name="Email">
-                <Input placeholder="partner@example.com" />
-              </Form.Item>
-            </div>
-
-            <div className="mt-6 flex justify-end gap-3">
-              <Button variant="secondary" htmlType="button" onClick={closeModal}>
-                Cancel
-              </Button>
-              <Button variant="primary" htmlType="submit">
-                Update Partner
-              </Button>
-            </div>
-          </Form>
-        )}
-
-        {/* Add Partner Program (unchanged) */}
         {isProgramModalOpen && (
           <div className="rounded-3xl bg-[#f7fbff] p-1">
             <div className="rounded-[22px] border border-[#dbe6f3] bg-white p-5 shadow-[0_12px_32px_rgba(15,23,42,0.04)] sm:p-6">
               <div className="mb-5 border-b border-slate-200 pb-4">
-                <h3 className="mt-1 text-xl font-semibold text-slate-900">
-                  Program Details
-                </h3>
+                <h3 className="mt-1 text-xl font-semibold text-slate-900">Program Details</h3>
               </div>
-
               <Form<ProgramFormValues>
                 layout="vertical"
-                onFinish={(values) =>
-                  handleProgramSubmit({ ...values, "Verification Step": programVerification })
-                }
-                initialValues={{
-                  "Partner Program Name": "",
-                  Description: "",
-                  Template: "",
-                  "Login Template": "",
-                  "Login Script": "",
-                }}
+                onFinish={(values) => handleProgramSubmit({ ...values, "Verification Step": programVerification })}
+                initialValues={{ "Partner Program Name": "", Description: "", Template: "", "Login Template": "", "Login Script": "" }}
                 className="space-y-5"
               >
                 <div className="flex flex-col gap-4 sm:grid-cols-2">
-                  <Form.Item
-                    label="Partner Name"
-                    name="Partner Name"
-                    rules={[{ required: true, message: "Program name is required" }]}
-                  >
-                    <Select
-                      variant="panel"
-                      placeholder="Select partner name"
-                      options={partnerNameOptions}
-                      showSearch
-                      optionFilterProp="label"
-                    />
+                  <Form.Item label="Partner Name" name="Partner Name" rules={[{ required: true, message: "Program name is required" }]}>
+                    <Select variant="panel" placeholder="Select partner name" options={partnerNameOptions} showSearch optionFilterProp="label" />
                   </Form.Item>
                   <Form.Item label="Program Name" name="Program Name">
                     <Input appearance="soft" placeholder="Enter program name" />
@@ -541,20 +363,57 @@ export default function PartnerPage() {
                     <Input.TextArea appearance="soft" placeholder="Enter description" rows={3} />
                   </Form.Item>
                 </div>
-
                 <div className="flex justify-end gap-3 pt-1">
-                  <Button variant="secondary" htmlType="button" onClick={closeModal}>
-                    Cancel
-                  </Button>
-                  <Button variant="primary" htmlType="submit">
-                    Save Program
-                  </Button>
+                  <Button variant="secondary" htmlType="button" onClick={closeModal}>Cancel</Button>
+                  <Button variant="primary" htmlType="submit">Save Program</Button>
                 </div>
               </Form>
             </div>
           </div>
         )}
       </Modal>
+
+      <Drawer
+        variant="sidebar"
+        title={<span className="text-base font-semibold text-slate-900">Edit Partner</span>}
+        placement="right"
+        size={500}
+        open={isEditDrawerOpen}
+        onClose={closeModal}
+        destroyOnHidden
+      >
+        <Form<PartnerFormValues>
+          form={form}
+          layout="vertical"
+          onFinish={handleEditPartnerSubmit}
+          className="mt-4"
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Form.Item label="External ID" name="External id">
+              <Input placeholder="Enter external id" />
+            </Form.Item>
+            <Form.Item label="Partner Name" name="partner Name" rules={[{ required: true, message: "Partner name is required" }]}>
+              <Input placeholder="Enter partner name" />
+            </Form.Item>
+            <Form.Item label="Parent Partner" name="parent Partner">
+              <Input placeholder="Enter parent partner" />
+            </Form.Item>
+            <Form.Item label="PM ID" name="PM Id">
+              <Input placeholder="Enter PM ID" />
+            </Form.Item>
+            <Form.Item label="URL" name="URL">
+              <Input placeholder="https://example.com" />
+            </Form.Item>
+            <Form.Item label="Email" name="Email">
+              <Input placeholder="partner@example.com" />
+            </Form.Item>
+          </div>
+          <div className="mt-6 flex justify-end gap-3">
+            <Button variant="secondary" htmlType="button" onClick={closeModal}>Cancel</Button>
+            <Button variant="primary" htmlType="submit">Update Partner</Button>
+          </div>
+        </Form>
+      </Drawer>
     </div>
   );
 }
