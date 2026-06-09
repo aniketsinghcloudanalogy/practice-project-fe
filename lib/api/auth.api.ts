@@ -85,6 +85,16 @@ export type UserRow = {
   createdAt: string;
 };
 
+export type PartnerRow = {
+  Id: number;
+  "External id": number | null;
+  "partner Name": string | null;
+  "parent Partner": string | null;
+  "PM Id": string | null;
+  URL: string | null;
+  Email: string | null;
+};
+
 type OAuthPayload = {
   user: User;
   account: Account;

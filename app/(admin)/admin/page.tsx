@@ -27,21 +27,20 @@ export default function AdminPage() {
   const [toggling, setToggling] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status === 'loading') return;
+    if (status === "loading") return;
 
     const timerId = window.setTimeout(() => {
       if (!accessToken) {
         setLoading(false);
-        setError('No access token found. Please log in.');
+        setError("No access token found. Please log in.");
         return;
       }
-
       setLoading(true);
       setError(null);
       getUsers(accessToken)
         .then((data) => setUsers(data))
         .catch((error: unknown) => {
-          setError(error instanceof Error ? error.message : 'Failed to fetch users');
+          setError(error instanceof Error ? error.message : "Failed to fetch users");
         })
         .finally(() => setLoading(false));
     }, 0);
@@ -65,57 +64,75 @@ export default function AdminPage() {
       title: "Name",
       dataIndex: "name",
       key: "name",
+      width: 140,
+      ellipsis: true,
       render: (v) => v ?? <span className="text-slate-400 italic">—</span>,
     },
     {
       title: "Email",
       dataIndex: "email",
       key: "email",
+      width: 200,
+      ellipsis: true,
     },
     {
       title: "Role",
       dataIndex: "role",
       key: "role",
+      width: 120,
       filters: [
         { text: "User", value: "USER" },
         { text: "Admin", value: "ADMIN" },
         { text: "Super Admin", value: "SUPER_ADMIN" },
       ],
       onFilter: (value, record) => record.role === value,
-      render: (role) => <Tag variant="status" color={roleColors[role] ?? "default"}>{role}</Tag>,
+      render: (role) => (
+        <Tag variant="status" color={roleColors[role] ?? "default"}>
+          {role}
+        </Tag>
+      ),
     },
     {
       title: "Active",
       dataIndex: "isActive",
       key: "isActive",
+      width: 100,
       filters: [
         { text: "Active", value: true },
         { text: "Inactive", value: false },
       ],
       onFilter: (value, record) => record.isActive === value,
       render: (isActive) => (
-        <Tag variant="status" color={isActive ? "success" : "error"}>{isActive ? "Active" : "Inactive"}</Tag>
+        <Tag variant="status" color={isActive ? "success" : "error"}>
+          {isActive ? "Active" : "Inactive"}
+        </Tag>
       ),
     },
     {
       title: "Joined",
       dataIndex: "createdAt",
       key: "createdAt",
+      width: 110,
+      responsive: ["sm"],
       render: (v) => new Date(v).toLocaleDateString(),
       sorter: (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     },
     {
       title: "Edit",
       key: "action",
+      width: 80,
+      fixed: "right",
       render: (_, record) => {
         const isSelf = record.id === currentUserId;
-        const isAdminTarget = record.role === 'ADMIN' || record.role === 'SUPER_ADMIN';
-        const canToggle = !isSelf && (!isAdminTarget || currentRole === 'SUPER_ADMIN');
+        const isAdminTarget = record.role === "ADMIN" || record.role === "SUPER_ADMIN";
+        const canToggle = !isSelf && (!isAdminTarget || currentRole === "SUPER_ADMIN");
         const tooltipMsg = isSelf
-          ? 'Cannot deactivate yourself'
-          : isAdminTarget && currentRole !== 'SUPER_ADMIN'
-          ? 'Only Super Admin can manage admin accounts'
-          : record.isActive ? 'Deactivate' : 'Activate';
+          ? "Cannot deactivate yourself"
+          : isAdminTarget && currentRole !== "SUPER_ADMIN"
+          ? "Only Super Admin can manage admin accounts"
+          : record.isActive
+          ? "Deactivate"
+          : "Activate";
         return (
           <Tooltip title={tooltipMsg}>
             <Switch
@@ -134,25 +151,29 @@ export default function AdminPage() {
 
   return (
     <section>
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-slate-900">User Management</h1>
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">User Management</h1>
         <p className="mt-1 text-sm text-slate-500">Activate or deactivate users from this panel.</p>
       </div>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-800 text-sm">{error}</p>
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 sm:p-4">
+          <p className="text-sm text-red-800">{error}</p>
         </div>
       )}
 
-      <Table<UserRow>
-        columns={columns}
-        dataSource={users}
-        rowKey="id"
-        loading={loading}
-        pagination={{ pageSize: 10, showSizeChanger: true }}
-        rowClassName={(record) => (!record.isActive ? "opacity-60" : "")}
-      />
+      <div className="w-full overflow-x-auto rounded-xl">
+        <Table<UserRow>
+          columns={columns}
+          dataSource={users}
+          rowKey="id"
+          loading={loading}
+          pagination={{ pageSize: 10, showSizeChanger: true, size: "small" }}
+          rowClassName={(record) => (!record.isActive ? "opacity-60" : "")}
+          scroll={{ x: 600 }}
+          size="middle"
+        />
+      </div>
     </section>
   );
 }

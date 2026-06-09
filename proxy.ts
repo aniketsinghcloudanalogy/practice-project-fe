@@ -1,21 +1,35 @@
 import { withAuth } from "next-auth/middleware";
-import type { NextRequestWithAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
+type Role = "USER" | "ADMIN" | "SUPER_ADMIN";
+
+const ROUTE_ROLES = [
+  { prefix: "/dashboard", allowed: ["USER"] as Role[] },
+  { prefix: "/admin", allowed: ["ADMIN", "SUPER_ADMIN"] as Role[] },
+  { prefix: "/partner", allowed: ["SUPER_ADMIN"] as Role[] },
+  { prefix: "/contact", allowed: ["USER", "ADMIN", "SUPER_ADMIN"] as Role[] },
+];
+
+const REDIRECT: Record<Role, string> = {
+  USER: "/dashboard",
+  ADMIN: "/admin",
+  SUPER_ADMIN: "/admin",
+};
+
 export default withAuth(
-  function middleware(req: NextRequestWithAuth) {
-    const { pathname } = req.nextUrl;
-    const role = req.nextauth.token?.user?.role;
-    const isAdminRole = role === "ADMIN" || role === "SUPER_ADMIN";
+  function middleware(req) {
+    const pathname = req.nextUrl.pathname;
 
-    // ADMIN / SUPER_ADMIN visiting /dashboard → redirect to /admin
-    if (pathname.startsWith("/dashboard") && isAdminRole) {
-      return NextResponse.redirect(new URL("/admin", req.url));
-    }
+    const role = req.nextauth.token?.role as Role | undefined;
 
-    // USER visiting /admin → redirect to /dashboard
-    if (pathname.startsWith("/admin") && !isAdminRole) {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+    const route = ROUTE_ROLES.find((r) =>
+      pathname.startsWith(r.prefix)
+    );
+
+    if (route && role && !route.allowed.includes(role)) {
+      return NextResponse.redirect(
+        new URL(REDIRECT[role], req.url)
+      );
     }
 
     return NextResponse.next();
@@ -31,5 +45,10 @@ export default withAuth(
 );
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*", "/contact/:path*"],
+  matcher: [
+    "/dashboard/:path*",
+    "/admin/:path*",
+    "/partner/:path*",
+    "/contact/:path*",
+  ],
 };

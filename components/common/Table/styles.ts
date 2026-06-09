@@ -25,13 +25,13 @@ export const StyledTableWrapper = styled.div<{ $variant: string }>`
 
 	/* header bottom border */
 	.ant-table-thead > tr > th {
-		border-bottom: 2px solid #e0e0e0;
-		background-color: #f0f2f5 !important;
-		color: #1a1a2e !important;
+		border-bottom: 1px solid #3f6687;
+		background-color: #587d9d !important;
+		color: #ffffff !important;
 		font-size: 13px !important;
 		font-weight: 700 !important;
-		letter-spacing: 0.04em;
-		text-transform: uppercase;
+		letter-spacing: 0.02em;
+		text-transform: none;
 	}
 
 	/* body cell text */
@@ -51,6 +51,20 @@ export const StyledTableWrapper = styled.div<{ $variant: string }>`
 		.ant-table-thead > tr > th,
 		.ant-table-tbody > tr > td {
 			padding: 8px 12px;
+		}
+
+		.ant-pagination {
+			margin-top: 12px;
+			padding-right: 4px;
+		}
+
+		.ant-pagination-prev,
+		.ant-pagination-next {
+			margin: 0 6px;
+		}
+
+		.ant-pagination-item {
+			margin-inline-end: 6px;
 		}
 	`}
 `

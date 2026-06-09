@@ -137,4 +137,30 @@ export const StyledButtonWrapper = styled.div<{ $variant: string }>`
 			color: #0b1220 !important;
 		}
 	`}
+
+	${({ $variant }) =>
+		$variant === 'soft' &&
+		`
+		.ant-btn {
+			width: 38px;
+			height: 38px;
+			padding: 0;
+			border-radius: 12px;
+			background: #ffffff;
+			border-color: #d8e1ed;
+			color: #243b63;
+			box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.ant-btn:hover,
+		.ant-btn:focus {
+			background: #ffffff;
+			border-color: #243b63 !important;
+			color: #243b63 !important;
+			box-shadow: 0 12px 24px rgba(36, 59, 99, 0.12) !important;
+		}
+	`}
 `

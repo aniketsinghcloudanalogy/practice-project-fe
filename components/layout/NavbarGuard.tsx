@@ -12,7 +12,7 @@ export default function NavbarGuard({ children }: Props) {
   const pathname = usePathname() ?? ''
 
   const hideOn = ['/login', '/signup']
-  const shouldHide = hideOn.includes(pathname) || pathname.startsWith('/admin')
+  const shouldHide = hideOn.includes(pathname) || pathname.startsWith('/admin') || pathname.startsWith('/partner')
 
   return (
     <>
