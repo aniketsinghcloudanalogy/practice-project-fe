@@ -30,7 +30,6 @@ const buildColumns = (columns: PdfColumn[]) => {
   }));
 };
 
-<<<<<<< HEAD
 const formatSourceName = (sourceName: string) => {
   return sourceName
     .replace(/\.pdf$/i, "")
@@ -51,8 +50,6 @@ const getDisplayTableTitle = (title: string | null | undefined, sourceFileNames:
   return sourceFileName ? formatSourceName(sourceFileName) : "Untitled table";
 };
 
-=======
->>>>>>> 1cdffa8 (Changed Ui for Upload Button and card)
 const MergedTablesPage = () => {
   const router = useRouter();
   const [messageApi, contextHolder] = message.useMessage();
@@ -104,38 +101,24 @@ const MergedTablesPage = () => {
               <div className="space-y-6">
                 {data.tables.map((table, index) => {
                   const tableColumns = buildColumns(table.columns);
-<<<<<<< HEAD
                   const sourceTableId = table.sourceTableIds?.[0];
                   const displayTitle = getDisplayTableTitle(table.title, table.sourceFileNames ?? []);
-=======
->>>>>>> 1cdffa8 (Changed Ui for Upload Button and card)
 
                   return (
                     <section key={`${table.schemaHash}-${index}`} className="rounded-2xl border border-slate-200 bg-white shadow-sm">
                       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-700">Table {index + 1}</p>
-<<<<<<< HEAD
                           <h3 className="mt-1 text-lg font-semibold text-slate-950">{displayTitle}</h3>
                           <p className="mt-1 text-xs text-slate-500">
                             {table.sourceTableIds.length} source table{table.sourceTableIds.length === 1 ? "" : "s"}
-=======
-                          <h3 className="mt-1 text-lg font-semibold text-slate-950">{table.title || "Untitled table"}</h3>
-                          <p className="mt-1 text-xs text-slate-500">
-                            {table.sourcePdfDocumentIds.length} source PDF{table.sourcePdfDocumentIds.length === 1 ? "" : "s"}
->>>>>>> 1cdffa8 (Changed Ui for Upload Button and card)
                           </p>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
                           <div className="pdf-status-chip">{table.rows.length} rows</div>
                           <Button
-<<<<<<< HEAD
                             onClick={() => sourceTableId && router.push(`/pdf/${sourceTableId}`)}
                             disabled={!sourceTableId}
-=======
-                            onClick={() => router.push(`/pdf/${table.sourcePdfDocumentIds[0]}`)}
-                            disabled={!table.sourcePdfDocumentIds.length}
->>>>>>> 1cdffa8 (Changed Ui for Upload Button and card)
                           >
                             Edit rows / clear table
                           </Button>

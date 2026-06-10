@@ -57,7 +57,11 @@ export type MergedExtractedTable = {
 	schemaHash: string
 	columns: PdfColumn[]
 	rows: Record<string, any>[]
+<<<<<<< HEAD
 	sourceFileNames: string[]
+=======
+	sourcePdfDocumentIds: string[]
+>>>>>>> 9ba38f3 (Enabled Particular table edit feature)
 	sourceTableIds: string[]
 }
 

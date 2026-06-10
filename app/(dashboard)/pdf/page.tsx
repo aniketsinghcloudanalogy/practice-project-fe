@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import message from "@/components/common/Message";
-import PdfList from "@/components/pdf/PdfList";
 import { StyledPdfPage } from "@/components/pdf/PdfPage.styles";
 import {
   useDeletePdfTableMutation,
@@ -150,13 +149,13 @@ const Page = () => {
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Upload PDF</p>
         <h3 className="mt-2 text-xl font-semibold text-slate-950">Add more extracted tables</h3>
         <p className="mt-2 text-sm leading-6 text-slate-500">Only PDF files up to 1MB are accepted.</p>
-        <section className="pdf-page-hero bg-gradient-to-b from-white to-slate-50 p-8 rounded-2xl border border-slate-100 mt-4">
+        <section className="pdf-page-hero bg-linear-to-b from-white to-slate-50 p-8 rounded-2xl border border-slate-100 mt-4">
           <div className="pdf-page-hero__inner flex flex-col md:flex-row items-start gap-8">
             <div className="flex-1 pr-6">
               <p className="pdf-page-kicker text-xs uppercase tracking-wider text-slate-400">Document Intelligence</p>
               <h2 className="pdf-page-title text-2xl font-bold mt-2">PDF Extraction</h2>
               <p className="pdf-page-copy mt-2 text-sm text-slate-600">
-                Upload a PDF to extract structured rows, browse past uploads, and open the merged table view for each file.
+                Upload a PDF to extract structured rows, browse saved tables, and open the merged table view for grouped schemas.
               </p>
             </div>
 
