@@ -1,5 +1,6 @@
 export {
 	ArrowLeftOutlined,
+	PlusOutlined,
 	CloseOutlined,
 	ClockCircleOutlined,
 	CustomerServiceOutlined,

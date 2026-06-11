@@ -35,6 +35,7 @@ export type PdfTableRow = Record<string, any> & {
 	id: string
 	rowIndex?: number | null
 	rowHash?: string
+	isDeleted?: boolean
 }
 
 export type PdfTable = {
@@ -45,6 +46,7 @@ export type PdfTable = {
 	tableHash: string
 	columns: PdfColumn[]
 	rows: PdfTableRow[]
+	isDeleted?: boolean
 }
 
 export type MergedExtractedTable = {
@@ -81,6 +83,7 @@ export type PdfDocument = {
 	extractedData: ExtractedData | null
 	createdAt: string
 	updatedAt: string
+	isDeleted?: boolean
 }
 
 export type UploadPdfSummary = {
@@ -121,6 +124,20 @@ export type UpdatePdfTableRowPayload = {
 	tableId: string
 	rowId: string
 	rowData: Record<string, any>
+}
+
+export type BulkUpdatePdfTableRowsPayload = {
+	tableId: string
+	updates: {
+		rowId: string
+		rowData: Record<string, unknown>
+	}[]
+}
+
+export type BulkUpdatePdfTableRowsResponse = {
+	success: boolean
+	updatedCount: number
+	table: PdfTable
 }
 
 export type ApiResponse<T> = {

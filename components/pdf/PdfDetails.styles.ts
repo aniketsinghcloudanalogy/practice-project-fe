@@ -23,12 +23,17 @@ export const StyledPdfDetailsPage = styled.div`
     gap: 10px;
   }
 
+  .pdf-icon-button.ant-btn {
+    min-width: 42px;
+    padding-inline: 10px;
+  }
+
   .pdf-row-actions {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
-    gap: 8px;
-    white-space: nowrap;
+    justify-content: center;
+    gap: 6px;
   }
 
   .pdf-row-actions .ant-btn {
@@ -200,6 +205,11 @@ export const StyledPdfDetailsPage = styled.div`
 
   .pdf-structured-table .pdf-actions-cell {
     white-space: nowrap;
+    text-align: center !important;
+  }
+
+  .pdf-structured-table .ant-table-thead th:last-child {
+    text-align: center !important;
   }
 
   .pdf-structured-table .ant-table-tbody > tr.pdf-editing-row > td {
@@ -254,6 +264,76 @@ export const StyledPdfDetailsPage = styled.div`
     margin-top: 16px;
     padding-top: 16px;
     border-top: 1px solid #e2e8f0;
+  }
+
+  .pdf-bulk-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .pdf-bulk-edit-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .pdf-bulk-edit-hint {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #64748b;
+  }
+
+  .pdf-bulk-edit-selected-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .pdf-bulk-edit-row {
+    display: grid;
+    grid-template-columns: minmax(220px, 260px) minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: end;
+    padding: 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  }
+
+  .pdf-bulk-edit-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .pdf-bulk-edit-field label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+  }
+
+  .pdf-bulk-edit-field .ant-select,
+  .pdf-bulk-edit-field .ant-input {
+    width: 100%;
+  }
+
+  .pdf-bulk-edit-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .pdf-bulk-edit-empty {
+    padding: 18px 16px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 16px;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 13px;
   }
 
   .pdf-structured-table .ant-table-pagination {

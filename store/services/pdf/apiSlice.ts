@@ -12,14 +12,28 @@ import type {
     UpdatePdfTablePayload,
     CreatePdfTableRowPayload,
     UpdatePdfTableRowPayload,
+    BulkUpdatePdfTableRowsPayload,
+    BulkUpdatePdfTableRowsResponse,
 } from '../types'
+
+const isSoftDeleted = (entity: { isDeleted?: boolean } | null | undefined) => Boolean(entity?.isDeleted)
+
+const filterActiveRows = (rows: PdfTable['rows']) => rows.filter((row) => !isSoftDeleted(row))
+
+const filterActiveTables = (tables: PdfTable[]) =>
+    tables
+        .filter((table) => !isSoftDeleted(table))
+        .map((table) => ({
+            ...table,
+            rows: filterActiveRows(table.rows),
+        }))
 
 export const pdfApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         getUserPdfs: builder.query<PdfDocument[], void>({
             query: () => 'api/pdfs',
             keepUnusedDataFor: 300,
-            transformResponse: (response: ApiResponse<PdfDocument[]>) => response.data,
+            transformResponse: (response: ApiResponse<PdfDocument[]>) => response.data.filter((pdf) => !isSoftDeleted(pdf)),
             providesTags: (result) =>
                 result
                     ? [
@@ -36,7 +50,7 @@ export const pdfApi = baseApi.injectEndpoints({
         getPdfTables: builder.query<PdfTable[], string>({
             query: (id) => `api/pdfs/${id}/tables`,
             keepUnusedDataFor: 300,
-            transformResponse: (response: ApiResponse<PdfTable[]>) => response.data,
+            transformResponse: (response: ApiResponse<PdfTable[]>) => filterActiveTables(response.data),
             providesTags: (result, _error, id) =>
                 result
                     ? [
@@ -150,6 +164,19 @@ export const pdfApi = baseApi.injectEndpoints({
                 ...(result?.data?.pdfDocumentId ? [{ type: 'Pdfs' as const, id: `PDF-${result.data.pdfDocumentId}` }] : []),
             ],
         }),
+        bulkUpdateRows: builder.mutation<BulkUpdatePdfTableRowsResponse, BulkUpdatePdfTableRowsPayload>({
+            query: ({ tableId, updates }) => ({
+                url: `api/pdfs/tables/${tableId}/rows/bulk`,
+                method: 'PATCH',
+                body: { updates },
+            }),
+            invalidatesTags: (result, _error, arg) => [
+                { type: 'Pdfs' as const, id: `TABLES-${result?.table?.pdfDocumentId ?? arg.tableId}` },
+                { type: 'Pdfs' as const, id: 'MERGED' },
+                ...(result?.table?.pdfDocumentId ? [{ type: 'Pdfs' as const, id: `PDF-${result.table.pdfDocumentId}` }] : []),
+                ...(result?.table?.id ? [{ type: 'Pdfs' as const, id: result.table.id }] : []),
+            ],
+        }),
         deletePdfTableRow: builder.mutation<ApiResponse<Record<string, any>>, { tableId: string; rowId: string }>({
             query: ({ tableId, rowId }) => ({
                 url: `api/pdfs/tables/${tableId}/rows/${rowId}`,
@@ -196,7 +223,7 @@ export const pdfApi = baseApi.injectEndpoints({
             invalidatesTags: (_result, _error, id) => [{ type: 'Pdfs' as const, id }],
         }),
     }),
-    overrideExisting: false,
+    overrideExisting: true,
 })
 
 export const {
@@ -211,6 +238,7 @@ export const {
     useDeletePdfTableMutation,
     useCreatePdfTableRowMutation,
     useUpdatePdfTableRowMutation,
+    useBulkUpdateRowsMutation,
     useDeletePdfTableRowMutation,
     useClearPdfTableRowsMutation,
     useDeletePdfMutation,

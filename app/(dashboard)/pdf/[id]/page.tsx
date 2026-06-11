@@ -1,17 +1,20 @@
 "use client";
 
-import  { useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeftOutlined, CloseOutlined, DeleteOutlined, EditOutlined, FilePdfOutlined, SaveOutlined } from "@/components/common/antd/icons";
+import { ArrowLeftOutlined, CloseOutlined, DeleteOutlined, EditOutlined, FilePdfOutlined, PlusOutlined, SaveOutlined } from "@/components/common/antd/icons";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
+import Select from "@/components/common/Select";
 import Table from "@/components/common/Table";
+import type { ColumnsType } from "@/components/common/antd/Table";
 import message from "@/components/common/Message";
 import Modal from "@/components/common/Modal";
 import { StyledPdfDetailsPage } from "@/components/pdf/PdfDetails.styles";
 import {
 	useClearPdfTableRowsMutation,
 	useCreatePdfTableRowMutation,
+	useBulkUpdateRowsMutation,
 	useDeletePdfTableMutation,
 	useDeletePdfTableRowMutation,
 	useDeletePdfMutation,
@@ -35,11 +38,23 @@ type EditableTableGroup = {
 	tableHash: string;
 };
 
+type BulkEditDrafts = Record<
+  string,
+  Record<string, string>
+>;
+
+
+type BulkEditFieldDraft = {
+	id: string;
+	columnKey: string | null;
+	value: string;
+};
+
 const EMPTY_PDF_TABLES: PdfTable[] = [];
 
-const inferColumnsFromRows = (rows: Record<string, any>[] = []): PdfColumn[] => {
+const inferColumnsFromRows = (rows: Record<string, unknown>[] = []): PdfColumn[] => {
 	const keys = new Set<string>();
-	const ignoredKeys = new Set(["__rowKey", "__isNew", "id", "rowIndex", "rowHash", "pdfDocumentId", "tableId"]);
+	const ignoredKeys = new Set(["__rowKey", "__isNew", "id", "rowIndex", "rowHash", "pdfDocumentId", "tableId", "isDeleted"]);
 
 	rows.forEach((row) => {
 		Object.keys(row).forEach((key) => {
@@ -60,10 +75,12 @@ const inferColumnsFromRows = (rows: Record<string, any>[] = []): PdfColumn[] => 
 };
 
 const buildEditableRows = (rows: PdfTableRow[] | undefined): EditableRow[] =>
-	(rows ?? []).map((row, index) => ({
-		...row,
-		__rowKey: String(row.id ?? index),
-	}));
+	(rows ?? [])
+		.filter((row) => !row.isDeleted)
+		.map((row, index) => ({
+			...row,
+			__rowKey: String(row.id ?? index),
+		}));
 
 const stripEditableRowKey = (row: EditableRow) => {
 	const { __rowKey, __isNew, id, rowIndex, rowHash, ...rest } = row;
@@ -75,7 +92,9 @@ const getTableTitle = (table: PdfTable, index: number) => {
 };
 
 const buildTableGroups = (tables: PdfTable[] | undefined): EditableTableGroup[] => {
-	return (tables ?? []).map((table, tableIndex) => {
+	return (tables ?? [])
+		.filter((table) => !table.isDeleted)
+		.map((table, tableIndex) => {
 		const rows = buildEditableRows(table.rows).map((row, rowIndex) => ({
 			...row,
 			__rowKey: `table-${tableIndex + 1}:${row.__rowKey || rowIndex}`,
@@ -125,6 +144,48 @@ const renderCell = (value: unknown) => {
 	return <span className="text-slate-700">{String(value)}</span>;
 };
 
+const getRowIdentity = (row: EditableRow) => row.id;
+
+const getColumnFieldName = (column: PdfColumn) => column.key?.trim() || column.title.trim();
+
+const createBulkEditField = (columnKey: string | null = null): BulkEditFieldDraft => ({
+	id: `bulk-field-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+	columnKey,
+	value: "",
+});
+
+const getRowLabel = (row: EditableRow, index: number) => (row.rowIndex != null ? `Row ${row.rowIndex}` : `Row ${index + 1}`);
+
+const buildBulkEditDrafts = (tableGroup: EditableTableGroup, rowIds: string[]): BulkEditDrafts => {
+	return rowIds.reduce<BulkEditDrafts>((drafts, rowId) => {
+		const row = tableGroup.rows.find((candidate) => candidate.id === rowId);
+		if (!row) {
+			return drafts;
+		}
+
+		drafts[rowId] = tableGroup.columns.reduce<Record<string, string>>((rowDraft, column) => {
+			const fieldName = getColumnFieldName(column);
+			const value = row[column.key];
+			rowDraft[fieldName] = value === null || value === undefined ? "" : String(value);
+			return rowDraft;
+		}, {});
+
+		return drafts;
+	}, {});
+};
+
+const isEmptyModalValue = (value: unknown) => {
+	if (value === null || value === undefined) {
+		return true;
+	}
+
+	if (typeof value === "string") {
+		return value.trim() === "";
+	}
+
+	return false;
+};
+
 const isBlankRow = (row: EditableRow, columns: PdfColumn[]) => {
 	return columns.every((column) => {
 		const value = row[column.key];
@@ -157,6 +218,7 @@ const PdfDetailsPage = () => {
 	const pdfTables = pdfTablesData ?? EMPTY_PDF_TABLES;
 	const [createPdfTableRow, { isLoading: creatingRow }] = useCreatePdfTableRowMutation();
 	const [updatePdfTableRow, { isLoading: savingExtractedRow }] = useUpdatePdfTableRowMutation();
+	const [bulkUpdateRows, { isLoading: bulkUpdatingRows }] = useBulkUpdateRowsMutation();
 	const [deletePdfTableRow] = useDeletePdfTableRowMutation();
 	const [clearPdfTableRows] = useClearPdfTableRowsMutation();
 	const [deletePdfTable] = useDeletePdfTableMutation();
@@ -170,8 +232,16 @@ const PdfDetailsPage = () => {
 	const [deleteTableTargetId, setDeleteTableTargetId] = useState<string | null>(null);
 	const [deleteRowTarget, setDeleteRowTarget] = useState<{ tableId: string; rowId: string; rowKey: string } | null>(null);
 	const [deletePdfOpen, setDeletePdfOpen] = useState(false);
+	const [bulkEditTableId, setBulkEditTableId] = useState<string | null>(null);
+	const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
+	const [rowSelectionMode, setRowSelectionMode] = useState(false);
+	const [bulkEditModalOpen, setBulkEditModalOpen] = useState(false);
+	const [bulkEditDrafts, setBulkEditDrafts] = useState<BulkEditDrafts>({});
+	const [bulkEditFields, setBulkEditFields] = useState<BulkEditFieldDraft[]>([]);
+	const newRowIdRef = useRef(0);
 	const isPageLoading = loading || tablesLoading;
 
+	/* eslint-disable react-hooks/set-state-in-effect */
 	useEffect(() => {
 		if (error) {
 			messageApi.error("Failed to fetch PDF");
@@ -186,7 +256,44 @@ const PdfDetailsPage = () => {
 		setEditingRowKey(null);
 		setSavingRowKey(null);
 		setDeletingRowKey(null);
+		setSelectedRowKeys([]);
+		setBulkEditTableId(null);
+		setRowSelectionMode(false);
+		setBulkEditModalOpen(false);
+		setBulkEditFields([]);
 	}, [pdfTables]);
+
+	useEffect(() => {
+		setSelectedRowKeys([]);
+		setBulkEditTableId(null);
+		setRowSelectionMode(false);
+		setBulkEditModalOpen(false);
+		setBulkEditFields([]);
+	}, [selectedTableId]);
+	/* eslint-enable react-hooks/set-state-in-effect */
+
+	useEffect(() => {
+		if (pdf?.isDeleted) {
+			messageApi.info("This PDF has been deleted.");
+			router.replace("/pdf");
+		}
+	}, [messageApi, pdf, router]);
+
+	useEffect(() => {
+		if (!selectedTableId) {
+			return;
+		}
+
+		const targetHeading = document.getElementById(`pdf-table-heading-${selectedTableId}`);
+		if (!targetHeading) {
+			return;
+		}
+
+		const headerOffset = 96;
+		const targetTop = targetHeading.getBoundingClientRect().top + window.scrollY - headerOffset;
+
+		window.scrollTo({ top: targetTop, behavior: "smooth" });
+	}, [selectedTableId, tableGroups]);
 
 	const handleSaveRow = async (tableKey: string, rowKey: string) => {
 		if (!pdf) return;
@@ -195,7 +302,7 @@ const PdfDetailsPage = () => {
 		if (!tableGroup) return;
 		if (!canEditTable(tableGroup.id)) return;
 
-		const targetRow = tableGroup.rows.find((row) => row.__rowKey === rowKey);
+		const targetRow = tableGroup.rows.find((row) => getRowIdentity(row) === rowKey);
 		if (!targetRow) return;
 
 		for (const column of tableGroup.columns) {
@@ -225,7 +332,7 @@ const PdfDetailsPage = () => {
 			}
 			await refetchTables();
 			setEditingRowKey(null);
-		} catch (mutationError: any) {
+		} catch (mutationError: unknown) {
 			messageApi.error(getErrorMessage(mutationError, "Failed to update row"));
 		} finally {
 			setSavingRowKey(null);
@@ -240,7 +347,8 @@ const PdfDetailsPage = () => {
 	const handleAddRow = (tableKey: string) => {
 		if (!canEditTable(tableKey)) return;
 
-		const tempKey = `new-${Date.now()}`;
+		newRowIdRef.current += 1;
+		const tempKey = `new-${newRowIdRef.current}`;
 
 		setTableGroups((currentGroups) =>
 			currentGroups.map((currentGroup) => {
@@ -268,6 +376,125 @@ const PdfDetailsPage = () => {
 		setEditingRowKey(tempKey);
 	};
 
+	const handleBulkSelectionChange = (tableId: string, nextSelectedRowKeys: React.Key[]) => {
+		const nextKeys = nextSelectedRowKeys.map((key) => String(key));
+		const hasSelection = nextKeys.length > 0;
+		const tableChanged = bulkEditTableId !== null && bulkEditTableId !== tableId;
+
+		setSelectedRowKeys(nextKeys);
+		setBulkEditTableId(hasSelection ? tableId : null);
+
+		if (!hasSelection || tableChanged) {
+			setBulkEditModalOpen(false);
+			setBulkEditDrafts({});
+		}
+	};
+
+	const handleStartRowSelection = (tableId: string) => {
+		setBulkEditTableId(tableId);
+		setSelectedRowKeys([]);
+		setRowSelectionMode(true);
+		setBulkEditModalOpen(false);
+		setBulkEditDrafts({});
+	};
+
+	const handleStopRowSelection = () => {
+		setRowSelectionMode(false);
+		setSelectedRowKeys([]);
+		setBulkEditTableId(null);
+		setBulkEditModalOpen(false);
+		setBulkEditDrafts({});
+	};
+
+	const handleOpenBulkEdit = (tableId: string) => {
+		const tableGroup = tableGroups.find((group) => group.id === tableId);
+		if (!tableGroup) {
+			return;
+		}
+
+		setBulkEditTableId(tableId);
+		setBulkEditDrafts(buildBulkEditDrafts(tableGroup, selectedRowKeys));
+		setBulkEditModalOpen(true);
+	};
+
+	const handleCloseBulkEdit = () => {
+		setBulkEditModalOpen(false);
+		setBulkEditDrafts({});
+	};
+
+	const handleSubmitBulkEdit = async () => {
+		if (!bulkEditTableId || selectedRowKeys.length === 0) {
+			return;
+		}
+
+		const tableGroup = tableGroups.find((group) => group.id === bulkEditTableId);
+		if (!tableGroup) {
+			return;
+		}
+
+		const updates: { rowId: string; rowData: Record<string, unknown> }[] = [];
+
+		for (const row of tableGroup.rows) {
+			if (!selectedRowKeys.includes(row.id)) {
+				continue;
+			}
+
+			const draft = bulkEditDrafts[row.id] ?? {};
+			const rowData: Record<string, unknown> = {};
+
+			for (const column of tableGroup.columns) {
+				const fieldName = getColumnFieldName(column);
+				const value = draft[fieldName];
+
+				if (isEmptyModalValue(value)) {
+					continue;
+				}
+
+				if (column.dataType === "number") {
+					const nextNumber = Number(value);
+					if (Number.isNaN(nextNumber)) {
+						messageApi.error(`${column.title} must be a valid number.`);
+						return;
+					}
+
+					if (Number(row[column.key]) !== nextNumber) {
+						rowData[fieldName] = nextNumber;
+					}
+
+					continue;
+				}
+
+				if (String(row[column.key] ?? "") !== value) {
+					rowData[fieldName] = value;
+				}
+			}
+
+			if (Object.keys(rowData).length > 0) {
+				updates.push({ rowId: row.id, rowData });
+			}
+		}
+
+		if (updates.length === 0) {
+			messageApi.error("Enter at least one value before bulk updating rows.");
+			return;
+		}
+
+		try {
+			await bulkUpdateRows({
+				tableId: tableGroup.id,
+				updates,
+			}).unwrap();
+			messageApi.success("Rows updated successfully");
+			handleCloseBulkEdit();
+			setSelectedRowKeys([]);
+			setBulkEditTableId(null);
+			setRowSelectionMode(false);
+			await refetchTables();
+		} catch (mutationError: unknown) {
+			messageApi.error(getErrorMessage(mutationError, "Failed to bulk update rows"));
+		}
+	};
+
 	const handleRowFieldChange = (
 		tableKey: string,
 		rowKey: string,
@@ -278,18 +505,20 @@ const PdfDetailsPage = () => {
 			column.dataType === "number" ? (rawValue === "" ? "" : Number(rawValue)) : rawValue;
 
 		setTableGroups((currentGroups) =>
-			currentGroups.map((currentGroup) =>
-				currentGroup.key !== tableKey
-					? currentGroup
-					: {
-							...currentGroup,
-							rows: currentGroup.rows.map((currentRow) =>
-								currentRow.__rowKey === rowKey
-									? { ...currentRow, [column.key]: nextValue }
-									: currentRow,
-							),
-						},
-			),
+			currentGroups.map((currentGroup) => {
+				if (currentGroup.key !== tableKey) {
+					return currentGroup;
+				}
+
+				return {
+					...currentGroup,
+					rows: currentGroup.rows.map((currentRow) =>
+						getRowIdentity(currentRow) === rowKey
+							? { ...currentRow, [column.key]: nextValue }
+							: currentRow,
+					),
+				};
+			}),
 		);
 	};
 
@@ -298,15 +527,15 @@ const PdfDetailsPage = () => {
 			<div className="pdf-row-edit-grid">
 				{group.columns.map((column, columnIndex) => (
 					<div key={column.key} className="pdf-row-edit-field">
-						<label htmlFor={`${record.__rowKey}-${column.key}`}>{column.title}</label>
+						<label htmlFor={`${record.id}-${column.key}`}>{column.title}</label>
 						<Input
-							id={`${record.__rowKey}-${column.key}`}
+							id={`${record.id}-${column.key}`}
 							type={column.dataType === "number" ? "number" : "text"}
 							size="middle"
 							value={record[column.key] ?? ""}
 							autoFocus={columnIndex === 0}
 							onChange={(event) =>
-								handleRowFieldChange(group.key, record.__rowKey, column, event.target.value)
+								handleRowFieldChange(group.key, record.id, column, event.target.value)
 							}
 						/>
 					</div>
@@ -316,8 +545,8 @@ const PdfDetailsPage = () => {
 				<Button
 					variant="primary"
 					icon={<SaveOutlined />}
-					loading={savingRowKey === record.__rowKey || creatingRow || savingExtractedRow}
-					onClick={() => void handleSaveRow(group.key, record.__rowKey)}
+					loading={savingRowKey === record.id || creatingRow || savingExtractedRow}
+					onClick={() => void handleSaveRow(group.key, record.id)}
 				>
 					{record.__isNew ? 'Create row' : 'Save changes'}
 				</Button>
@@ -335,7 +564,7 @@ const PdfDetailsPage = () => {
 		if (!tableGroup) return;
 		if (!canEditTable(tableGroup.id)) return;
 
-		const targetRow = tableGroup.rows.find((row) => row.__rowKey === rowKey);
+		const targetRow = tableGroup.rows.find((row) => getRowIdentity(row) === rowKey);
 		if (!targetRow) return;
 
 		if (targetRow.__isNew) {
@@ -345,7 +574,7 @@ const PdfDetailsPage = () => {
 						? currentGroup
 						: {
 							...currentGroup,
-							rows: currentGroup.rows.filter((row) => row.__rowKey !== rowKey),
+							rows: currentGroup.rows.filter((row) => getRowIdentity(row) !== rowKey),
 						},
 				),
 			);
@@ -369,7 +598,7 @@ const PdfDetailsPage = () => {
 	const handleSelectTable = (tableId: string, rowKey?: string) => {
 		if (!pdfId) return;
 
-		router.push(`/pdf/${pdfId}?tableId=${tableId}`);
+		router.push(`/pdf/${pdfId}?tableId=${tableId}`, { scroll: false });
 		setEditingRowKey(rowKey ?? null);
 	};
 
@@ -377,6 +606,15 @@ const PdfDetailsPage = () => {
 		if (!pdf) return;
 		setDeletePdfOpen(true);
 	};
+
+	const activeBulkTableGroup = bulkEditTableId
+		? tableGroups.find((group) => group.id === bulkEditTableId) ?? null
+		: null;
+	const activeBulkRows = activeBulkTableGroup
+		? selectedRowKeys
+				.map((rowId) => activeBulkTableGroup.rows.find((row) => row.id === rowId))
+				.filter((row): row is EditableRow => Boolean(row))
+		: [];
 
 	const hasStructuredData = tableGroups.length > 0;
 
@@ -411,9 +649,7 @@ const PdfDetailsPage = () => {
 						</div>
 
 						<div className="pdf-detail-actions">
-							<Button variant="danger" icon={<DeleteOutlined />} onClick={handleDeletePdf} disabled={!pdf}>
-								Delete PDF
-							</Button>
+							<Button variant="danger-light" icon={<DeleteOutlined />} onClick={handleDeletePdf} disabled={!pdf} />
 						</div>
 					</div>
 
@@ -437,7 +673,7 @@ const PdfDetailsPage = () => {
 									setEditingRowKey(null);
 								}
 								setDeleteRowTarget(null);
-							} catch (mutationError: any) {
+							} catch (mutationError: unknown) {
 								messageApi.error(getErrorMessage(mutationError, "Failed to delete row"));
 							} finally {
 								setDeletingRowKey(null);
@@ -459,7 +695,7 @@ const PdfDetailsPage = () => {
 								await refetchTables();
 								messageApi.success("Table rows cleared successfully");
 								setClearTableTargetId(null);
-							} catch (mutationError: any) {
+							} catch (mutationError: unknown) {
 								messageApi.error(getErrorMessage(mutationError, "Failed to clear extracted data"));
 							}
 						}}
@@ -479,7 +715,7 @@ const PdfDetailsPage = () => {
 								await refetchTables();
 								messageApi.success("Table deleted successfully");
 								setDeleteTableTargetId(null);
-							} catch (mutationError: any) {
+							} catch (mutationError: unknown) {
 								messageApi.error(getErrorMessage(mutationError, "Failed to delete table"));
 							}
 						}}
@@ -499,12 +735,89 @@ const PdfDetailsPage = () => {
 								messageApi.success(response.message || "PDF deleted successfully");
 								router.push("/pdf");
 								setDeletePdfOpen(false);
-							} catch (mutationError: any) {
+							} catch (mutationError: unknown) {
 								messageApi.error(getErrorMessage(mutationError, "Failed to delete PDF"));
 							}
 						}}
 						onCancel={() => setDeletePdfOpen(false)}
 					/>
+
+					<Modal
+						open={bulkEditModalOpen}
+						title={
+							activeBulkTableGroup
+								? `Bulk Edit ${selectedRowKeys.length} row${selectedRowKeys.length === 1 ? "" : "s"}`
+								: "Bulk Edit"
+						}
+						okText="Apply changes"
+						cancelText="Cancel"
+						confirmLoading={bulkUpdatingRows}
+						onOk={() => void handleSubmitBulkEdit()}
+						onCancel={handleCloseBulkEdit}
+						width="92vw"
+						styles={{ body: { padding: 20 } }}
+						destroyOnHidden
+					>
+						{activeBulkTableGroup ? (
+							<div className="max-h-[72vh] overflow-auto rounded-2xl border border-slate-200 bg-slate-50">
+								<div
+									className="min-w-max"
+									style={{ gridTemplateColumns: `260px repeat(${activeBulkRows.length}, minmax(280px, 1fr))` }}
+								>
+									<div className="grid sticky top-0 z-30 border-b border-slate-200 bg-slate-100" style={{ gridTemplateColumns: `260px repeat(${activeBulkRows.length}, minmax(280px, 1fr))` }}>
+										<div className="sticky left-0 z-40 border-r border-slate-200 bg-slate-100 px-5 py-4 text-sm font-semibold text-slate-700">
+											Field
+										</div>
+										{activeBulkRows.map((row, index) => (
+											<div key={row.id} className="border-r border-slate-200 bg-slate-100 px-5 py-4">
+												<p className="text-sm font-semibold text-slate-900">{getRowLabel(row, index)}</p>
+											</div>
+										))}
+									</div>
+
+									{activeBulkTableGroup.columns.map((column) => {
+										const fieldName = getColumnFieldName(column);
+
+										return (
+											<Fragment key={column.key}>
+												<div className="grid border-b border-slate-200" style={{ gridTemplateColumns: `260px repeat(${activeBulkRows.length}, minmax(280px, 1fr))` }}>
+													<div className="sticky left-0 z-20 border-r border-slate-200 bg-white px-5 py-5 text-sm font-medium text-slate-700">
+														{column.title}
+													</div>
+													{activeBulkRows.map((row) => {
+														const currentValue = bulkEditDrafts[row.id]?.[fieldName] ?? "";
+
+														return (
+															<div key={`${row.id}-${fieldName}`} className="border-r border-slate-200 bg-white p-4">
+																<Input
+																	size="large"
+																	type={column.dataType === "number" ? "number" : "text"}
+																	value={currentValue}
+																	placeholder={`Edit ${column.title}`}
+																	onChange={(event) => {
+																		const nextValue = event.target.value;
+																		setBulkEditDrafts((currentDrafts) => ({
+																			...currentDrafts,
+																			[row.id]: {
+																				...(currentDrafts[row.id] ?? {}),
+																				[fieldName]: nextValue,
+																			},
+																		}));
+																	}}
+																/>
+															</div>
+														);
+													})}
+												</div>
+											</Fragment>
+										);
+									})}
+								</div>
+							</div>
+						) : (
+							<p className="text-sm text-slate-500">Select rows from a table before opening bulk edit.</p>
+						)}
+					</Modal>
 
 					<div className="p-6">
 						{isPageLoading ? (
@@ -515,7 +828,8 @@ const PdfDetailsPage = () => {
 							<div className="pdf-multi-table-list">
 								{tableGroups.map((group) => {
 									const isSelectedTable = !selectedTableId || selectedTableId === group.id;
-									const columns: any[] = group.columns.map((column) => ({
+									const isBulkActiveTable = bulkEditTableId === group.id;
+									const columns: ColumnsType<EditableRow> = group.columns.map((column) => ({
 										title: column.title,
 										dataIndex: column.key,
 										key: column.key,
@@ -541,11 +855,10 @@ const PdfDetailsPage = () => {
 												return (
 													<Button
 														variant="secondary"
+														size="small"
 														icon={<EditOutlined />}
-														onClick={() => handleSelectTable(group.id, record.__rowKey)}
-													>
-														Edit
-													</Button>
+														onClick={() => handleSelectTable(group.id, record.id)}
+													/>
 												);
 											}
 
@@ -556,31 +869,31 @@ const PdfDetailsPage = () => {
 													) : (
 														<Button
 															variant="secondary"
+															size="small"
 															icon={<EditOutlined />}
-															onClick={() => setEditingRowKey(record.__rowKey)}
-														>
-															Edit
-														</Button>
+															onClick={() => setEditingRowKey(record.id)}
+														/>
 													)}
 
 													<Button
 														variant="danger"
+														size="small"
 														icon={<DeleteOutlined />}
 														loading={deletingRowKey === record.__rowKey}
 														onClick={() => void handleDeleteRow(group.key, record.__rowKey)}
-													>
-														Delete
-													</Button>
+													/>
 												</div>
 											);
 										},
 									});
 
 									return (
-										<section key={group.key} className="pdf-section-card pdf-table-group">
+										<section id={`pdf-table-${group.id}`} key={group.key} className="pdf-section-card pdf-table-group">
 											<div className="pdf-section-header">
 												<div>
-													<h3 className="pdf-section-title">{group.title}</h3>
+													<h3 id={`pdf-table-heading-${group.id}`} className="pdf-section-title scroll-mt-24">
+														{group.title}
+													</h3>
 													<p className="pdf-section-copy">
 														{group.rows.length} rows • {group.columns.length} columns
 													</p>
@@ -590,12 +903,24 @@ const PdfDetailsPage = () => {
 														<Button variant="secondary" size="small" onClick={() => handleAddRow(group.key)}>
 															Add row
 														</Button>
+														{isBulkActiveTable && rowSelectionMode ? (
+															<Button variant="secondary" size="small" onClick={handleStopRowSelection}>
+																Stop selecting
+															</Button>
+														) : (
+															<Button variant="secondary" size="small" onClick={() => handleStartRowSelection(group.id)}>
+																Select multiple rows
+															</Button>
+														)}
+														{isBulkActiveTable && selectedRowKeys.length > 0 ? (
+															<Button variant="primary" size="small" onClick={() => handleOpenBulkEdit(group.id)}>
+																Bulk Edit
+															</Button>
+														) : null}
 														<Button variant="secondary" size="small" onClick={() => handleClearTable(group.id)}>
 															Clear rows
 														</Button>
-														<Button variant="danger" size="small" onClick={() => handleDeleteTable(group.id)}>
-															Delete table
-														</Button>
+														<Button variant="danger" size="small" icon={<DeleteOutlined />} onClick={() => handleDeleteTable(group.id)} />
 													</div>
 												) : (
 													<Button
@@ -610,27 +935,39 @@ const PdfDetailsPage = () => {
 											</div>
 											<div className="p-6">
 												<div className="pdf-table-shell">
-													<Table
-														columns={columns as any}
-														dataSource={group.rows as any}
-														rowKey="__rowKey"
+													<Table<EditableRow>
+														columns={columns}
+														dataSource={group.rows}
+														rowKey={(row: EditableRow) => row.id}
 														pagination={false}
 														className="pdf-structured-table"
 														rowClassName={(row: EditableRow) =>
-															editingRowKey === row.__rowKey ? "pdf-editing-row" : ""
+															editingRowKey === row.id ? "pdf-editing-row" : ""
+														}
+														rowSelection={
+															isSelectedTable && rowSelectionMode
+																? {
+																	selectedRowKeys: isBulkActiveTable ? selectedRowKeys : [],
+																	onChange: (nextSelectedRowKeys) =>
+																		handleBulkSelectionChange(group.id, nextSelectedRowKeys),
+																	getCheckboxProps: (record: EditableRow) => ({
+																		disabled: Boolean(record.__isNew),
+																	}),
+																}
+																: undefined
 														}
 														expandable={{
 															showExpandColumn: false,
 															expandedRowKeys: editingRowKey
-																? group.rows.some((row) => row.__rowKey === editingRowKey)
+																? group.rows.some((row) => row.id === editingRowKey)
 																	? [editingRowKey]
 																	: []
 																: [],
 															expandedRowRender: (record: EditableRow) =>
-																editingRowKey === record.__rowKey
+																editingRowKey === record.id
 																	? renderRowEditPanel(group, record)
 																	: null,
-															rowExpandable: (record: EditableRow) => editingRowKey === record.__rowKey,
+															rowExpandable: (record: EditableRow) => editingRowKey === record.id,
 														}}
 													/>
 												</div>
