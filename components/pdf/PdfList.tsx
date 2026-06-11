@@ -6,12 +6,12 @@ import Button from "@/components/common/Button";
 import Modal from "@/components/common/Modal";
 import Tag from "@/components/common/Tag";
 import { DeleteOutlined, EyeOutlined, FilePdfOutlined } from "@/components/common/antd/icons";
-import type { PdfDocument } from "@/store/services/types";
+import type { PdfTable } from "@/store/services/types";
 import { isMultiTableExtractedData, isStructuredExtractedData } from "@/store/services/pdf/apiSlice";
 import { StyledPdfList } from "@/components/pdf/PdfList.styles";
 
 type Props = {
-  pdfs: PdfDocument[];
+  pdfs: PdfTable[];
   loading?: boolean;
   deletingId?: string | null;
   onView: (id: string) => void;
@@ -22,9 +22,9 @@ const PdfList: React.FC<Props> = ({ pdfs, loading, deletingId, onView, onDelete 
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
   const columns = [
     {
-      title: "File name",
-      dataIndex: "fileName",
-      key: "fileName",
+      title: "Table",
+      key: "title",
+      render: (_: unknown, record: PdfTable) => record.title || record.sourceFileName || record.id,
     },
     {
       title: "Created",
@@ -35,14 +35,11 @@ const PdfList: React.FC<Props> = ({ pdfs, loading, deletingId, onView, onDelete 
     {
       title: "Extracted data",
       key: "extractedData",
-      render: (_: unknown, record: PdfDocument) => {
-        const structuredData = isStructuredExtractedData(record.extractedData) ? record.extractedData : null
-        const multiTableData = isMultiTableExtractedData(record.extractedData) ? record.extractedData : null
-        const rowCount = structuredData ? structuredData.rows.length : 0
-        const columnCount = structuredData ? structuredData.columns.length : 0
-        const tableCount = multiTableData ? multiTableData.tables.length : 0
+      render: (_: unknown, record: PdfTable) => {
+        const rowCount = record.rows.filter((row) => !row.isDeleted).length
+        const columnCount = record.columns.length
 
-        if (structuredData && rowCount > 0 && columnCount > 0) {
+        if (rowCount > 0 && columnCount > 0) {
           return (
             <div className="flex flex-col gap-1">
               <Tag variant="status" color="green" className="w-fit">Structured</Tag>
@@ -51,20 +48,11 @@ const PdfList: React.FC<Props> = ({ pdfs, loading, deletingId, onView, onDelete 
           )
         }
 
-        if (multiTableData && tableCount > 0) {
+        if (record.sourceFileName) {
           return (
             <div className="flex flex-col gap-1">
-              <Tag variant="status" color="green" className="w-fit">Multiple tables</Tag>
-              <span className="text-xs text-slate-500">{tableCount} tables detected</span>
-            </div>
-          )
-        }
-
-        if (record.extractedData && (Array.isArray(record.extractedData) ? record.extractedData.length > 0 : Object.keys(record.extractedData).length > 0)) {
-          return (
-            <div className="flex flex-col gap-1">
-              <Tag variant="status" color="blue" className="w-fit">Custom JSON</Tag>
-              <span className="text-xs text-slate-500">Stored but not structured for table view</span>
+              <Tag variant="status" color="blue" className="w-fit">Imported</Tag>
+              <span className="text-xs text-slate-500">Source: {record.sourceFileName}</span>
             </div>
           )
         }
@@ -72,7 +60,7 @@ const PdfList: React.FC<Props> = ({ pdfs, loading, deletingId, onView, onDelete 
         return (
           <div className="flex flex-col gap-1">
             <Tag variant="default" color="default" className="w-fit">Empty</Tag>
-            <span className="text-xs text-slate-500">No structured data found</span>
+            <span className="text-xs text-slate-500">No extracted rows found</span>
           </div>
         )
       },
@@ -80,7 +68,7 @@ const PdfList: React.FC<Props> = ({ pdfs, loading, deletingId, onView, onDelete 
     {
       title: "Actions",
       key: "actions",
-      render: (_: any, record: PdfDocument) => (
+      render: (_: any, record: PdfTable) => (
         <div className="pdf-list-actions">
           <Button variant="secondary" size="small" icon={<EyeOutlined />} onClick={() => onView(record.id)}>
             View
@@ -118,7 +106,7 @@ const PdfList: React.FC<Props> = ({ pdfs, loading, deletingId, onView, onDelete 
   return (
     <StyledPdfList>
       <div className="pdf-list-table">
-        <Table variant="compact" columns={columns as any} dataSource={pdfs} rowKey={(r: PdfDocument) => r.id} loading={loading} />
+        <Table variant="compact" columns={columns as any} dataSource={pdfs} rowKey={(r: PdfTable) => r.id} loading={loading} />
       </div>
 
       <Modal

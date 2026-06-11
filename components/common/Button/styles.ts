@@ -24,6 +24,70 @@ export const StyledButtonWrapper = styled.div<{ $variant: string }>`
 	}
 
 	${({ $variant }) =>
+		$variant === 'icon-button-1' &&
+		`
+		.ant-btn {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 40px;
+			height: 28px;
+			min-width: 40px;
+			padding: 0;
+			border-radius: 10px;
+			background: #eff6ff;
+			color: #2563eb;
+			border: 1px solid #bfdbfe;
+			box-shadow: none;
+			transition: background 0.15s, border-color 0.15s, color 0.15s;
+		}
+
+		.ant-btn:not(:disabled):hover,
+		.ant-btn:not(:disabled):focus {
+			background: #dbeafe !important;
+			border-color: #93c5fd !important;
+			color: #1d4ed8 !important;
+		}
+
+		.ant-btn:disabled {
+			opacity: 0.45;
+			cursor: not-allowed;
+		}
+	`}
+
+	${({ $variant }) =>
+		$variant === 'icon-button-2' &&
+		`
+		.ant-btn {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 46px;
+			height: 46px;
+			min-width: 46px;
+			padding: 0;
+			border-radius: 10px;
+			background: transparent;
+			color: #ef4444;
+			border: none;
+			box-shadow: none;
+			font-size: 20px;
+		}
+
+		.ant-btn:not(:disabled):hover,
+		.ant-btn:not(:disabled):focus {
+			background: #fee2e2 !important;
+			border-color: transparent !important;
+			color: #dc2626 !important;
+		}
+
+		.ant-btn:disabled {
+			opacity: 0.45;
+			cursor: not-allowed;
+		}
+	`}
+
+	${({ $variant }) =>
 		$variant === 'primary' &&
 		`
 		.ant-btn {

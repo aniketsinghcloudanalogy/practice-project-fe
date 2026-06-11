@@ -23,6 +23,18 @@ export const StyledPdfDetailsPage = styled.div`
     gap: 10px;
   }
 
+  .pdf-detail-actions__menu-slot {
+    flex: 0 0 42px;
+    width: 42px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .pdf-detail-actions__menu-slot--hidden {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
   .pdf-icon-button.ant-btn {
     min-width: 42px;
     padding-inline: 10px;
@@ -203,6 +215,17 @@ export const StyledPdfDetailsPage = styled.div`
     font-weight: 600;
   }
 
+  .pdf-structured-table .ant-table-selection-column {
+    text-align: center !important;
+  }
+
+  .pdf-structured-table .ant-table-selection-column .ant-table-selection,
+  .pdf-structured-table .ant-table-selection-column .ant-checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .pdf-structured-table .pdf-actions-cell {
     white-space: nowrap;
     text-align: center !important;
@@ -269,7 +292,7 @@ export const StyledPdfDetailsPage = styled.div`
   .pdf-bulk-edit-form {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 18px;
   }
 
   .pdf-bulk-edit-toolbar {
@@ -278,6 +301,7 @@ export const StyledPdfDetailsPage = styled.div`
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    padding-bottom: 12px;
   }
 
   .pdf-bulk-edit-hint {
@@ -294,20 +318,44 @@ export const StyledPdfDetailsPage = styled.div`
   }
 
   .pdf-bulk-edit-row {
-    display: grid;
-    grid-template-columns: minmax(220px, 260px) minmax(0, 1fr) auto;
-    gap: 12px;
-    align-items: end;
-    padding: 14px;
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 14px;
     border: 1px solid #e2e8f0;
-    border-radius: 18px;
+    border-radius: 14px;
     background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  }
+
+  .pdf-bulk-edit-row-main {
+    flex: 1 1 auto;
+    display: grid !important;
+    grid-template-columns: minmax(180px, 220px) 240px;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+    align-items: end;
+  }
+
+  .pdf-bulk-edit-row > .pdf-bulk-edit-row-actions {
+    display: none;
   }
 
   .pdf-bulk-edit-field {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    min-width: 0;
+    flex: 1 1 0;
+  }
+
+  .pdf-bulk-edit-field:first-child {
+    flex-basis: auto;
+  }
+
+  .pdf-bulk-edit-field:last-child {
+    width: 240px;
+    justify-self: start;
   }
 
   .pdf-bulk-edit-field label {
