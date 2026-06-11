@@ -9,6 +9,20 @@ export const StyledButtonWrapper = styled.div<{ $variant: string }>`
 		font-weight: 600;
 	}
 
+	.ant-btn.ant-btn-sm {
+		height: 28px;
+		padding-inline: 10px;
+		font-size: 12px;
+		font-weight: 600;
+		border-radius: 6px;
+		line-height: 1;
+	}
+
+	.ant-btn.ant-btn-sm.ant-btn-icon-only {
+		width: 28px;
+		padding-inline: 0;
+	}
+
 	${({ $variant }) =>
 		$variant === 'primary' &&
 		`
@@ -24,9 +38,16 @@ export const StyledButtonWrapper = styled.div<{ $variant: string }>`
 		$variant === 'secondary' &&
 		`
 		.ant-btn {
-			background: #f5f5f5;
-			border-color: #d9d9d9;
-			color: #111827;
+			background: #f8fafc;
+			border-color: #e2e8f0;
+			color: #374151;
+		}
+
+		.ant-btn:hover,
+		.ant-btn:focus {
+			background: #f1f5f9 !important;
+			border-color: #cbd5e1 !important;
+			color: #111827 !important;
 		}
 	`}
 
@@ -37,6 +58,31 @@ export const StyledButtonWrapper = styled.div<{ $variant: string }>`
 			background: #ef4444;
 			border-color: #ef4444;
 			color: #ffffff;
+		}
+
+		.ant-btn:hover,
+		.ant-btn:focus {
+			background: #dc2626 !important;
+			border-color: #dc2626 !important;
+			color: #ffffff !important;
+		}
+	`}
+
+	${({ $variant }) =>
+		$variant === 'danger-light' &&
+		`
+		.ant-btn {
+			background: transparent;
+			border-color: rgba(255, 255, 255, 0.55);
+			color: #ffffff;
+			box-shadow: none;
+		}
+
+		.ant-btn:hover,
+		.ant-btn:focus {
+			background: rgba(255, 255, 255, 0.08) !important;
+			border-color: rgba(255, 255, 255, 0.8) !important;
+			color: #ffffff !important;
 		}
 	`}
 
