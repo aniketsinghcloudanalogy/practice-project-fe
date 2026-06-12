@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from 'react'
+import { App } from 'antd'
 import { SessionProvider } from 'next-auth/react'
 import { Provider as ReduxProvider } from 'react-redux'
 import { MessageStyles } from '@/components/common/Message'
@@ -15,9 +16,11 @@ const Providers = ({ children }: ProvidersProps) => {
   return (
     <ReduxProvider store={store}>
       <SessionProvider refetchInterval={0} refetchOnWindowFocus={false}>
-        <SessionGuard />
-        <MessageStyles />
-        {children}
+        <App>
+          <SessionGuard />
+          <MessageStyles />
+          {children}
+        </App>
       </SessionProvider>
     </ReduxProvider>
   )

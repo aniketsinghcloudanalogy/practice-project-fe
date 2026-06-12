@@ -1,9 +1,12 @@
-import { LuPencil, LuTrash2 } from "react-icons/lu";
+import { useEffect, useRef, useState } from "react";
+import { LuPencil, LuSearch, LuTrash2 } from "react-icons/lu";
 
 import Button from "@/components/common/Button";
+import Input from "@/components/common/Input";
 import Table from "@/components/common/Table";
+import { getPartnerPrograms } from "@/lib/api/partner.api";
 
-import { partnerProgramColumns } from "./partnerProgramColumns";
+import { getPartnerProgramColumns } from "./partnerProgramColumns";
 import type { PartnerProgramRow } from "./types";
 
 export type PartnerRow = {
@@ -19,23 +22,57 @@ export type PartnerRow = {
 };
 
 type PartnerTableProps = {
-  loading : boolean;
+  loading: boolean;
   dataSource: PartnerRow[];
   onEdit: (record: PartnerRow) => void;
   onDelete: (record: PartnerRow) => void;
   onAddPartner: () => void;
   onAddProgram: () => void;
+  programsRefreshKey?: number;
+  onVerificationToggle: (checked: boolean) => void;
 };
 
-export default  function PartnerTable({
+export default function PartnerTable({
   loading,
   dataSource,
   onEdit,
   onDelete,
   onAddPartner,
   onAddProgram,
+  programsRefreshKey,
+  onVerificationToggle,
 }: PartnerTableProps) {
+  const [programs, setPrograms] = useState<Record<number, PartnerProgramRow[]>>({});
+  const [programsLoading, setProgramsLoading] = useState<Record<number, boolean>>({});
+  const [search, setSearch] = useState("");
+  const expandedKeysRef = useRef<Set<number>>(new Set());
 
+  const loadPrograms = async (partnerId: number) => {
+    setProgramsLoading((prev) => ({ ...prev, [partnerId]: true }));
+    try {
+      const res = await getPartnerPrograms(partnerId);
+      if (res?.success) setPrograms((prev) => ({ ...prev, [partnerId]: res.data?.programs ?? [] }));
+    } finally {
+      setProgramsLoading((prev) => ({ ...prev, [partnerId]: false }));
+    }
+  };
+
+  useEffect(() => {
+    if (programsRefreshKey === 0) return;
+    expandedKeysRef.current.forEach((id) => loadPrograms(id));
+  }, [programsRefreshKey]);
+
+  const partnerProgramColumns = getPartnerProgramColumns(onVerificationToggle);
+
+  const filtered = search.trim()
+    ? dataSource.filter((p) => {
+        const q = search.trim().toLowerCase();
+        return (
+          p.partnerName.toLowerCase().includes(q) ||
+          (p.email ?? "").toLowerCase().includes(q)
+        );
+      })
+    : dataSource;
 
   const partnerColumns = [
     {
@@ -76,19 +113,7 @@ export default  function PartnerTable({
       dataIndex: "url",
       key: "url",
       width: 180,
-      render: (value: string | null) =>
-        value ? (
-          <a
-            href={value}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline"
-          >
-            Open
-          </a>
-        ) : (
-          "-"
-        ),
+      render: (value: string | null) => value ?? "-"
     },
     {
       title: "Email",
@@ -127,19 +152,23 @@ export default  function PartnerTable({
 
   return (
     <section className="mt-6">
-      <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-2xl font-semibold text-slate-900">
-          All Partners
-        </h2>
-
-        <div className="flex flex-wrap gap-3">
-          <Button variant="secondary" onClick={onAddPartner}>
-            Add Partner
-          </Button>
-
-          <Button variant="secondary" onClick={onAddProgram}>
-            Add Partner Program
-          </Button>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3 flex-1">
+          <h2 className="text-2xl font-semibold text-slate-900 shrink-0">All Partners</h2>
+         
+        </div>
+        <div className="flex flex-wrap gap-3 shrink-0">
+           <Input
+            appearance="soft"
+            placeholder="Search by name or email…"
+            allowClear
+            prefix={<LuSearch size={15} className="text-slate-400" />}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ width: 260, height: 44, borderRadius: 8 }}
+          />
+          <Button variant="secondary" onClick={onAddPartner}>Add Partner</Button>
+          <Button variant="secondary" onClick={onAddProgram}>Add Partner Program</Button>
         </div>
       </div>
 
@@ -147,7 +176,7 @@ export default  function PartnerTable({
         <div className="w-full overflow-x-auto">
           <Table<PartnerRow>
             columns={columns}
-            dataSource={dataSource}
+            dataSource={filtered}
             rowKey="id"
             loading={loading}
             pagination={{
@@ -177,15 +206,23 @@ export default  function PartnerTable({
                   <Table<PartnerProgramRow>
                     variant="compact"
                     columns={partnerProgramColumns}
-                    dataSource={[] as PartnerProgramRow[]}
+                    dataSource={programs[record.id] ?? []}
                     rowKey="id"
-                    loading={false}
+                    loading={programsLoading[record.id] ?? false}
                     pagination={false}
                     size="small"
                     scroll={{ x: 1100 }}
                   />
                 </div>
               ),
+              onExpand: (expanded, record) => {
+                if (expanded) {
+                  expandedKeysRef.current.add(record.id);
+                  loadPrograms(record.id);
+                } else {
+                  expandedKeysRef.current.delete(record.id);
+                }
+              },
             }}
           />
         </div>

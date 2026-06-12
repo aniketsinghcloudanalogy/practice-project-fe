@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { message } from "antd";
+import message from "@/components/common/Message";
 import { isAxiosError } from "axios";
 
 import Button from "@/components/common/Button";
 import Form from "@/components/common/Form";
-import { addPartnerSchema } from "@/lib/validations/partner.schema";
 import { addpartner } from "@/lib/api/partner.api";
 
 import PartnerFormFields from "./PartnerFormFields";
@@ -23,21 +22,9 @@ export default function AddPartnerForm({ onSubmit, onCancel }: AddPartnerFormPro
   const [loading, setLoading] = useState(false);
 
   const onSubmitHandler = async (values: PartnerFormValues) => {
-    const result = addPartnerSchema.safeParse(values);
-
-    if (!result.success) {
-      form.setFields(
-        result.error.issues.map((issue) => ({
-          name: issue.path[0] as keyof PartnerFormValues,
-          errors: [issue.message],
-        }))
-      );
-      return;
-    }
-
     try {
       setLoading(true);
-      const response = await addpartner(result.data);
+      const response = await addpartner(values);
       message.success("Partner created successfully");
       form.resetFields();
       onSubmit(response.data);

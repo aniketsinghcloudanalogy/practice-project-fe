@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from 'react'
+import { App } from 'antd'
 import Button from '@/components/common/Button'
 import Form from '@/components/common/Form'
 import Input from '@/components/common/Input'
-import Message from '@/components/common/Message'
 import {  Phone } from 'lucide-react';
 import {
 	MailOutlined,
@@ -25,6 +25,7 @@ import {
 } from './ContactForm.styles'
 
 const ContactForm = () => {
+	const { message } = App.useApp()
 	const [form] = Form.useForm<ContactPayload>()
 	const [loading, setLoading] = useState(false)
 
@@ -33,10 +34,10 @@ const ContactForm = () => {
 
 		try {
 			await createContact(values)
-			Message.success('Your message has been sent.')
+			message.success('Your message has been sent.')
 			form.resetFields()
 		} catch {
-			Message.error('Unable to send your message right now.')
+			message.error('Unable to send your message right now.')
 		} finally {
 			setLoading(false)
 		}

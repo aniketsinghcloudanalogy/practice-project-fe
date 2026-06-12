@@ -1,13 +1,14 @@
 import type { AddPartnerInput, AddProgramInput } from "@/lib/validations/partner.schema";
 
 export type PartnerProgramRow = {
-  Id: number;
-  "Partner Program Name": string;
-  Description: string;
-  "Verification Step": boolean;
-  Template: string;
-  "Login Template": string;
-  "Login Script": string;
+  id: number;
+  partnerProgramName: string;
+  description: string | null;
+  verificationStep: boolean | null;
+  template: string | null;
+  loginTemplate: string | null;
+  loginScript: string | null;
+  partnerId: number;
 };
 
 export type ModalType = "partner" | "program" | "edit-partner" | null;

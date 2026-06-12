@@ -5,7 +5,8 @@ import styled from 'styled-components'
 export const StyledInputWrapper = styled.div<{ $appearance: string }>`
 	.ant-input,
 	.ant-input-affix-wrapper,
-	.ant-input-password {
+	.ant-input-password,
+	.ant-input-search .ant-input-affix-wrapper {
 		width: 100%;
 		min-height: 44px;
 		border-radius: 16px;
@@ -15,6 +16,25 @@ export const StyledInputWrapper = styled.div<{ $appearance: string }>`
 		align-items: center;
 		box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 		transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+	}
+
+	.ant-input-search {
+		display: flex;
+		align-items: stretch;
+	}
+
+	.ant-input-search .ant-input-affix-wrapper {
+		border-radius: 8px !important;
+		flex: 1;
+	}
+
+	.ant-input-search .ant-input-group-addon,
+	.ant-input-search .ant-input-search-button {
+		display: none !important;
+		width: 0 !important;
+		padding: 0 !important;
+		border: none !important;
+		overflow: hidden !important;
 	}
 
 	.ant-input-affix-wrapper {
@@ -75,7 +95,8 @@ export const StyledInputWrapper = styled.div<{ $appearance: string }>`
 		`
 		.ant-input,
 		.ant-input-affix-wrapper,
-		.ant-input-password {
+		.ant-input-password,
+		.ant-input-search .ant-input-affix-wrapper {
 			background: #f8fbff;
 			border-color: #94a3b8;
 		}

@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { LuSearch } from "react-icons/lu";
 import type { ColumnsType } from "antd/es/table";
 import Table from "@/components/common/Table";
+import Input from "@/components/common/Input";
 import Tag from "@/components/common/Tag";
 import Switch from "@/components/common/Switch";
 import Tooltip from "@/components/common/Tooltip";
@@ -25,6 +27,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [toggling, setToggling] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (status === "loading") return;
@@ -149,11 +152,32 @@ export default function AdminPage() {
     },
   ];
 
+  const filtered = search.trim()
+    ? users.filter((u) => {
+        const q = search.trim().toLowerCase();
+        return (
+          (u.name ?? "").toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q)
+        );
+      })
+    : users;
+
   return (
-    <section className="w-full space-y-6 px-2 sm:px-4 lg:px-6">
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">User Management</h1>
-        <p className="mt-1 text-sm text-slate-500">Activate or deactivate users from this panel.</p>
+    <section className="w-full space-y-4 px-2 sm:px-4 lg:px-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">User Management</h1>
+          <p className="mt-1 text-sm text-slate-500">Activate or deactivate users from this panel.</p>
+        </div>
+        <Input
+          appearance="soft"
+          placeholder="Search by name or email…"
+          allowClear
+          prefix={<LuSearch size={15} className="text-slate-400" />}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ width: "100%", maxWidth: 280, height: 44, borderRadius: 8 }}
+        />
       </div>
 
       {error && (
@@ -165,7 +189,7 @@ export default function AdminPage() {
       <div className="w-full overflow-x-auto rounded-xl">
         <Table<UserRow>
           columns={columns}
-          dataSource={users}
+          dataSource={filtered}
           rowKey="id"
           loading={loading}
           pagination={{ pageSize: 10, showSizeChanger: true, size: "small" }}

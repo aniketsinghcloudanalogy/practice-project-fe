@@ -3,7 +3,6 @@ import Modal from "@/components/common/Modal";
 import AddPartnerForm from "./AddPartnerForm";
 import AddProgramForm from "./AddProgramForm";
 import type { ModalType, ProgramFormValues } from "./types";
-import type { PartnerRow } from "./PartnerTable";
 
 type PartnerNameOption = {
   label: string;
@@ -25,25 +24,25 @@ export default function PartnerModals({
   onPartnerSubmit,
   onProgramSubmit,
 }: PartnerModalsProps) {
-  const isPartnerModalOpen = modalType === "partner";
-  const isProgramModalOpen = modalType === "program";
+  const isPartner = modalType === "partner";
+  const isProgram = modalType === "program";
 
   return (
     <Modal
-      open={isPartnerModalOpen || isProgramModalOpen}
+      open={isPartner || isProgram}
       onCancel={onClose}
       title={
         <span className="text-base font-semibold text-slate-900">
-          {isPartnerModalOpen ? "Add Partner" : "Add Partner Program"}
+          {isPartner ? "Add Partner" : "Add Partner Program"}
         </span>
       }
       variant="compact"
-      width={isProgramModalOpen ? "min(920px, 96vw)" : "min(760px, 96vw)"}
+      width={isProgram ? "min(920px, 96vw)" : "min(760px, 96vw)"}
       destroyOnHidden
       footer={null}
     >
-      {isPartnerModalOpen && <AddPartnerForm onSubmit={onPartnerSubmit} onCancel={onClose} />}
-      {isProgramModalOpen && (
+      {isPartner && <AddPartnerForm onSubmit={onPartnerSubmit} onCancel={onClose} />}
+      {isProgram && (
         <AddProgramForm
           partnerNameOptions={partnerNameOptions}
           onSubmit={onProgramSubmit}

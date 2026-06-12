@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { message } from "antd";
-import { isAxiosError } from "axios";
 
 import Button from "@/components/common/Button";
 import Form from "@/components/common/Form";
 import Input from "@/components/common/Input";
 import Select from "@/components/common/Select";
+import { addProgram } from "@/lib/api/partner.api";
 import { addProgramSchema } from "@/lib/validations/partner.schema";
 
 import type { ProgramFormValues } from "./types";
@@ -33,7 +32,6 @@ export default function AddProgramForm({
 
   const onSubmitHandler = async (values: ProgramFormValues) => {
     const result = addProgramSchema.safeParse(values);
-
     if (!result.success) {
       form.setFields(
         result.error.issues.map((issue) => ({
@@ -43,16 +41,12 @@ export default function AddProgramForm({
       );
       return;
     }
-
     try {
       setLoading(true);
+      await addProgram(result.data);
       onSubmit(result.data);
-    } catch (error) {
-      if (isAxiosError(error)) {
-        message.error(error.response?.data?.message || "Request failed");
-      } else {
-        console.error(error);
-      }
+    } catch {
+      form.setFields([{ name: "partnerName", errors: ["Failed to add program. Please try again."] }]);
     } finally {
       setLoading(false);
     }
@@ -96,7 +90,7 @@ export default function AddProgramForm({
             <Button variant="secondary" htmlType="button" onClick={onCancel}>
               Cancel
             </Button>
-            <Button variant="primary" loading={loading} htmlType="submit">
+            <Button variant="primary" htmlType="submit" loading={loading}>
               Save Program
             </Button>
           </div>

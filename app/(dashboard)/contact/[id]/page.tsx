@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
+import { App } from 'antd';
 import { useParams, useRouter } from 'next/navigation';
 import { getContact, updateContact, deleteContact } from '@/lib/api/contact.api';
 import Button from '@/components/common/Button';
 import Form from '@/components/common/Form';
 import Input from '@/components/common/Input';
-import Message from '@/components/common/Message';
 import Card from '@/components/common/Card';
 import AntdModal from '@/components/common/antd/Modal';
 
@@ -44,6 +44,7 @@ const SkeletonBlock = ({ w = 'w-full', h = 'h-4' }: { w?: string; h?: string }) 
 const ContactDetailPage = () => {
   const params = useParams();
   const router = useRouter();
+  const { message } = App.useApp();
   const contactId = params?.id as string;
   const [contact, setContact] = useState<Contact | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -72,7 +73,7 @@ const ContactDetailPage = () => {
           form.setFieldsValue(data);
         }
       } catch {
-        Message.error('Failed to fetch contact');
+        message.error('Failed to fetch contact');
       } finally {
         setIsLoading(false);
       }
@@ -85,14 +86,14 @@ const ContactDetailPage = () => {
     try {
       const response = await updateContact(contactId, values);
       if (response.success) {
-        Message.success('Contact updated successfully');
+        message.success('Contact updated successfully');
         setContact((prev) => (prev ? { ...prev, ...values } : prev));
         setIsEditing(false);
       } else {
-        Message.error(response.message || 'Failed to update contact');
+        message.error(response.message || 'Failed to update contact');
       }
     } catch {
-      Message.error('Failed to update contact');
+      message.error('Failed to update contact');
     } finally {
       setIsSaving(false);
     }
@@ -108,10 +109,10 @@ const ContactDetailPage = () => {
       onOk: async () => {
         try {
           await deleteContact(contactId);
-          Message.success('Contact deleted');
+          message.success('Contact deleted');
           router.push('/contact');
         } catch {
-          Message.error('Failed to delete contact');
+          message.error('Failed to delete contact');
         }
       },
     });

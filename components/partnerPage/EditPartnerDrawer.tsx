@@ -1,8 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
+import { App } from "antd";
 import Button from "@/components/common/Button";
 import Drawer from "@/components/common/Drawer";
 import Form from "@/components/common/Form";
+import { updatePartner } from "@/lib/api/partner.api";
 import { addPartnerSchema } from "@/lib/validations/partner.schema";
 import type { PartnerRow } from "./PartnerTable";
 
@@ -22,7 +24,9 @@ export default function EditPartnerDrawer({
   onClose,
   onSubmit,
 }: EditPartnerDrawerProps) {
+  const { message } = App.useApp();
   const [form] = Form.useForm<PartnerFormValues>();
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!open || !partner) return;
@@ -54,7 +58,7 @@ export default function EditPartnerDrawer({
       <Form<PartnerFormValues>
       form={form}
       layout="vertical"
-      onFinish={(values) => {
+      onFinish={async (values) => {
         const result = addPartnerSchema.safeParse(values);
         if (!result.success) {
           form.setFields(
@@ -65,7 +69,22 @@ export default function EditPartnerDrawer({
           );
           return;
         }
-        onSubmit(result.data);
+        if (!partner) return;
+        try {
+          setLoading(true);
+          await updatePartner(partner.id, result.data);
+          message.success("Partner updated successfully");
+          onSubmit(result.data);
+        } catch (err: unknown) {
+          const status = (err as { response?: { status?: number } })?.response?.status;
+          if (status === 400) {
+            form.setFields([{ name: "partnerName", errors: ["Partner with this name already exists"] }]);
+          } else {
+            message.error("Failed to update partner. Please try again.");
+          }
+        } finally {
+          setLoading(false);
+        }
       }}
       className="mt-4"
     >
@@ -74,7 +93,7 @@ export default function EditPartnerDrawer({
           <Button variant="secondary" htmlType="button" onClick={handleClose}>
             Cancel
           </Button>
-          <Button variant="primary" htmlType="submit">
+          <Button variant="primary" htmlType="submit" loading={loading}>
             Update Partner
           </Button>
         </div>

@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { App } from 'antd';
 import { useRouter } from 'next/navigation';
 import Table from '@/components/common/Table';
 import Button from '@/components/common/Button';
 import Modal from '@/components/common/Modal';
 import AntdModal from '@/components/common/antd/Modal';
-import Message from '@/components/common/Message';
 import Form from '@/components/common/Form';
 import Input from '@/components/common/Input';
 import Card from '@/components/common/Card';
@@ -59,6 +59,7 @@ const StatCard = ({
 
 const ContactPage = () => {
   const router = useRouter();
+  const { message } = App.useApp();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -74,7 +75,7 @@ const ContactPage = () => {
         setContacts(Array.isArray(response.data) ? response.data : []);
       }
     } catch {
-      Message.error('Failed to fetch contacts');
+      message.error('Failed to fetch contacts');
     } finally {
       setLoading(false);
     }
@@ -99,14 +100,14 @@ const ContactPage = () => {
     try {
       const response = await createContact(values);
       if (response.success) {
-        Message.success('Contact created successfully');
+        message.success('Contact created successfully');
         closeModal();
         await fetchContacts();
       } else {
-        Message.error(response.message || 'Failed to create contact');
+        message.error(response.message || 'Failed to create contact');
       }
     } catch (error: unknown) {
-      Message.error(error instanceof Error ? error.message : 'Failed to create contact');
+      message.error(error instanceof Error ? error.message : 'Failed to create contact');
     } finally {
       setIsCreating(false);
     }
@@ -122,10 +123,10 @@ const ContactPage = () => {
       onOk: async () => {
         try {
           await deleteContact(id);
-          Message.success('Contact deleted successfully');
+          message.success('Contact deleted successfully');
           await fetchContacts();
         } catch {
-          Message.error('Failed to delete contact');
+          message.error('Failed to delete contact');
         }
       },
     });
