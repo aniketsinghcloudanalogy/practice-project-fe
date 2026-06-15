@@ -1,8 +1,6 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import Sidebar from '@/components/layout/Sidebar'
-import DashboardHeader from '@/components/layout/DashboardHeader'
-import { SidebarProvider } from '@/store/features/dashboard/sidebarContext'
 
 type DashboardLayoutProps = {
   children: ReactNode
@@ -15,6 +13,7 @@ export const metadata: Metadata = {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
+
     <SidebarProvider>
       <div className="min-h-screen bg-slate-50 text-slate-900">
         <DashboardHeader />
@@ -42,5 +41,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </main>
       </div>
     </SidebarProvider>
+
   )
 }
