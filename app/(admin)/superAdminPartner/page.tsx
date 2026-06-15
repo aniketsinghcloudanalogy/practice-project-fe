@@ -9,8 +9,7 @@ import {
   PartnerStats,
   PartnerTable,
 } from "@/components/partnerPage";
-import type { ModalType, PartnerFormValues } from "@/components/partnerPage";
-import type { PartnerRow } from "@/components/partnerPage/PartnerTable";
+import type { ModalType, PartnerFormValues, PartnerRow } from "@/components/partnerPage";
 import { deletePartner, getPartners, getPartnerStats } from "@/lib/api/partner.api";
 
 export default function SuperAdminPartner() {

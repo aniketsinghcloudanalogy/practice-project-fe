@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import message from "@/components/common/Message";
+import { App } from "antd";
 import { isAxiosError } from "axios";
 
 import Button from "@/components/common/Button";
@@ -10,7 +10,7 @@ import { addpartner } from "@/lib/api/partner.api";
 
 import PartnerFormFields from "./PartnerFormFields";
 import type { PartnerFormValues } from "./types";
-import type { PartnerRow } from "./PartnerTable";
+import type { PartnerRow } from "./types";
 
 type AddPartnerFormProps = {
   onSubmit: (newPartner: PartnerRow) => void;
@@ -18,6 +18,7 @@ type AddPartnerFormProps = {
 };
 
 export default function AddPartnerForm({ onSubmit, onCancel }: AddPartnerFormProps) {
+  const { message } = App.useApp();
   const [form] = Form.useForm<PartnerFormValues>();
   const [loading, setLoading] = useState(false);
 

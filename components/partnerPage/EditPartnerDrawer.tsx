@@ -6,7 +6,7 @@ import Drawer from "@/components/common/Drawer";
 import Form from "@/components/common/Form";
 import { updatePartner } from "@/lib/api/partner.api";
 import { addPartnerSchema } from "@/lib/validations/partner.schema";
-import type { PartnerRow } from "./PartnerTable";
+import type { PartnerRow } from "./types";
 
 import PartnerFormFields from "./PartnerFormFields";
 import type { PartnerFormValues } from "./types";

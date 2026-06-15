@@ -7,19 +7,9 @@ import Table from "@/components/common/Table";
 import { getPartnerPrograms } from "@/lib/api/partner.api";
 
 import { getPartnerProgramColumns } from "./partnerProgramColumns";
-import type { PartnerProgramRow } from "./types";
+import type { PartnerProgramRow, PartnerRow } from "./types";
 
-export type PartnerRow = {
-  id: number;
-  externalId: string | null;
-  partnerName: string;
-  parentPartner: string | null;
-  pmId: string | null;
-  url: string | null;
-  email: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
+export type { PartnerRow };
 
 type PartnerTableProps = {
   loading: boolean;

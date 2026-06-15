@@ -8,5 +8,6 @@ export type {
   ModalType,
   PartnerFormValues,
   PartnerProgramRow,
+  PartnerRow,
   ProgramFormValues,
 } from "./types";

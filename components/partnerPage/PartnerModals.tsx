@@ -2,6 +2,7 @@ import Modal from "@/components/common/Modal";
 
 import AddPartnerForm from "./AddPartnerForm";
 import AddProgramForm from "./AddProgramForm";
+import type { PartnerRow } from "./PartnerTable";
 import type { ModalType, ProgramFormValues } from "./types";
 
 type PartnerNameOption = {
