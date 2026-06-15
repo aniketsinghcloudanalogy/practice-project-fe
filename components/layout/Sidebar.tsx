@@ -25,6 +25,17 @@ import { MdArrowBack, MdArrowForward, MdClose } from 'react-icons/md'
 import Drawer from '@/components/common/Drawer'
 import SiderComponent from '@/components/common/Sidebar'
 import {
+  ArrowLeftOutlined,
+  FileTextOutlined,
+  FilePdfOutlined,
+  HomeOutlined,
+  ArrowRightOutlined,
+  RiseOutlined,
+  ShoppingOutlined,
+  TeamOutlined,
+  UserOutlined,
+} from "@/components/common/antd/icons"
+import {
   BrandBlock,
   BrandCopy,
   BrandMark,
@@ -47,12 +58,13 @@ import Tooltip from '@/components/common/Tooltip'
 
 const itemsByRole: Record<UserRole, SidebarItem[]> = {
   user: [
-    { key: 'home',        label: 'Home',        icon: <MdHome size={20} />,        href: '/dashboard' },
-    { key: 'quote',       label: 'Quote',        icon: <MdDescription size={20} /> },
-    { key: 'accounts',    label: 'Accounts',     icon: <MdGroup size={20} /> },
-    { key: 'contacts',    label: 'Contacts',     icon: <MdPerson size={20} />,      href: '/contact' },
-    { key: 'opportunity', label: 'Opportunity',  icon: <MdTrendingUp size={20} /> },
-    { key: 'order',       label: 'Order',        icon: <MdShoppingCart size={20} /> },
+    { key: 'home', label: 'Home', icon: <HomeOutlined />, href: '/dashboard' },
+  { key: 'quote', label: 'Quote', icon: <FileTextOutlined /> },
+  { key: 'pdf', label: 'PDF Extraction', icon: <FilePdfOutlined />, href: '/pdf' },
+  { key: 'accounts', label: 'Accounts', icon: <TeamOutlined /> },
+  { key: 'contacts', label: 'Contacts', icon: <UserOutlined /> , href: '/contact'},
+  { key: 'opportunity', label: 'Opportunity', icon: <RiseOutlined /> },
+  { key: 'order', label: 'Order', icon: <ShoppingOutlined /> },
   ],
   admin: [
     { key: 'dashboard',  label: 'Dashboard',   icon: <MdDashboard size={20} />,        href: '/admin' },
@@ -114,6 +126,10 @@ const Sidebar = () => {
       </DrawerNavButton>
     )
   })
+
+  const collapseSidebar = () => {
+    setCollapsed(true)
+  }
 
   return (
     <>

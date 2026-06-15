@@ -1,8 +1,10 @@
 export {
 	ClockCircleOutlined,
 	CustomerServiceOutlined,
+	DeleteOutlined,
 	EyeInvisibleOutlined,
 	EyeOutlined,
+	FilePdfOutlined,
 	MailFilled,
 	LockOutlined,
 	MailOutlined,
