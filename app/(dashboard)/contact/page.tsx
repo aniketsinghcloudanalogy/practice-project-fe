@@ -49,25 +49,13 @@ const StatCard = ({
 const ContactPage = () => {
   const router = useRouter();
   const { message } = App.useApp();
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { data: contacts = [], isLoading, isFetching, error } = useGetContactsQuery();
+  const [createContact, { isLoading: isCreating }] = useCreateContactMutation();
+  const [deleteContact] = useDeleteContactMutation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [form] = Form.useForm();
-
-  const fetchContacts = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await getContacts();
-      if (response.success && response.data) {
-        setContacts(Array.isArray(response.data) ? response.data : []);
-      }
-    } catch {
-      Message.error('Failed to fetch contacts');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const loading = isLoading || isFetching;
 
   useEffect(() => {
     const timerId = window.setTimeout(() => {
@@ -79,9 +67,9 @@ const ContactPage = () => {
 
   useEffect(() => {
     if (error) {
-      Message.error('Failed to fetch contacts');
+      message.error('Failed to fetch contacts');
     }
-  }, [error]);
+  }, [error, message]);
 
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
@@ -90,18 +78,11 @@ const ContactPage = () => {
 
   const handleCreateContact = async (values: CreateFormValues) => {
     try {
-      const response = await createContact(values);
-      if (response.success) {
-        Message.success('Contact created successfully');
-        closeModal();
-        await fetchContacts();
-      } else {
-        Message.error(response.message || 'Failed to create contact');
-      }
+      await createContact(values).unwrap();
+      message.success('Contact created successfully');
+      closeModal();
     } catch (error: unknown) {
-      Message.error(error instanceof Error ? error.message : 'Failed to create contact');
-    } finally {
-      setIsCreating(false);
+      message.error(error instanceof Error ? error.message : 'Failed to create contact');
     }
   };
 
@@ -114,15 +95,14 @@ const ContactPage = () => {
       cancelText: 'No',
       onOk: async () => {
         try {
-          await deleteContact(id);
-          Message.success('Contact deleted successfully');
-          await fetchContacts();
+          await deleteContact(id).unwrap();
+          message.success('Contact deleted successfully');
         } catch {
           message.error('Failed to delete contact');
         }
       },
     });
-  }, [deleteContact]);
+  }, [deleteContact, message]);
 
   const columns: ColumnsType<Contact> = useMemo(() => [
     {

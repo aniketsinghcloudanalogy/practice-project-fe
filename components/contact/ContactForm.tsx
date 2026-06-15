@@ -1,5 +1,6 @@
 "use client";
 
+import { App } from 'antd'
 import Button from '@/components/common/Button'
 import Form from '@/components/common/Form'
 import Input from '@/components/common/Input'
@@ -26,6 +27,7 @@ import {
 } from './ContactForm.styles'
 
 const ContactForm = () => {
+	const { message } = App.useApp()
 	const [form] = Form.useForm<ContactMessagePayload>()
 	const [submitContact, { isLoading: loading }] = useSubmitContactMessageMutation()
 
@@ -33,10 +35,10 @@ const ContactForm = () => {
 
 		try {
 			const response = await submitContact(values).unwrap()
-			Message.success(response.message || 'Your message has been sent.')
+			message.success(response.message || 'Your message has been sent.')
 			form.resetFields()
 		} catch {
-			Message.error('Unable to send your message right now.')
+			message.error('Unable to send your message right now.')
 		}
 	}
 

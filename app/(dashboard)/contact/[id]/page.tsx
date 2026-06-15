@@ -63,18 +63,18 @@ const ContactDetailPage = () => {
 
   useEffect(() => {
     if (error) {
-      Message.error('Failed to fetch contact');
+      message.error('Failed to fetch contact');
     }
-  }, [error]);
+  }, [error, message]);
 
   const handleUpdate = async (values: Partial<Contact>) => {
     try {
       const response = await updateContact({ id: contactId, body: values }).unwrap();
-      Message.success(response.message || 'Contact updated successfully');
+      message.success(response.message || 'Contact updated successfully');
       setIsEditing(false);
       router.push('/contact');
     } catch {
-      Message.error('Failed to update contact');
+      message.error('Failed to update contact');
     }
   };
 
@@ -88,7 +88,7 @@ const ContactDetailPage = () => {
       onOk: async () => {
         try {
           const response = await deleteContact(contactId).unwrap();
-          Message.success(response.message || 'Contact deleted');
+          message.success(response.message || 'Contact deleted');
           router.push('/contact');
         } catch {
           message.error('Failed to delete contact');
