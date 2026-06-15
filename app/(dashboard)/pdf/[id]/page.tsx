@@ -310,7 +310,7 @@ const PdfDetailsPage = () => {
 	useEffect(() => {
 		if (table?.isDeleted) {
 			messageApi.info("This table has been deleted.");
-			router.replace("/pdf");
+			router.replace("/pdf/merged");
 		}
 	}, [messageApi, router, table]);
 
@@ -514,80 +514,58 @@ const PdfDetailsPage = () => {
 			return;
 		}
 
-		const rowsById = new Map(tableGroup.rows.map((row) => [row.id, row] as const));
 		const uniqueSelectedRowIds = [...new Set(selectedRowKeys)].filter(
-			(rowId): rowId is string => typeof rowId === "string" && rowId.trim().length > 0,
+			(rowId): rowId is string => typeof rowId === 'string' && rowId.trim().length > 0,
 		);
-		const updates: { rowId: string; rowData: Record<string, unknown> }[] = [];
 
-		for (const rowId of uniqueSelectedRowIds) {
-			const row = rowsById.get(rowId);
-			if (!row) {
+		const dataToApply: Record<string, unknown> = {};
+		for (const field of selectedFields) {
+			const { column, value } = field;
+
+			if (isEmptyModalValue(value)) {
 				continue;
 			}
 
-			const rowData: Record<string, unknown> = {};
-
-			for (const field of selectedFields) {
-				const { column, value } = field;
-
-				if (isEmptyModalValue(value)) {
-					continue;
+			if (column.dataType === 'number') {
+				const nextNumber = Number(value);
+				if (Number.isNaN(nextNumber)) {
+					messageApi.error(`${column.title} must be a valid number.`);
+					return;
 				}
 
-				if (column.dataType === "number") {
-					const nextNumber = Number(value);
-					if (Number.isNaN(nextNumber)) {
-						messageApi.error(`${column.title} must be a valid number.`);
-						return;
-					}
-
-					rowData[column.key] = nextNumber;
-
-					continue;
-				}
-
-				rowData[column.key] = value;
+				dataToApply[column.key] = nextNumber;
+				continue;
 			}
 
-			if (Object.keys(rowData).length > 0) {
-				updates.push({ rowId, rowData });
-			}
+			dataToApply[column.key] = value;
 		}
 
-		if (updates.length === 0) {
-			messageApi.error("Enter at least one value before bulk updating rows.");
+		if (Object.keys(dataToApply).length === 0) {
+			messageApi.error('Enter at least one value before bulk updating rows.');
 			return;
 		}
 
 		try {
-			await bulkUpdateRows({
-				tableId: tableGroup.id,
-				updates,
-			}).unwrap();
+			await bulkUpdateRows({ tableId: tableGroup.id, rowIds: uniqueSelectedRowIds, data: dataToApply }).unwrap();
 
-			const nextValuesByRowId = new Map(updates.map((update) => [update.rowId, update.rowData] as const));
 			setTableGroups((currentGroups) =>
 				currentGroups.map((currentGroup) =>
 					currentGroup.id !== tableGroup.id
 						? currentGroup
 						: {
 							...currentGroup,
-							rows: currentGroup.rows.map((row) => {
-								const nextRowData = nextValuesByRowId.get(row.id);
-								return nextRowData ? { ...row, ...nextRowData } : row;
-							}),
+							rows: currentGroup.rows.map((row) => (uniqueSelectedRowIds.includes(row.id) ? { ...row, ...dataToApply } : row)),
 						},
 				),
 			);
 
-			messageApi.success("Rows updated successfully");
+			messageApi.success('Rows updated successfully');
 			handleCloseBulkEdit();
 			setSelectedRowKeys([]);
-				setBulkEditTableId(null);
+			setBulkEditTableId(null);
 			await refetchVisibleTables();
 		} catch (mutationError: unknown) {
-			messageApi.error(getErrorMessage(mutationError, "Failed to bulk update rows"));
+			messageApi.error(getErrorMessage(mutationError, 'Failed to bulk update rows'));
 		}
 	};
 
@@ -770,7 +748,7 @@ const PdfDetailsPage = () => {
 						<h1 className="mt-2 text-3xl font-semibold text-slate-900">{pageDisplayTitle}</h1>
 					</div>
 					<div className="pdf-detail-actions">
-						<Button variant="secondary" icon={<ArrowLeftOutlined />} href="/pdf">
+						<Button variant="secondary" icon={<ArrowLeftOutlined />} href="/pdf/merged">
 							Back to list
 						</Button>
 					</div>
@@ -875,7 +853,7 @@ const PdfDetailsPage = () => {
 								messageApi.success("Table deleted successfully");
 								setDeleteTableTargetId(null);
 								if (selectedTableId && selectedTableId === targetTableId) {
-									router.push("/pdf");
+									router.push("/pdf/merged");
 								}
 							} catch (mutationError: unknown) {
 								messageApi.error(getErrorMessage(mutationError, "Failed to delete table"));

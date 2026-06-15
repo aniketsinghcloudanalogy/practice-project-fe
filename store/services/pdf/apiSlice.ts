@@ -196,12 +196,15 @@ export const pdfApi = baseApi.injectEndpoints({
                 { type: 'Pdfs' as const, id: 'MERGED' },
             ],
         }),
-        bulkUpdateRows: builder.mutation<BulkUpdatePdfTableRowsResponse, BulkUpdatePdfTableRowsPayload>({
-            query: ({ tableId, updates }) => ({
-                url: `api/pdfs/tables/${tableId}/rows/bulk`,
-                method: 'PATCH',
-                body: { updates },
-            }),
+        bulkUpdateRows: builder.mutation<BulkUpdatePdfTableRowsResponse, any>({
+            query: (payload) => {
+                const { tableId, ...body } = payload ?? {};
+                return {
+                    url: `api/pdfs/tables/${tableId}/rows/bulk`,
+                    method: 'PATCH',
+                    body,
+                };
+            },
             transformResponse: (response: ApiResponse<BulkUpdatePdfTableRowsResponse>) =>
                 response.data,
             invalidatesTags: (_result, _error, arg) => [

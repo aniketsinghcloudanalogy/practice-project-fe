@@ -121,15 +121,11 @@ export type UpdatePdfTableRowPayload = {
 
 export type BulkUpdatePdfTableRowsPayload = {
 	tableId: string
-	updates: {
-		rowId: string
-		rowData: Record<string, unknown>
-	}[]
+	updates: Record<string, Record<string, unknown>>
 }
 
 export type BulkUpdatePdfTableRowsResponse = {
-	success: boolean
-	updatedCount: number
+	count: number
 	table: PdfTable
 }
 
