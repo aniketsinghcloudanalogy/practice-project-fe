@@ -163,7 +163,7 @@ export default function AdminPage() {
     : users;
 
   return (
-    <section className="w-full space-y-4 px-2 sm:px-4 lg:px-6">
+    <section className="w-full min-w-0 space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">User Management</h1>
@@ -186,17 +186,19 @@ export default function AdminPage() {
         </div>
       )}
 
-      <div className="w-full overflow-x-auto rounded-xl">
-        <Table<UserRow>
-          columns={columns}
-          dataSource={filtered}
-          rowKey="id"
-          loading={loading}
-          pagination={{ pageSize: 10, showSizeChanger: true, size: "small" }}
-          rowClassName={(record) => (!record.isActive ? "opacity-60" : "")}
-          scroll={{ x: 600 }}
-          size="middle"
-        />
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div className="w-full overflow-x-auto">
+          <Table<UserRow>
+            columns={columns}
+            dataSource={filtered}
+            rowKey="id"
+            loading={loading}
+            pagination={{ pageSize: 10, showSizeChanger: true, size: "small" }}
+            rowClassName={(record) => (!record.isActive ? "opacity-60" : "")}
+            scroll={{ x: 640 }}
+            size="middle"
+          />
+        </div>
       </div>
     </section>
   );

@@ -16,18 +16,29 @@ export const metadata: Metadata = {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
-      <div className="min-h-[calc(100vh-var(--navbar-height))] bg-slate-50 text-slate-900">
+      <div className="min-h-screen bg-slate-50 text-slate-900">
         <DashboardHeader />
         <Sidebar />
+
         <main
-          className="w-full overflow-x-hidden transition-[padding-left] duration-200 px-4 sm:px-6"
+          className="
+            w-full
+            min-w-0
+            pb-8
+            px-4
+            sm:px-6
+            transition-all
+            duration-200
+            md:pl-[calc(var(--sidebar-width)+16px)]
+          "
           style={{
-            paddingLeft: 'max(16px, calc(var(--sidebar-width, 92px) + 16px))',
-            paddingTop: 'calc(var(--navbar-height) + 24px)',
-            minHeight: '100vh',
+            paddingTop: "calc(var(--navbar-height) + 24px)",
+            minHeight: "100vh",
           }}
         >
-          {children}
+          <div className="w-full min-w-0">
+            {children}
+          </div>
         </main>
       </div>
     </SidebarProvider>
