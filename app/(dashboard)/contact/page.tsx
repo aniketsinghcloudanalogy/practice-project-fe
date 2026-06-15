@@ -10,20 +10,9 @@ import AntdModal from '@/components/common/antd/Modal';
 import Form from '@/components/common/Form';
 import Input from '@/components/common/Input';
 import Card from '@/components/common/Card';
-import { getContacts, deleteContact, createContact } from '@/lib/api/contact.api';
+import { useCreateContactMutation, useDeleteContactMutation, useGetContactsQuery } from '@/store/services/contact/apiSlice';
 import type { ColumnsType } from '@/components/common/Table/types';
-
-interface Contact {
-  id: string;
-  firstName: string;
-  lastName?: string;
-  email: string;
-  primaryContact: string;
-  secondaryContact?: string;
-  company?: string;
-  notes?: string;
-  createdAt?: string;
-}
+import type { Contact } from '@/store/services/types';
 
 interface CreateFormValues {
   firstName: string;
@@ -46,9 +35,9 @@ const StatCard = ({
   bg: string;
   color: string;
 }) => (
-  <Card className="!rounded-2xl shadow-sm border border-gray-100">
+  <Card className="rounded-2xl! shadow-sm border border-gray-100">
     <div className="flex items-center gap-4">
-      <div className={`${bg} ${color} rounded-xl p-3 text-2xl`}>{emoji}</div>
+          <div className={`${bg} ${color} rounded-xl p-3 text-2xl`}>{emoji}</div>
       <div>
         <p className="text-xs text-gray-400 uppercase tracking-wide">{label}</p>
         <p className="text-2xl font-bold text-gray-800">{value}</p>
@@ -60,35 +49,27 @@ const StatCard = ({
 const ContactPage = () => {
   const router = useRouter();
   const { message } = App.useApp();
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { data: contacts = [], isLoading, isFetching, error } = useGetContactsQuery();
+  const [createContact, { isLoading: isCreating }] = useCreateContactMutation();
+  const [deleteContact] = useDeleteContactMutation();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [form] = Form.useForm();
-
-  const fetchContacts = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await getContacts();
-      if (response.success && response.data) {
-        setContacts(Array.isArray(response.data) ? response.data : []);
-      }
-    } catch {
-      message.error('Failed to fetch contacts');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const loading = isLoading || isFetching;
 
   useEffect(() => {
     const timerId = window.setTimeout(() => {
       setCurrentTime(Date.now());
-      void fetchContacts();
     }, 0);
 
     return () => window.clearTimeout(timerId);
-  }, [fetchContacts]);
+  }, []);
+
+  useEffect(() => {
+    if (error) {
+      message.error('Failed to fetch contacts');
+    }
+  }, [error, message]);
 
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
@@ -96,20 +77,12 @@ const ContactPage = () => {
   }, [form]);
 
   const handleCreateContact = async (values: CreateFormValues) => {
-    setIsCreating(true);
     try {
-      const response = await createContact(values);
-      if (response.success) {
-        message.success('Contact created successfully');
-        closeModal();
-        await fetchContacts();
-      } else {
-        message.error(response.message || 'Failed to create contact');
-      }
+      await createContact(values).unwrap();
+      message.success('Contact created successfully');
+      closeModal();
     } catch (error: unknown) {
       message.error(error instanceof Error ? error.message : 'Failed to create contact');
-    } finally {
-      setIsCreating(false);
     }
   };
 
@@ -122,15 +95,14 @@ const ContactPage = () => {
       cancelText: 'No',
       onOk: async () => {
         try {
-          await deleteContact(id);
+          await deleteContact(id).unwrap();
           message.success('Contact deleted successfully');
-          await fetchContacts();
         } catch {
           message.error('Failed to delete contact');
         }
       },
     });
-  }, [fetchContacts]);
+  }, [deleteContact, message]);
 
   const columns: ColumnsType<Contact> = useMemo(() => [
     {
@@ -139,7 +111,7 @@ const ContactPage = () => {
       width: 180,
       render: (_: unknown, r: Contact) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+          <div className="w-8 h-8 rounded-full bg-linear-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
             {r.firstName[0]}{r.lastName?.[0] ?? ''}
           </div>
           <span className="font-medium text-gray-800">{r.firstName} {r.lastName ?? ''}</span>
@@ -228,7 +200,7 @@ const ContactPage = () => {
       </div>
 
       {/* Table — horizontally scrollable on small screens */}
-      <Card className="!rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <Card className="rounded-2xl! shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <Table
             columns={columns}

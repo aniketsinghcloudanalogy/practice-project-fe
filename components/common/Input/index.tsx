@@ -2,7 +2,7 @@
 
 import type { InputRef } from 'antd'
 import type { ComponentProps, RefAttributes, ReactElement } from 'react'
-import { forwardRef } from 'react'
+import { forwardRef, useImperativeHandle, useRef } from 'react'
 import AntInput from '../antd/Input'
 import { StyledInputWrapper } from './styles'
 import type { AppInputProps } from './types'
@@ -30,6 +30,24 @@ const InputBase = forwardRef<InputRef, AppInputProps>(function Input(
 	{ appearance = 'default', ...props },
 	ref,
 ) {
+	const nativeFileInputRef = useRef<HTMLInputElement | null>(null)
+
+	useImperativeHandle(
+		ref,
+		() => ({ input: nativeFileInputRef.current }) as InputRef,
+		[],
+	)
+
+	if (props.type === 'file') {
+		const fileInputProps = props as unknown as ComponentProps<'input'>
+
+		return (
+			<StyledInputWrapper $appearance={appearance}>
+				<input ref={nativeFileInputRef} {...fileInputProps} />
+			</StyledInputWrapper>
+		)
+	}
+
 	return (
 		<StyledInputWrapper $appearance={appearance}>
 			<AntInput ref={ref} {...props} />

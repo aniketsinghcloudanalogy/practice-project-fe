@@ -9,6 +9,84 @@ export const StyledButtonWrapper = styled.div<{ $variant: string }>`
 		font-weight: 600;
 	}
 
+	.ant-btn.ant-btn-sm {
+		height: 28px;
+		padding-inline: 10px;
+		font-size: 12px;
+		font-weight: 600;
+		border-radius: 6px;
+		line-height: 1;
+	}
+
+	.ant-btn.ant-btn-sm.ant-btn-icon-only {
+		width: 28px;
+		padding-inline: 0;
+	}
+
+	${({ $variant }) =>
+		$variant === 'icon-button-1' &&
+		`
+		.ant-btn {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 40px;
+			height: 28px;
+			min-width: 40px;
+			padding: 0;
+			border-radius: 10px;
+			background: #eff6ff;
+			color: #2563eb;
+			border: 1px solid #bfdbfe;
+			box-shadow: none;
+			transition: background 0.15s, border-color 0.15s, color 0.15s;
+		}
+
+		.ant-btn:not(:disabled):hover,
+		.ant-btn:not(:disabled):focus {
+			background: #dbeafe !important;
+			border-color: #93c5fd !important;
+			color: #1d4ed8 !important;
+		}
+
+		.ant-btn:disabled {
+			opacity: 0.45;
+			cursor: not-allowed;
+		}
+	`}
+
+	${({ $variant }) =>
+		$variant === 'icon-button-2' &&
+		`
+		.ant-btn {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 46px;
+			height: 46px;
+			min-width: 46px;
+			padding: 0;
+			border-radius: 10px;
+			background: transparent;
+			color: #ef4444;
+			border: none;
+			box-shadow: none;
+			font-size: 20px;
+		}
+
+		.ant-btn:not(:disabled):hover,
+		.ant-btn:not(:disabled):focus {
+			background: #fee2e2 !important;
+			border-color: transparent !important;
+			color: #dc2626 !important;
+		}
+
+		.ant-btn:disabled {
+			opacity: 0.45;
+			cursor: not-allowed;
+		}
+	`}
+
 	${({ $variant }) =>
 		$variant === 'primary' &&
 		`
@@ -24,9 +102,16 @@ export const StyledButtonWrapper = styled.div<{ $variant: string }>`
 		$variant === 'secondary' &&
 		`
 		.ant-btn {
-			background: #f5f5f5;
-			border-color: #d9d9d9;
-			color: #111827;
+			background: #f8fafc;
+			border-color: #e2e8f0;
+			color: #374151;
+		}
+
+		.ant-btn:hover,
+		.ant-btn:focus {
+			background: #f1f5f9 !important;
+			border-color: #cbd5e1 !important;
+			color: #111827 !important;
 		}
 	`}
 
@@ -37,6 +122,31 @@ export const StyledButtonWrapper = styled.div<{ $variant: string }>`
 			background: #ef4444;
 			border-color: #ef4444;
 			color: #ffffff;
+		}
+
+		.ant-btn:hover,
+		.ant-btn:focus {
+			background: #dc2626 !important;
+			border-color: #dc2626 !important;
+			color: #ffffff !important;
+		}
+	`}
+
+	${({ $variant }) =>
+		$variant === 'danger-light' &&
+		`
+		.ant-btn {
+			background: transparent;
+			border-color: rgba(255, 255, 255, 0.55);
+			color: #ffffff;
+			box-shadow: none;
+		}
+
+		.ant-btn:hover,
+		.ant-btn:focus {
+			background: rgba(255, 255, 255, 0.08) !important;
+			border-color: rgba(255, 255, 255, 0.8) !important;
+			color: #ffffff !important;
 		}
 	`}
 
@@ -163,4 +273,70 @@ export const StyledButtonWrapper = styled.div<{ $variant: string }>`
 			box-shadow: 0 12px 24px rgba(36, 59, 99, 0.12) !important;
 		}
 	`}
+
+	
+	${({ $variant }) =>
+		$variant === 'icon-button-1' &&
+		`
+		.ant-btn {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 40px;
+			height: 28px;
+			min-width: 40px;
+			padding: 0;
+			border-radius: 10px;
+			background: #eff6ff;
+			color: #2563eb;
+			border: 1px solid #bfdbfe;
+			box-shadow: none;
+			transition: background 0.15s, border-color 0.15s, color 0.15s;
+		}
+
+		.ant-btn:not(:disabled):hover,
+		.ant-btn:not(:disabled):focus {
+			background: #dbeafe !important;
+			border-color: #93c5fd !important;
+			color: #1d4ed8 !important;
+		}
+
+		.ant-btn:disabled {
+			opacity: 0.45;
+			cursor: not-allowed;
+		}
+	`}
+
+	${({ $variant }) =>
+		$variant === 'icon-button-2' &&
+		`
+		.ant-btn {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 46px;
+			height: 46px;
+			min-width: 46px;
+			padding: 0;
+			border-radius: 10px;
+			background: transparent;
+			color: #ef4444;
+			border: none;
+			box-shadow: none;
+			font-size: 20px;
+		}
+
+		.ant-btn:not(:disabled):hover,
+		.ant-btn:not(:disabled):focus {
+			background: #fee2e2 !important;
+			border-color: transparent !important;
+			color: #dc2626 !important;
+		}
+
+		.ant-btn:disabled {
+			opacity: 0.45;
+			cursor: not-allowed;
+		}
+	`}
+
 `
