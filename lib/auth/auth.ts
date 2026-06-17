@@ -2,10 +2,24 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import AzureADProvider from "next-auth/providers/azure-ad";
+import { isAxiosError } from "axios";
 import { login, oauth, refreshToken } from "../api/auth.api";
 
 const REFRESH_BUFFER_MS = 15 * 1000; // refresh 15s before expiry
-const refreshLocks = new Map<string, Promise<{ user: any; accessToken: string }>>();
+type BackendAuthUser = {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  role: string;
+  isAdmin?: boolean;
+  isActive?: boolean;
+  authProvider: string;
+  organizationId?: string | null;
+  organizationName?: string | null;
+};
+
+const refreshLocks = new Map<string, Promise<{ user: BackendAuthUser; accessToken: string }>>();
 
 const getErrorMessage = (error: unknown): string => {
   // Axios error — extract backend message first
@@ -13,9 +27,9 @@ const getErrorMessage = (error: unknown): string => {
     error &&
     typeof error === "object" &&
     "response" in error &&
-    (error as any).response?.data?.message
+    isAxiosError<{ message?: string }>(error) && error.response?.data?.message
   ) {
-    return (error as any).response.data.message;
+    return error.response.data.message;
   }
 
   if (error instanceof Error) return error.message;
@@ -107,7 +121,11 @@ export const authOptions: NextAuthOptions = {
         user.email = backendUser.email;
         user.image = backendUser.image;
         user.role = backendUser.role;
+        user.isAdmin = backendUser.isAdmin;
+        user.isActive = backendUser.isActive;
         user.authProvider = backendUser.authProvider;
+        user.organizationId = backendUser.organizationId;
+        user.organizationName = backendUser.organizationName;
         user.accessToken = backendUser.accessToken;
 
         return true;
@@ -155,8 +173,8 @@ export const authOptions: NextAuthOptions = {
           user: { ...token.user, ...refreshed.user },
           error: undefined,
         };
-      } catch (err: any) {
-        const status = err?.response?.status;
+      } catch (err: unknown) {
+        const status = isAxiosError(err) ? err.response?.status : undefined;
         if (status === 403) return { ...token, error: "AccountDeactivated" };
         return { ...token, error: "RefreshTokenExpired" };
       }

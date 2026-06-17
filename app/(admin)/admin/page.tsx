@@ -79,6 +79,14 @@ export default function AdminPage() {
       ellipsis: true,
     },
     {
+      title: "Organization",
+      dataIndex: "organizationName",
+      key: "organizationName",
+      width: 150,
+      ellipsis: true,
+      render: (v) => v ?? <span className="text-slate-400 italic">None</span>,
+    },
+    {
       title: "Role",
       dataIndex: "role",
       key: "role",
@@ -92,6 +100,22 @@ export default function AdminPage() {
       render: (role) => (
         <Tag variant="status" color={roleColors[role] ?? "default"}>
           {role}
+        </Tag>
+      ),
+    },
+    {
+      title: "Admin",
+      dataIndex: "isAdmin",
+      key: "isAdmin",
+      width: 100,
+      filters: [
+        { text: "Admin", value: true },
+        { text: "User", value: false },
+      ],
+      onFilter: (value, record) => record.isAdmin === value,
+      render: (isAdmin) => (
+        <Tag variant="status" color={isAdmin ? "purple" : "default"}>
+          {isAdmin ? "Yes" : "No"}
         </Tag>
       ),
     },
@@ -127,7 +151,7 @@ export default function AdminPage() {
       fixed: "right",
       render: (_, record) => {
         const isSelf = record.id === currentUserId;
-        const isAdminTarget = record.role === "ADMIN" || record.role === "SUPER_ADMIN";
+        const isAdminTarget = record.isAdmin || record.role === "ADMIN" || record.role === "SUPER_ADMIN";
         const canToggle = !isSelf && (!isAdminTarget || currentRole === "SUPER_ADMIN");
         const tooltipMsg = isSelf
           ? "Cannot deactivate yourself"
@@ -157,7 +181,8 @@ export default function AdminPage() {
         const q = search.trim().toLowerCase();
         return (
           (u.name ?? "").toLowerCase().includes(q) ||
-          u.email.toLowerCase().includes(q)
+          u.email.toLowerCase().includes(q) ||
+          (u.organizationName ?? "").toLowerCase().includes(q)
         );
       })
     : users;
@@ -194,7 +219,7 @@ export default function AdminPage() {
           loading={loading}
           pagination={{ pageSize: 10, showSizeChanger: true, size: "small" }}
           rowClassName={(record) => (!record.isActive ? "opacity-60" : "")}
-          scroll={{ x: 600 }}
+          scroll={{ x: 860 }}
           size="middle"
         />
       </div>

@@ -6,7 +6,11 @@ type AppUser = {
   email?: string | null;
   image?: string | null;
   role: string;
+  isAdmin?: boolean;
+  isActive?: boolean;
   authProvider: string;
+  organizationId?: string | null;
+  organizationName?: string | null;
 };
 
 declare module "next-auth" {

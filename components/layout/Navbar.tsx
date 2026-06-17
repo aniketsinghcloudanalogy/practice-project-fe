@@ -16,7 +16,7 @@ const Navbar = () => {
   const username = session?.user?.name
   const userImage = session?.user?.image
   const role = session?.user?.role
-  const isAdminRole = role === 'ADMIN' || role === 'SUPER_ADMIN'
+  const isAdminRole = Boolean(session?.user?.isAdmin) || role === 'ADMIN' || role === 'SUPER_ADMIN'
   const dashboardHref = isAdminRole ? '/admin' : '/dashboard'
 
   const handleLogout = async () => {

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useSidebar } from '@/store/features/dashboard/sidebarContext'
-import { FaHandshake } from "react-icons/fa";
+import { FaHandshake,FaWpforms } from "react-icons/fa";
 import {
   MdHome,
   MdDescription,
@@ -71,7 +71,7 @@ const itemsByRole: Record<UserRole, SidebarItem[]> = {
     { key: 'users',       label: 'Users',         icon: <MdSupervisorAccount size={20} /> },
     { key: 'contacts',    label: 'Contacts',      icon: <MdPerson size={20} />,             href: '/contact' },
     { key: 'partners',   label: 'Partners',     icon: <FaHandshake size={20} />,          href: '/superAdminPartner' },
-    { key: 'admin-panel', label: 'Admin Panel',   icon: <MdAdminPanelSettings size={20} /> },
+    { key: 'Form-Builder', label: 'Form Builder',   icon: <FaWpforms size={20} /> , href: '/formBuilder' },
     { key: 'security',    label: 'Security',      icon: <MdSecurity size={20} /> },
     { key: 'settings',    label: 'Settings',      icon: <MdSettings size={20} /> },
   ],

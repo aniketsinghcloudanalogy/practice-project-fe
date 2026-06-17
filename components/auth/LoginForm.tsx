@@ -56,7 +56,7 @@ const LoginForm = () => {
 			if (result?.ok) {
 				const session = await getSession()
 				const role = session?.user?.role
-				const isAdminRole = role === 'ADMIN' || role === 'SUPER_ADMIN'
+				const isAdminRole = Boolean(session?.user?.isAdmin) || role === 'ADMIN' || role === 'SUPER_ADMIN'
 				router.push(isAdminRole ? '/admin' : '/dashboard')
 				return
 			}

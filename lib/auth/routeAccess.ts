@@ -18,6 +18,10 @@ export type RouteAccessRule = {
  */
 export const ROUTE_ACCESS: RouteAccessRule[] = [
   {
+    path: "/formBuilder",
+    allowedRoles: [ROLES.SUPER_ADMIN],
+  },
+  {
     path: "/superAdminPartner",
     allowedRoles: [ROLES.SUPER_ADMIN],
   },
@@ -37,6 +41,7 @@ export const ROUTE_ACCESS: RouteAccessRule[] = [
 
 /** Paths checked by `proxy.ts`. Keep in sync with `ROUTE_ACCESS`. */
 export const PROXY_MATCHER = [
+  "/formBuilder/:path*",
   "/superAdminPartner/:path*",
   "/admin/:path*",
   "/dashboard/:path*",

@@ -91,7 +91,10 @@ export type UserRow = {
   name: string | null;
   email: string;
   role: string;
+  isAdmin: boolean;
   isActive: boolean;
+  organizationId: string | null;
+  organizationName: string | null;
   createdAt: string;
 };
 
