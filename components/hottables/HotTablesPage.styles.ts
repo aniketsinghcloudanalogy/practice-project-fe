@@ -202,7 +202,11 @@ export const OpenButton = styled(Button)`
   && {
     border-radius: 7px;
     font-weight: 500;
+<<<<<<< HEAD
     font-size: 11px;
+=======
+    font-size: 13px;
+>>>>>>> c318904 (Ui using HOtTables)
     height: 32px;
     border-color: #e8eaed;
     color: #1d1f2b;
@@ -214,6 +218,7 @@ export const OpenButton = styled(Button)`
   }
 `;
 
+<<<<<<< HEAD
 export const DeleteButton = styled(Button)`
   && {
     border-radius: 7px;
@@ -232,6 +237,8 @@ export const DeleteButton = styled(Button)`
   }
 `;
 
+=======
+>>>>>>> c318904 (Ui using HOtTables)
 export const EmptyWrapper = styled.div`
   padding: 48px 0;
   text-align: center;

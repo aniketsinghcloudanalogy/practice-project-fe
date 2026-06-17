@@ -1,15 +1,22 @@
 'use client'
 
 import React, { useState } from 'react'
+<<<<<<< HEAD
 import AntUpload from '@/components/common/antd/Upload'
+=======
+import Upload from '@/components/common/Upload'
+>>>>>>> c318904 (Ui using HOtTables)
 import Table from '@/components/common/Table'
 import Tag from '@/components/common/Tag'
 import Space from '@/components/common/Space'
 import Spin from '@/components/common/Spin'
 import Empty from '@/components/common/Empty'
 import Message from '@/components/common/Message'
+<<<<<<< HEAD
 import Modal from '@/components/common/Modal'
 import Button from '@/components/common/Button'
+=======
+>>>>>>> c318904 (Ui using HOtTables)
 import Typography from '@/components/common/Typography'
 import {
   UploadOutlined,
@@ -17,29 +24,67 @@ import {
   TableOutlined,
   ArrowRightOutlined,
   InboxOutlined,
+<<<<<<< HEAD
   DeleteOutlined,
+=======
+>>>>>>> c318904 (Ui using HOtTables)
 } from '@/components/common/antd/icons'
 import Link from 'next/link'
 import {
   useGetAiPdfUploadsQuery,
   useExtractAiPdfMutation,
+<<<<<<< HEAD
   useDeleteAiPdfUploadMutation,
 } from '@/store/services/aiPdf/apiSlice'
 import type { AiPdfUploadListItem } from '@/store/services/aiPdf/types'
 
 const { Title, Text } = Typography
 const { Dragger } = AntUpload
+=======
+} from '@/store/services/aiPdf/apiSlice'
+import type { AiPdfUploadListItem } from '@/store/services/aiPdf/types'
+import {
+  PageWrapper,
+  HeroCard,
+  HeroLeft,
+  HeroTitle,
+  HeroSubtitle,
+  StepBadge,
+  StepDot,
+  StepLabel,
+  StatGrid,
+  StatBox,
+  StatNumber,
+  StatLabel,
+  SectionCard,
+  SectionHeader,
+  SectionTitle,
+  StyledDragger,
+  UploadButton,
+  FileNameText,
+  OpenButton,
+  EmptyWrapper,
+} from '@/components/hottables/HotTablesPage.styles'
+
+const { Title, Text, Paragraph } = Typography
+>>>>>>> c318904 (Ui using HOtTables)
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function HotTablesPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+<<<<<<< HEAD
   const [deleteTarget, setDeleteTarget] = useState<AiPdfUploadListItem | null>(null)
+=======
+>>>>>>> c318904 (Ui using HOtTables)
   const [messageApi, contextHolder] = Message.useMessage()
 
   const { data: uploads = [], isLoading: uploadsLoading } = useGetAiPdfUploadsQuery()
   const [extractAiPdf, { isLoading: extracting }] = useExtractAiPdfMutation()
+<<<<<<< HEAD
   const [deleteAiPdfUpload, { isLoading: deletingUpload }] = useDeleteAiPdfUploadMutation()
+=======
+>>>>>>> c318904 (Ui using HOtTables)
 
   const handleUpload = async () => {
     if (!selectedFile) return
@@ -52,6 +97,7 @@ export default function HotTablesPage() {
     }
   }
 
+<<<<<<< HEAD
   const handleDeleteUpload = async () => {
     if (!deleteTarget) return
 
@@ -64,6 +110,8 @@ export default function HotTablesPage() {
     }
   }
 
+=======
+>>>>>>> c318904 (Ui using HOtTables)
   const tableColumns = [
     {
       title: 'File',
@@ -71,8 +119,13 @@ export default function HotTablesPage() {
       key: 'fileName',
       render: (name: string) => (
         <Space>
+<<<<<<< HEAD
           <FileTextOutlined className="text-indigo-500" />
           <span className="text-sm font-medium text-indigo-500">{name}</span>
+=======
+          <FileTextOutlined style={{ color: '#6366f1' }} />
+          <FileNameText>{name}</FileNameText>
+>>>>>>> c318904 (Ui using HOtTables)
         </Space>
       ),
     },
@@ -82,7 +135,17 @@ export default function HotTablesPage() {
       render: (_: any, record: AiPdfUploadListItem) => (
         <Tag
           icon={<TableOutlined />}
+<<<<<<< HEAD
           className="rounded-md border-none bg-indigo-50 font-semibold text-indigo-500"
+=======
+          style={{
+            background: '#f0f1ff',
+            color: '#6366f1',
+            border: 'none',
+            borderRadius: 6,
+            fontWeight: 600,
+          }}
+>>>>>>> c318904 (Ui using HOtTables)
         >
           {record._count.tables} {record._count.tables === 1 ? 'table' : 'tables'}
         </Tag>
@@ -93,7 +156,11 @@ export default function HotTablesPage() {
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (date: string) => (
+<<<<<<< HEAD
         <Text className="text-[13px] text-slate-400">
+=======
+        <Text style={{ color: '#8b8fa8', fontSize: 13 }}>
+>>>>>>> c318904 (Ui using HOtTables)
           {new Date(date).toLocaleDateString('en-IN', {
             day: 'numeric',
             month: 'short',
@@ -103,6 +170,7 @@ export default function HotTablesPage() {
       ),
     },
     {
+<<<<<<< HEAD
       title: 'Actions',
       key: 'action',
       width: 220,
@@ -126,6 +194,17 @@ export default function HotTablesPage() {
             </Button>
           </Link>
         </Space>
+=======
+      title: '',
+      key: 'action',
+      width: 100,
+      render: (_: any, record: AiPdfUploadListItem) => (
+        <Link href={`/hottables/tables/${record.id}`}>
+          <OpenButton icon={<ArrowRightOutlined />} iconPlacement="end">
+            Open
+          </OpenButton>
+        </Link>
+>>>>>>> c318904 (Ui using HOtTables)
       ),
     },
   ]
@@ -133,6 +212,7 @@ export default function HotTablesPage() {
   const totalTables = uploads.reduce((sum, u) => sum + u._count.tables, 0)
 
   return (
+<<<<<<< HEAD
     <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
       {contextHolder}
 
@@ -217,13 +297,62 @@ export default function HotTablesPage() {
         </div>
 
         <Dragger
+=======
+    <PageWrapper>
+      {contextHolder}
+
+      {/* ── Hero ── */}
+      <HeroCard>
+        <HeroLeft>
+          <StepBadge>
+            <StepDot $active />
+            <StepDot $active />
+            <StepDot />
+            <StepLabel>PDF → Tables</StepLabel>
+          </StepBadge>
+          <HeroTitle level={2}>Extract tables from any PDF</HeroTitle>
+          <HeroSubtitle>
+            Upload a PDF containing one or more tables. The AI reads the document, identifies every
+            table, and renders them as live, editable grids — ready to view, filter, and export.
+          </HeroSubtitle>
+        </HeroLeft>
+
+        <StatGrid>
+          <StatBox>
+            <StatNumber level={3}>{uploads.length}</StatNumber>
+            <StatLabel>PDFs uploaded</StatLabel>
+          </StatBox>
+          <StatBox>
+            <StatNumber level={3}>{totalTables}</StatNumber>
+            <StatLabel>Tables extracted</StatLabel>
+          </StatBox>
+        </StatGrid>
+      </HeroCard>
+
+      {/* ── Upload ── */}
+      <SectionCard>
+        <SectionHeader>
+          <SectionTitle level={4}>Upload a PDF</SectionTitle>
+          {selectedFile && (
+            <Text style={{ color: '#8b8fa8', fontSize: 13 }}>
+              Ready:{' '}
+              <span style={{ color: '#6366f1', fontWeight: 500 }}>{selectedFile.name}</span>
+            </Text>
+          )}
+        </SectionHeader>
+
+        <StyledDragger
+>>>>>>> c318904 (Ui using HOtTables)
           accept=".pdf"
           showUploadList={false}
           beforeUpload={(file) => {
             setSelectedFile(file)
             return false
           }}
+<<<<<<< HEAD
           className="[&_.ant-upload-drag]:rounded-[10px]! [&_.ant-upload-drag]:border-2! [&_.ant-upload-drag]:border-dashed! [&_.ant-upload-drag]:border-indigo-200! [&_.ant-upload-drag]:bg-slate-50! [&_.ant-upload-drag]:transition-all! [&_.ant-upload-drag:hover]:border-indigo-500! [&_.ant-upload-drag:hover]:!bg-indigo-50! [&_.ant-upload-drag-icon_.anticon]:text-4xl! [&_.ant-upload-drag-icon_.anticon]:text-indigo-500! [&_.ant-upload-hint]:text-[13px]! [&_.ant-upload-hint]:text-slate-400! [&_.ant-upload-text]:text-[15px]! [&_.[&_.ant-upload-text]:font-semibold! [&_.ant-upload-text]:text-[#1d1f2b]!"
+=======
+>>>>>>> c318904 (Ui using HOtTables)
         >
           <p className="ant-upload-drag-icon">
             <InboxOutlined />
@@ -232,15 +361,23 @@ export default function HotTablesPage() {
             {selectedFile ? selectedFile.name : 'Drop a PDF here or click to browse'}
           </p>
           <p className="ant-upload-hint">Single PDF up to 1 MB · Tables are extracted automatically</p>
+<<<<<<< HEAD
         </Dragger>
 
         <div className="text-right">
           <Button
+=======
+        </StyledDragger>
+
+        <div style={{ textAlign: 'right' }}>
+          <UploadButton
+>>>>>>> c318904 (Ui using HOtTables)
             type="primary"
             icon={<UploadOutlined />}
             loading={extracting}
             disabled={!selectedFile}
             onClick={handleUpload}
+<<<<<<< HEAD
             className="mt-4 h-10 w-full rounded-lg border-indigo-500 bg-indigo-500 px-6 font-semibold hover:border-indigo-600! hover:bg-indigo-600! sm:w-auto"
           >
             {extracting ? 'Extracting…' : 'Upload & Extract'}
@@ -269,10 +406,38 @@ export default function HotTablesPage() {
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={
                 <Text className="text-slate-400">
+=======
+          >
+            {extracting ? 'Extracting…' : 'Upload & Extract'}
+          </UploadButton>
+        </div>
+      </SectionCard>
+
+      {/* ── Upload List ── */}
+      <SectionCard>
+        <SectionHeader>
+          <SectionTitle level={4}>Your PDFs</SectionTitle>
+          <Text style={{ color: '#8b8fa8', fontSize: 13 }}>
+            {uploads.length} {uploads.length === 1 ? 'document' : 'documents'}
+          </Text>
+        </SectionHeader>
+
+        {uploadsLoading ? (
+          <div style={{ textAlign: 'center', padding: '48px 0' }}>
+            <Spin size="large" />
+          </div>
+        ) : uploads.length === 0 ? (
+          <EmptyWrapper>
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={
+                <Text style={{ color: '#8b8fa8' }}>
+>>>>>>> c318904 (Ui using HOtTables)
                   No PDFs yet. Upload one above to get started.
                 </Text>
               }
             />
+<<<<<<< HEAD
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -289,5 +454,20 @@ export default function HotTablesPage() {
         )}
       </div>
     </div>
+=======
+          </EmptyWrapper>
+        ) : (
+          <Table
+            dataSource={uploads}
+            columns={tableColumns}
+            rowKey="id"
+            pagination={{ pageSize: 8, size: 'small' }}
+            size="middle"
+            style={{ borderRadius: 8 }}
+          />
+        )}
+      </SectionCard>
+    </PageWrapper>
+>>>>>>> c318904 (Ui using HOtTables)
   )
 }
