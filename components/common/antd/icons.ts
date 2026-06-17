@@ -18,5 +18,10 @@ export {
 	PhoneOutlined,
 	SendOutlined,
 	UserOutlined,
-	SaveOutlined
+	SaveOutlined,
+	FileTextOutlined,
+	ArrowRightOutlined,
+	InboxOutlined,
+	UploadOutlined,
+	TableOutlined,
 } from '@ant-design/icons'

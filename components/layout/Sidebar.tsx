@@ -51,7 +51,7 @@ import Tooltip from '@/components/common/Tooltip'
 const itemsByRole: Record<UserRole, SidebarItem[]> = {
   user: [
     { key: 'home', label: 'Home', icon: <MdHome size={20} />, href: '/dashboard' },
-    { key: 'quote', label: 'Quote', icon: <MdDescription size={20} /> },
+    { key: 'quote', label: 'HotTables', icon: <MdDescription size={20} />, href: '/hottables' },
     { key: 'pdf', label: 'PDF Extraction', icon: <FilePdfOutlined />, href: '/pdf' },
     { key: 'accounts', label: 'Accounts', icon: <MdGroup size={20} /> },
     { key: 'contacts', label: 'Contacts', icon: <MdPerson size={20} />, href: '/contact' },
