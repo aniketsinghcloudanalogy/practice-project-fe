@@ -86,7 +86,7 @@ export const contactApi = baseApi.injectEndpoints({
         }),
         submitContactMessage: builder.mutation<ApiResponse<unknown>, ContactMessagePayload>({
             query: (body) => ({
-                url: '/api/contacts',
+                url: '/api/contactus',
                 method: 'POST',
                 body,
             }),

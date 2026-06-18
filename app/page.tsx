@@ -33,7 +33,7 @@ const Page = () => {
 			<section className="relative border-b border-slate-200 bg-white">
 				<div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(22,119,255,0.10),transparent_34%),linear-gradient(135deg,rgba(14,165,233,0.08),rgba(255,255,255,0)_45%)]" />
 				<div
-					className="relative mx-auto grid min-h-[calc(100vh-88px)] w-full max-w-360 items-center gap-10 py-12 pr-4 pl-4 sm:pr-6 sm:pl-6 lg:grid-cols-[1.05fr_0.95fr] lg:py-16 lg:pr-8 lg:pl-[var(--navbar-offset)]"
+					className="relative mx-auto grid min-h-[calc(100vh-88px)] w-full max-w-360 items-center gap-10 py-12 pr-4 pl-4 sm:pr-6 sm:pl-6 lg:grid-cols-[1.05fr_0.95fr] lg:py-16 lg:pr-8 lg:pl-(--navbar-offset)"
 				>
 					<div className="max-w-3xl">
 						<div className="mb-5 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700">
@@ -53,7 +53,7 @@ const Page = () => {
 								Get Started
 								<ArrowRight size={18} aria-hidden="true" />
 							</Button>
-							<Button href="/contact" variant="auth" className="w-full sm:w-auto">
+							<Button href="/contactus" variant="auth" className="w-full sm:w-auto">
 								Contact Us
 							</Button>
 						</div>
@@ -107,7 +107,7 @@ const Page = () => {
 				</div>
 			</section>
 
-			<section className="mx-auto w-full max-w-360 py-12 pr-4 pl-4 sm:pr-6 sm:pl-6 lg:pr-8 lg:pl-[var(--navbar-offset)]">
+			<section className="mx-auto w-full max-w-360 py-12 pr-4 pl-4 sm:pr-6 sm:pl-6 lg:pr-8 lg:pl-(--navbar-offset)">
 				<div className="mb-7 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
 					<div>
 						<p className="text-sm font-semibold uppercase tracking-normal text-blue-700">What is inside</p>

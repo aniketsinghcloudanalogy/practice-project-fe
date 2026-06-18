@@ -26,19 +26,54 @@ import {
 	SubmitRow,
 } from './ContactForm.styles'
 
+const toDigitsOnly = (value?: string | null) => {
+	if (!value) return ''
+	return value.replace(/\D/g, '')
+}
+
+const hasValidPhoneLength = (value?: string | null) => {
+	const digits = toDigitsOnly(value)
+	return digits.length >= 10 && digits.length <= 15
+}
+
 const ContactForm = () => {
 	const { message } = App.useApp()
 	const [form] = Form.useForm<ContactMessagePayload>()
 	const [submitContact, { isLoading: loading }] = useSubmitContactMessageMutation()
 
 	const handleSubmit = async (values: ContactMessagePayload) => {
+		const primaryContact = toDigitsOnly(values.primaryContact)
+		const secondaryContactDigits = toDigitsOnly(values.secondaryContact)
+
+		const payload: ContactMessagePayload = {
+			...values,
+			firstName: values.firstName.trim(),
+			lastName: values.lastName?.trim() || undefined,
+			email: values.email.trim().toLowerCase(),
+			primaryContact,
+			secondaryContact: secondaryContactDigits || undefined,
+			subject: values.subject.trim(),
+			message: values.message.trim(),
+		}
 
 		try {
-			const response = await submitContact(values).unwrap()
+			const request = submitContact(payload)
+			const timeoutId = setTimeout(() => {
+				request.abort()
+			}, 15000)
+
+			const response = await request.unwrap()
+			clearTimeout(timeoutId)
 			message.success(response.message || 'Your message has been sent.')
 			form.resetFields()
-		} catch {
-			message.error('Unable to send your message right now.')
+		} catch (error: any) {
+			if (error?.name === 'AbortError') {
+				message.error('Request timed out. Please check the server and try again.')
+				return
+			}
+
+			const apiError = error?.data?.message
+			message.error(apiError || 'Unable to send your message right now.')
 		}
 	}
 
@@ -111,7 +146,13 @@ const ContactForm = () => {
 						name="primaryContact"
 						rules={[
 							{ required: true, message: 'Please enter your phone number.' },
-							{ pattern: /^\d{10,15}$/, message: 'Primary contact must be 10–15 digits with no spaces or symbols.' },
+							{
+								validator: async (_rule, value) => {
+									if (!hasValidPhoneLength(value)) {
+										throw new Error('Primary contact must contain 10-15 digits.')
+									}
+								},
+							},
 						]}
 					>
 						<Input
@@ -126,7 +167,15 @@ const ContactForm = () => {
 						label={<span className="text-[13px] font-medium text-slate-700">Secondary contact</span>}
 						name="secondaryContact"
 						rules={[
-							{ pattern: /^\d{10,15}$/, message: 'Secondary contact must be 10–15 digits with no spaces or symbols.' },
+							{
+								validator: async (_rule, value) => {
+									if (!value) return
+
+									if (!hasValidPhoneLength(value)) {
+										throw new Error('Secondary contact must contain 10-15 digits.')
+									}
+								},
+							},
 						]}>
 						<Input
 							appearance="soft"
