@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useState, useMemo } from 'react'
+import React, { useRef, useState, useMemo, useEffect } from 'react'
 import Spin from '@/components/common/Spin'
 import Empty from '@/components/common/Empty'
 import Tag from '@/components/common/Tag'
@@ -20,33 +20,15 @@ import 'handsontable/styles/ht-theme-main.css'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import {
-  useGetAiPdfUploadDetailQuery,
+    useGetAiPdfUploadDetailQuery,
+    useSyncAiPdfUploadMutation,
 } from '@/store/services/aiPdf/apiSlice'
-import type { AiPdfTable } from '@/store/services/aiPdf/types'
+import type { AiPdfSyncPayload, AiPdfTable, AiPdfTableRow } from '@/store/services/aiPdf/types'
 import Modal from '@/components/common/Modal'
 import Select from '@/components/common/Select'
 import Input from '@/components/common/Input'
 import Button from '@/components/common/Button'
 import Typography from '@/components/common/Typography'
-import {
-  PageWrapper,
-  TopBar,
-  BackButton,
-  MetaRow,
-  FileChip,
-  PageTitle,
-  TablesWrapper,
-  TableSection,
-  TableHeader,
-  TableTitleRow,
-  TableTitle,
-  TableIndexBadge,
-  ActionBar,
-  AddButton,
-  HotWrapper,
-  CenterBox,
-  BottomActions,
-} from '@/components/hottables/HotTablesDetail.styles'
 registerAllModules()
 
 const { Title, Text } = Typography
@@ -112,10 +94,12 @@ function PdfTableGrid({
     table,
     index,
     onDelete,
+    onRowsChange,
 }: {
     table: AiPdfTable
     index: number
     onDelete: () => void
+    onRowsChange: (tableId: string, rows: AiPdfTableRow[]) => void
 }) {
     const selectedRowsRef = useRef<number[]>([])
     const hotRef = useRef<HotTableClass>(null)
@@ -123,12 +107,12 @@ function PdfTableGrid({
     const [selectedRows, setSelectedRows] = useState<number[]>([])
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
 
-    const [rules, setRules] = useState([
-        {
-            column: '',
-            value: '',
-        },
-    ])
+    const createEmptyRule = () => ({
+        column: '',
+        value: '',
+    })
+
+    const [rules, setRules] = useState([createEmptyRule()])
 
     const colHeaders = useMemo(
         () => table.columns.map((c) => c.title),
@@ -140,21 +124,70 @@ function PdfTableGrid({
         [table.columns]
     )
 
+    const colWidths = useMemo(
+        () => table.columns.map(() => 180),
+        [table.columns]
+    )
+
     const data = useMemo(
-        () => table.rows.map((r) => ({ ...r.rowData })),
+        () => table.rows.map((r) => ({ __rowId: r.id, ...r.rowData })),
         [table.rows]
     )
 
-    const addRow = () => {
+    const syncRowsFromGrid = () => {
         const hot = hotRef.current?.hotInstance
         if (!hot) return
-        hot.alter('insert_row_below', hot.countRows())
+
+        const sourceRows = hot.getSourceData() as Record<string, unknown>[]
+        const existingById = new Map(table.rows.map((row) => [row.id, row]))
+
+        const normalizedRows = sourceRows.map((sourceRow, rowIndex) => {
+            const rowId =
+                typeof sourceRow?.__rowId === 'string' && sourceRow.__rowId.trim().length > 0
+                    ? sourceRow.__rowId
+                    : ''
+
+            const existingRow = rowId ? existingById.get(rowId) : undefined
+            const rowData: Record<string, unknown> = {}
+
+            table.columns.forEach((column) => {
+                rowData[column.key] =
+                    sourceRow[column.key] === undefined ? null : sourceRow[column.key]
+            })
+
+            return {
+                id: rowId,
+                pdfTableId: table.id,
+                rowData,
+                rowIndex,
+                isDeleted: false,
+                createdAt: existingRow?.createdAt || '',
+                updatedAt: existingRow?.updatedAt || '',
+            }
+        })
+
+        onRowsChange(table.id, normalizedRows)
     }
+
     const addRule = () => {
         setRules((prev) => [
             ...prev,
-            { column: '', value: '' },
+            createEmptyRule(),
         ])
+    }
+
+    const resetBulkEditModal = () => {
+        setRules([createEmptyRule()])
+    }
+
+    const openBulkEditModal = () => {
+        resetBulkEditModal()
+        setBulkEditOpen(true)
+    }
+
+    const closeBulkEditModal = () => {
+        setBulkEditOpen(false)
+        resetBulkEditModal()
     }
 
     const removeRule = (index: number) => {
@@ -198,31 +231,27 @@ function PdfTableGrid({
             `Updated ${selectedRows.length} rows`
         )
 
-        setBulkEditOpen(false)
+        closeBulkEditModal()
     }
 
 
 
     return (
-        <TableSection>
-            <TableHeader>
-                <TableTitleRow>
-                    <TableIndexBadge>{index + 1}</TableIndexBadge>
-                    <TableTitle level={5}>{table.title || `Table ${index + 1}`}</TableTitle>
-                </TableTitleRow>
+        <div className={index > 0 ? 'border-t-2 border-slate-200' : undefined}>
+            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-5 py-3.5">
+                <div className="flex items-center gap-2.5">
+                    <span className="flex h-5.5 w-5.5 shrink-0 items-center justify-center rounded-md bg-violet-100 text-[11px] font-bold text-indigo-500">
+                        {index + 1}
+                    </span>
+                    <Title level={5} className="mb-0 text-sm font-semibold text-[#1d1f2b]">
+                        {table.title || `Table ${index + 1}`}
+                    </Title>
+                </div>
 
-                <ActionBar>
+                <div className="flex items-center gap-2">
                     <Tag
                         icon={<TableOutlined />}
-                        style={{
-                            background: '#f0f1ff',
-                            color: '#6366f1',
-                            border: 'none',
-                            borderRadius: 6,
-                            fontWeight: 600,
-                            fontSize: 12,
-                            marginRight: 0,
-                        }}
+                        className="mr-0 rounded-md border-none bg-indigo-50 text-[12px] font-semibold text-indigo-500"
                     >
                         {table.rows.length} rows
                     </Tag>
@@ -231,7 +260,7 @@ function PdfTableGrid({
                         <Button
                             type="primary"
                             size="small"
-                            onClick={() => setBulkEditOpen(true)}
+                            onClick={openBulkEditModal}
                         >
                             Edit ({selectedRows.length})
                         </Button>
@@ -249,28 +278,29 @@ function PdfTableGrid({
                     />
 
 
-                </ActionBar>
-            </TableHeader>
+                </div>
+            </div>
 
-            <HotWrapper>
+            <div className="[&_.handsontable]:font-inherit [&_.handsontable]:text-[13px] [&_.handsontable_td]:text-[#3d3f52] [&_.handsontable_th]:bg-slate-50 [&_.handsontable_th]:text-[12px] [&_.handsontable_th]:font-semibold [&_.handsontable_th]:text-[#1d1f2b]">
                 {data.length === 0 ? (
-                    <CenterBox>
+                    <div className="flex min-h-75 items-center justify-center">
                         <Empty
                             image={Empty.PRESENTED_IMAGE_SIMPLE}
-                            description={<Text style={{ color: '#8b8fa8' }}>No rows in this table</Text>}
+                            description={<Text className="text-slate-400">No rows in this table</Text>}
                         />
-                    </CenterBox>
+                    </div>
                 ) : (
                     <HotTable
                         ref={hotRef}
                         data={data}
                         colHeaders={colHeaders}
                         columns={columns}
+                        colWidths={colWidths}
                         rowHeaders={true}
                         width="100%"
                         height="auto"
                         autoRowSize={true}
-                        autoColumnSize={true}
+                        autoColumnSize={false}
                         stretchH="all"
                         contextMenu={true}
                         manualColumnResize={true}
@@ -281,6 +311,16 @@ function PdfTableGrid({
                         selectionMode="multiple"
                         licenseKey="non-commercial-and-evaluation"
                         enterBeginsEditing={true}
+                        afterChange={(changes, source) => {
+                            if (!changes || source === 'loadData') return
+                            syncRowsFromGrid()
+                        }}
+                        afterCreateRow={() => {
+                            syncRowsFromGrid()
+                        }}
+                        afterRemoveRow={() => {
+                            syncRowsFromGrid()
+                        }}
                         afterSelectionEnd={(row, _col, row2) => {
                             const rows: number[] = []
 
@@ -306,29 +346,25 @@ function PdfTableGrid({
                         }}
                     />
                 )}
-            </HotWrapper>
+            </div>
 
             <Modal
                 open={bulkEditOpen}
                 footer={null}
-                onCancel={() => setBulkEditOpen(false)}
+                onCancel={closeBulkEditModal}
                 width={850}
             >
-                <Title level={5} style={{ marginBottom: 24 }}>
+                <Title level={5} className="mb-6">
                     Edit {selectedRows.length} rows
                 </Title>
 
                 <Text
-                    style={{
-                        display: 'block',
-                        marginBottom: 24,
-                        color: '#666',
-                    }}
+                    className="mb-6 block text-neutral-500"
                 >
                     Pick columns, enter a shared value, and apply it to all selected rows.
                 </Text>
 
-                <div style={{ marginBottom: 24 }}>
+                <div className="mb-6">
                     <Button
                         type="primary"
                         icon={<PlusOutlined />}
@@ -353,22 +389,17 @@ function PdfTableGrid({
                         return (
                             <div
                                 key={index}
-                                style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: '220px 1fr 40px',
-                                    gap: 16,
-                                    alignItems: 'start',
-                                    marginBottom: 16,
-                                }}
+                                className="mb-4 grid grid-cols-[220px_minmax(0,1fr)_44px] items-end gap-4"
                             >
-                                <div style={{ width: '100%' }}>
-                                    <Text style={{ display: 'block', marginBottom: 8 }}>
+                                <div className="flex w-full flex-col gap-2">
+                                    <Text className="mb-2 block">
                                         Field
                                     </Text>
 
                                     <Select
+                                        size="large"
                                         placeholder="Select field"
-                                        value={rule.column}
+                                        value={rule.column || undefined}
                                         onChange={(value) =>
                                             updateRule(index, 'column', value)
                                         }
@@ -376,33 +407,33 @@ function PdfTableGrid({
                                             label: c.title,
                                             value: c.key,
                                         }))}
-                                        style={{ width: '100%' }}
+                                        className="h-11 w-full"
                                     />
                                 </div>
 
-                                <div style={{ width: '100%' }}>
-                                    <Text style={{ display: 'block', marginBottom: 8 }}>
+                                <div className="flex w-full flex-col gap-2">
+                                    <Text className="mb-2 block">
                                         Value
                                     </Text>
 
                                     <Input
+                                        size="large"
                                         placeholder="Select a field first"
                                         value={rule.value}
                                         disabled={!rule.column}
                                         onChange={(e) =>
                                             updateRule(index, 'value', e.target.value)
                                         }
-                                        style={{ width: '100%' }}
+                                        className="h-11 w-full"
                                     />
                                 </div>
 
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <div style={{ height: 22 }} />
+                                <div className="flex h-full items-end justify-center">
                                     <Button
                                         variant="icon-button-2"
                                         icon={<DeleteOutlined />}
                                         onClick={() => removeRule(index)}
-                                        style={{ width: 32, height: 32 }}
+                                        className="h-11 w-11"
                                     />
                                 </div>
                             </div>
@@ -410,15 +441,8 @@ function PdfTableGrid({
                     })
                 })()}
 
-                <div
-                    style={{
-                        display: 'flex',
-                        justifyContent: 'flex-end',
-                        gap: 12,
-                        marginTop: 24,
-                    }}
-                >
-                    <Button onClick={() => setBulkEditOpen(false)}>
+                <div className="mt-6 flex justify-end gap-3">
+                    <Button onClick={closeBulkEditModal}>
                         Cancel
                     </Button>
 
@@ -436,21 +460,15 @@ function PdfTableGrid({
                 onCancel={() => setDeleteConfirmOpen(false)}
                 width={420}
             >
-                <Title level={5} style={{ marginBottom: 16 }}>
+                <Title level={5} className="mb-4">
                     Delete this table?
                 </Title>
 
-                <Text style={{ display: 'block', marginBottom: 24, color: '#666' }}>
+                <Text className="mb-6 block text-neutral-500">
                     {`"${table.title || `Table ${index + 1}`}" and its ${table.rows.length} row${table.rows.length === 1 ? '' : 's'} will be removed from this view. This won't affect the original PDF.`}
                 </Text>
 
-                <div
-                    style={{
-                        display: 'flex',
-                        justifyContent: 'flex-end',
-                        gap: 12,
-                    }}
-                >
+                <div className="flex justify-end gap-3">
                     <Button onClick={() => setDeleteConfirmOpen(false)}>
                         Cancel
                     </Button>
@@ -468,7 +486,7 @@ function PdfTableGrid({
                 </div>
             </Modal>
 
-        </TableSection>
+        </div>
     )
 }
 
@@ -478,14 +496,76 @@ export default function UploadDetailPage() {
     const params = useParams()
     const uploadId = params.id as string
 
-    const { data: upload, isLoading, isError } = useGetAiPdfUploadDetailQuery(uploadId)
+    const { data: upload, isLoading, isError, refetch } = useGetAiPdfUploadDetailQuery(uploadId)
+    const [syncUpload, { isLoading: isSyncing }] = useSyncAiPdfUploadMutation()
 
     const [tables, setTables] = useState<AiPdfTable[]>([])
     const lastUploadIdRef = useRef<string | null>(null)
 
-    if (upload && lastUploadIdRef.current !== upload.id) {
+    useEffect(() => {
+        if (!upload || lastUploadIdRef.current === upload.id) return
         lastUploadIdRef.current = upload.id
         setTables(upload.tables)
+    }, [upload])
+
+    const handleRowsChange = (tableId: string, rows: AiPdfTableRow[]) => {
+        setTables((prev) =>
+            prev.map((table) =>
+                table.id === tableId
+                    ? { ...table, rows }
+                    : table
+            )
+        )
+    }
+
+    const buildSyncPayload = (currentTables: AiPdfTable[]): AiPdfSyncPayload => {
+        return {
+            tables: currentTables.map((table) => ({
+                ...(table.id && !table.id.startsWith('merged-') ? { id: table.id } : {}),
+                title: table.title || null,
+                columns: table.columns,
+                rows: table.rows.map((row, rowIndex) => ({
+                    ...(row.id ? { id: row.id } : {}),
+                    rowData: row.rowData,
+                    rowIndex: row.rowIndex ?? rowIndex,
+                })),
+            })),
+        }
+    }
+
+    const initialPayload = useMemo(
+        () => JSON.stringify(buildSyncPayload(upload?.tables || [])),
+        [upload]
+    )
+
+    const currentPayload = useMemo(
+        () => JSON.stringify(buildSyncPayload(tables)),
+        [tables]
+    )
+
+    const hasUnsyncedChanges = currentPayload !== initialPayload
+
+    const handleSyncChanges = async () => {
+        try {
+            const payload = buildSyncPayload(tables)
+            await syncUpload({ uploadId, payload }).unwrap()
+
+            // Message.success(
+            //     `Synced successfully (tables: +${result.summary.createdTables} / ~${result.summary.updatedTables} / -${result.summary.deletedTables}, rows: +${result.summary.createdRows} / ~${result.summary.updatedRows} / -${result.summary.deletedRows})`
+            // )
+
+            Message.success('Synced successfully');
+
+            const refreshed = await refetch()
+
+            if (refreshed.data) {
+                setTables(refreshed.data.tables)
+            }
+        } catch (error: unknown) {
+            const fallback = 'Failed to sync table changes'
+            const err = error as { data?: { message?: string } }
+            Message.error(err?.data?.message || fallback)
+        }
     }
 
     const handleDeleteTable = (tableId: string) => {
@@ -508,87 +588,79 @@ export default function UploadDetailPage() {
 
     if (isLoading) {
         return (
-            <PageWrapper>
-                <CenterBox><Spin size="large" /></CenterBox>
-            </PageWrapper>
+            <div className="min-h-screen bg-[#f8f9fc] p-8">
+                <div className="flex min-h-75 items-center justify-center"><Spin size="large" /></div>
+            </div>
         )
     }
 
     if (isError || !upload) {
         return (
-            <PageWrapper>
-                <CenterBox>
-                    <Empty description={<Text style={{ color: '#8b8fa8' }}>Upload not found</Text>} />
-                </CenterBox>
-            </PageWrapper>
+            <div className="min-h-screen bg-[#f8f9fc] p-8">
+                <div className="flex min-h-75 items-center justify-center">
+                    <Empty description={<Text className="text-slate-400">Upload not found</Text>} />
+                </div>
+            </div>
         )
     }
 
     return (
-        <PageWrapper>
-            <TopBar>
+        <div className="min-h-screen bg-[#f8f9fc] p-8">
+            <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
                 <Link href="/hottables">
-                    <BackButton icon={<ArrowLeftOutlined />}>
+                    <Button
+                        icon={<ArrowLeftOutlined />}
+                        className="h-9 rounded-lg border border-slate-200 px-3 text-[13px] font-medium text-[#1d1f2b] hover:border-indigo-500! hover:text-indigo-500!"
+                    >
                         Back to PDFs
-                    </BackButton>
+                    </Button>
                 </Link>
 
-                <MetaRow>
-                    <FileChip>
-                        <FileTextOutlined
-                            style={{ color: '#6366f1', fontSize: 13 }}
-                        />
-                        <Text
-                            style={{
-                                fontSize: 13,
-                                fontWeight: 500,
-                                color: '#1d1f2b',
-                            }}
-                        >
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-1.5">
+                        <FileTextOutlined className="text-[13px] text-indigo-500" />
+                        <Text className="text-[13px] font-medium text-[#1d1f2b]">
                             {upload.fileName}
                         </Text>
-                    </FileChip>
+                    </div>
 
                     <Tag
-                        style={{
-                            background: '#f0f1ff',
-                            color: '#6366f1',
-                            border: 'none',
-                            borderRadius: 6,
-                            fontWeight: 600,
-                        }}
+                        className="rounded-md border-none bg-indigo-50 font-semibold text-indigo-500"
                     >
                         {upload.tables.length}{' '}
                         {upload.tables.length === 1 ? 'table' : 'tables'}
                     </Tag>
-                </MetaRow>
-            </TopBar>
+                </div>
+            </div>
 
-            <PageTitle level={3}>Extracted Tables</PageTitle>
+            <Title level={3} className="mb-6 text-[22px] font-bold text-[#1d1f2b]">
+                Extracted Tables
+            </Title>
 
             {upload.tables.length === 0 ? (
                 <Empty
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
                     description={
-                        <Text style={{ color: '#8b8fa8' }}>
+                        <Text className="text-slate-400">
                             No tables found in this upload
                         </Text>
                     }
                 />
             ) : (
                 <>
-                    <TablesWrapper>
+                    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
                         {tables.map((table, index) => (
                             <PdfTableGrid
                                 key={table.id}
                                 table={table}
                                 index={index}
                                 onDelete={() => handleDeleteTable(table.id)}
+                                onRowsChange={handleRowsChange}
                             />
                         ))}
-                    </TablesWrapper>
+                    </div>
 
-                    <BottomActions>
+                    <div className="mt-5 flex justify-end gap-3">
                         {tables.length >= 2 && (
                             <Button onClick={handleMergeTables}>
                                 Merge Tables
@@ -597,17 +669,20 @@ export default function UploadDetailPage() {
 
                         <Button
                             type="primary"
-                            onClick={() => {
-                                Message.success(
-                                    'Sync functionality will be connected later'
-                                )
-                            }}
+                            loading={isSyncing}
+                            disabled={!hasUnsyncedChanges}
+                            onClick={handleSyncChanges}
+                            className={
+                                !hasUnsyncedChanges
+                                    ? 'blur-[0.6px] opacity-70'
+                                    : undefined
+                            }
                         >
                             Sync Changes
                         </Button>
-                    </BottomActions>
+                    </div>
                 </>
             )}
-        </PageWrapper>
+        </div>
     )
 }

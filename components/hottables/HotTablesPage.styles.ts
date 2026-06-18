@@ -202,7 +202,7 @@ export const OpenButton = styled(Button)`
   && {
     border-radius: 7px;
     font-weight: 500;
-    font-size: 13px;
+    font-size: 11px;
     height: 32px;
     border-color: #e8eaed;
     color: #1d1f2b;
@@ -210,6 +210,24 @@ export const OpenButton = styled(Button)`
     &:hover {
       border-color: #6366f1;
       color: #6366f1;
+    }
+  }
+`;
+
+export const DeleteButton = styled(Button)`
+  && {
+    border-radius: 7px;
+    font-weight: 500;
+    font-size: 11px;
+    height: 32px;
+    border-color: #fecaca;
+    color: #dc2626;
+    background: #fff5f5;
+
+    &:hover {
+      border-color: #ef4444;
+      color: #ffffff;
+      background: #ef4444;
     }
   }
 `;
