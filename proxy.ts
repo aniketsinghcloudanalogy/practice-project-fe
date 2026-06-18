@@ -49,6 +49,14 @@ const ROUTE_ACCESS: RouteAccessRule[] = [
     allowedRoles: [ROLES.USER],
   },
   {
+    path: "/hottables",
+    allowedRoles: [ROLES.USER],
+  },
+  {
+    path: "/pdf",
+    allowedRoles: [ROLES.USER],
+  },
+  {
     path: "/contact",
     allowedRoles: [ROLES.USER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
   },
@@ -113,6 +121,8 @@ export const config = {
     "/dealRegAi/:path*",
     "/admin/:path*",
     "/dashboard/:path*",
+    "/hottables/:path*",
+    "/pdf/:path*",
     "/contact/:path*",
   ],
 };
