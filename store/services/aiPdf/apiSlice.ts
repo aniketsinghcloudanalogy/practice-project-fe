@@ -1,11 +1,10 @@
 import { baseApi } from '../baseApi'
+import { normalizeSyncPayload } from './constants'
 import type {
   AiPdfDeleteResponse,
   AiPdfDeleteSummary,
   AiPdfExtractResponse,
   AiPdfExtractSummary,
-  AiPdfLineItemFieldOption,
-  AiPdfLineItemFieldsResponse,
   AiPdfSyncPayload,
   AiPdfSyncResponse,
   AiPdfSyncSummary,
@@ -14,7 +13,6 @@ import type {
   AiPdfUploadListItem,
   AiPdfUploadListResponse,
 } from './types'
-
 export const aiPdfApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // GET /aipdf — list all uploads with table count
@@ -41,34 +39,23 @@ export const aiPdfApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // GET /aipdf/line-item-fields — DB LineItems field options
-    getAiPdfLineItemFields: builder.query<AiPdfLineItemFieldOption[], void>({
-      query: () => 'api/aipdf/line-item-fields',
-      transformResponse: (response: AiPdfLineItemFieldsResponse) => response.data.fields,
-    }),
-
     // POST /aipdf/extract — upload PDF and extract tables
     extractAiPdf: builder.mutation<AiPdfExtractSummary, File>({
       query: (file) => {
         const formData = new FormData()
         formData.append('pdf', file)
-
-        return {
-          url: 'api/aipdf/extract',
-          method: 'POST',
-          body: formData,
-        }
+        return { url: 'api/aipdf/extract', method: 'POST', body: formData }
       },
       transformResponse: (response: AiPdfExtractResponse) => response.data,
       invalidatesTags: [{ type: 'Pdfs' as const, id: 'AI-PDF-LIST' }],
     }),
 
-    // PUT /aipdf/:uploadId/sync — sync all table changes for an upload
+    // PUT /aipdf/:uploadId/sync — normalize payload here before it leaves the client
     syncAiPdfUpload: builder.mutation<AiPdfSyncSummary, { uploadId: string; payload: AiPdfSyncPayload }>({
       query: ({ uploadId, payload }) => ({
         url: `api/aipdf/${uploadId}/sync`,
         method: 'PUT',
-        body: payload,
+        body: normalizeSyncPayload(payload.tables),
       }),
       transformResponse: (response: AiPdfSyncResponse) => response.data,
       invalidatesTags: (_result, _error, { uploadId }) => [
@@ -96,7 +83,6 @@ export const aiPdfApi = baseApi.injectEndpoints({
 export const {
   useGetAiPdfUploadsQuery,
   useGetAiPdfUploadDetailQuery,
-  useGetAiPdfLineItemFieldsQuery,
   useExtractAiPdfMutation,
   useSyncAiPdfUploadMutation,
   useDeleteAiPdfUploadMutation,
