@@ -34,7 +34,7 @@ next-dev.err
 
 # env files (can opt-in for committing if needed)
 .env*
-
+.eslintcache
 # vercel
 .vercel
 
