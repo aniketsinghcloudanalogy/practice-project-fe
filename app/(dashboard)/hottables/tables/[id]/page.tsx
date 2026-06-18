@@ -1,10 +1,6 @@
 'use client'
 
-<<<<<<< HEAD
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-=======
-import React, { useRef, useState, useMemo } from 'react'
->>>>>>> c318904 (Ui using HOtTables)
 import Spin from '@/components/common/Spin'
 import Empty from '@/components/common/Empty'
 import Tag from '@/components/common/Tag'
@@ -14,10 +10,7 @@ import {
     TableOutlined,
     PlusOutlined,
     DeleteOutlined,
-<<<<<<< HEAD
     EditOutlined,
-=======
->>>>>>> c318904 (Ui using HOtTables)
 } from '@/components/common/antd/icons'
 import Message from '@/components/common/Message'
 import { HotTable } from '@handsontable/react'
@@ -28,7 +21,6 @@ import 'handsontable/styles/ht-theme-main.css'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import {
-<<<<<<< HEAD
     useGetAiPdfUploadDetailQuery,
     useSyncAiPdfUploadMutation,
 } from '@/store/services/aiPdf/apiSlice'
@@ -40,17 +32,11 @@ import type {
     AiPdfTable,
     AiPdfTableRow,
 } from '@/store/services/aiPdf/types'
-=======
-  useGetAiPdfUploadDetailQuery,
-} from '@/store/services/aiPdf/apiSlice'
-import type { AiPdfTable } from '@/store/services/aiPdf/types'
->>>>>>> c318904 (Ui using HOtTables)
 import Modal from '@/components/common/Modal'
 import Select from '@/components/common/Select'
 import Input from '@/components/common/Input'
 import Button from '@/components/common/Button'
 import Typography from '@/components/common/Typography'
-<<<<<<< HEAD
 
 registerAllModules()
 const { Title, Text } = Typography
@@ -140,46 +126,6 @@ function mergeTables(tablesToMerge: AiPdfTable[]): AiPdfTable {
             const normalizedTitle = normalizeColumnTitle(col.title || col.key)
             if (!normalizedTitleToKey.has(normalizedTitle)) {
                 normalizedTitleToKey.set(normalizedTitle, col.key)
-=======
-import {
-  PageWrapper,
-  TopBar,
-  BackButton,
-  MetaRow,
-  FileChip,
-  PageTitle,
-  TablesWrapper,
-  TableSection,
-  TableHeader,
-  TableTitleRow,
-  TableTitle,
-  TableIndexBadge,
-  ActionBar,
-  AddButton,
-  HotWrapper,
-  CenterBox,
-  BottomActions,
-} from '@/components/hottables/HotTablesDetail.styles'
-registerAllModules()
-
-const { Title, Text } = Typography
-
-
-// ─── Merge utility ─────────────────────────────────────────────────────────
-// Combines multiple AiPdfTable objects into one, using exact (case-sensitive)
-// column title matching. Columns with the same title across tables are
-// unified into a single column; rows are normalized to the merged schema,
-// with missing fields set to null.
-
-function mergeTables(tablesToMerge: AiPdfTable[]): AiPdfTable {
-    const mergedColumns: { key: string; title: string }[] = []
-    const titleToKey = new Map<string, string>()
-
-    tablesToMerge.forEach((table) => {
-        table.columns.forEach((col) => {
-            if (!titleToKey.has(col.title)) {
-                titleToKey.set(col.title, col.key)
->>>>>>> c318904 (Ui using HOtTables)
                 mergedColumns.push({ key: col.key, title: col.title })
             }
         })
@@ -188,40 +134,22 @@ function mergeTables(tablesToMerge: AiPdfTable[]): AiPdfTable {
     const mergedRows: { rowData: Record<string, unknown> }[] = []
 
     tablesToMerge.forEach((table) => {
-<<<<<<< HEAD
         const keyToNormalizedTitle = new Map(
             table.columns.map((col) => [col.key, normalizeColumnTitle(col.title || col.key)])
-=======
-        const keyToTitle = new Map(
-            table.columns.map((col) => [col.key, col.title])
->>>>>>> c318904 (Ui using HOtTables)
         )
 
         table.rows.forEach((row) => {
             const normalizedRowData: Record<string, unknown> = {}
-<<<<<<< HEAD
-=======
-
->>>>>>> c318904 (Ui using HOtTables)
             mergedColumns.forEach((mergedCol) => {
                 normalizedRowData[mergedCol.key] = 'NULL'
             })
 
             Object.entries(row.rowData).forEach(([sourceKey, value]) => {
-<<<<<<< HEAD
                 const normalizedTitle = keyToNormalizedTitle.get(sourceKey)
                 if (!normalizedTitle) return
 
                 const mergedKey = normalizedTitleToKey.get(normalizedTitle)
                 if (!mergedKey) return
-=======
-                const title = keyToTitle.get(sourceKey)
-                if (!title) return
-
-                const mergedKey = titleToKey.get(title)
-                if (!mergedKey) return
-
->>>>>>> c318904 (Ui using HOtTables)
                 normalizedRowData[mergedKey] = value
             })
 
@@ -231,7 +159,6 @@ function mergeTables(tablesToMerge: AiPdfTable[]): AiPdfTable {
 
     return {
         id: `merged-${Date.now()}`,
-<<<<<<< HEAD
         title: mergedTitle || 'Table 1',
         columns: mergedColumns,
         lineItemColumnMapping: null,
@@ -249,19 +176,10 @@ type FrontendSyncSummary = {
 }
 
 
-=======
-        title: 'Merged Table',
-        columns: mergedColumns,
-        rows: mergedRows,
-    } as AiPdfTable
-}
-// ─── Single table renderer ────────────────────────────────────────────────────
->>>>>>> c318904 (Ui using HOtTables)
 
 function PdfTableGrid({
     table,
     index,
-<<<<<<< HEAD
     isMergedTable,
     openUpdateColumnsRequest,
     onDelete,
@@ -281,18 +199,10 @@ function PdfTableGrid({
     onUpdateColumnMappings: (tableId: string, columns: AiPdfTable['columns'], mapping: AiPdfLineItemMapping) => void
     onSaveColumnMappings: (tableId: string, columns: AiPdfTable['columns'], mapping: AiPdfLineItemMapping) => Promise<void> | void
     lineItemFields: AiPdfLineItemFieldOption[]
-=======
-    onDelete,
-}: {
-    table: AiPdfTable
-    index: number
-    onDelete: () => void
->>>>>>> c318904 (Ui using HOtTables)
 }) {
     const selectedRowsRef = useRef<number[]>([])
     const hotRef = useRef<HotTableClass>(null)
     const [bulkEditOpen, setBulkEditOpen] = useState(false)
-<<<<<<< HEAD
     const [singleColumnEditOpen, setSingleColumnEditOpen] = useState(false)
     const [updateColumnsOpen, setUpdateColumnsOpen] = useState(false)
     const [selectedRows, setSelectedRows] = useState<number[]>([])
@@ -409,77 +319,15 @@ function PdfTableGrid({
 
     const updateRule = (index: number, key: 'column' | 'value', value: string) => {
         setRules((prev) => prev.map((rule, i) => (i === index ? { ...rule, [key]: value } : rule)))
-=======
-    const [selectedRows, setSelectedRows] = useState<number[]>([])
-    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
-
-    const [rules, setRules] = useState([
-        {
-            column: '',
-            value: '',
-        },
-    ])
-
-    const colHeaders = useMemo(
-        () => table.columns.map((c) => c.title),
-        [table.columns]
-    )
-
-    const columns = useMemo(
-        () => table.columns.map((c) => ({ data: c.key })),
-        [table.columns]
-    )
-
-    const data = useMemo(
-        () => table.rows.map((r) => ({ ...r.rowData })),
-        [table.rows]
-    )
-
-    const addRow = () => {
-        const hot = hotRef.current?.hotInstance
-        if (!hot) return
-        hot.alter('insert_row_below', hot.countRows())
-    }
-    const addRule = () => {
-        setRules((prev) => [
-            ...prev,
-            { column: '', value: '' },
-        ])
-    }
-
-    const removeRule = (index: number) => {
-        setRules((prev) =>
-            prev.filter((_, i) => i !== index)
-        )
-    }
-
-    const updateRule = (
-        index: number,
-        key: 'column' | 'value',
-        value: string,
-    ) => {
-        setRules((prev) =>
-            prev.map((rule, i) =>
-                i === index
-                    ? { ...rule, [key]: value }
-                    : rule
-            )
-        )
->>>>>>> c318904 (Ui using HOtTables)
     }
 
     const applyBulkEdit = () => {
         const hot = hotRef.current?.hotInstance
-<<<<<<< HEAD
-=======
-
->>>>>>> c318904 (Ui using HOtTables)
         if (!hot) return
 
         selectedRows.forEach((rowIndex) => {
             rules.forEach((rule) => {
                 if (!rule.column) return
-<<<<<<< HEAD
                 hot.setDataAtRowProp(rowIndex, rule.column, rule.value)
             })
         })
@@ -603,102 +451,18 @@ function PdfTableGrid({
                     <div className="flex min-h-75 items-center justify-center">
                         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<Text className="text-slate-400">No rows in this table</Text>} />
                     </div>
-=======
-
-                hot.setDataAtRowProp(
-                    rowIndex,
-                    rule.column,
-                    rule.value,
-                )
-            })
-        })
-
-        Message.success(
-            `Updated ${selectedRows.length} rows`
-        )
-
-        setBulkEditOpen(false)
-    }
-
-
-
-    return (
-        <TableSection>
-            <TableHeader>
-                <TableTitleRow>
-                    <TableIndexBadge>{index + 1}</TableIndexBadge>
-                    <TableTitle level={5}>{table.title || `Table ${index + 1}`}</TableTitle>
-                </TableTitleRow>
-
-                <ActionBar>
-                    <Tag
-                        icon={<TableOutlined />}
-                        style={{
-                            background: '#f0f1ff',
-                            color: '#6366f1',
-                            border: 'none',
-                            borderRadius: 6,
-                            fontWeight: 600,
-                            fontSize: 12,
-                            marginRight: 0,
-                        }}
-                    >
-                        {table.rows.length} rows
-                    </Tag>
-
-                    {selectedRows.length > 0 && (
-                        <Button
-                            type="primary"
-                            size="small"
-                            onClick={() => setBulkEditOpen(true)}
-                        >
-                            Edit ({selectedRows.length})
-                        </Button>
-
-
-
-                    )}
-                    <Button
-                        variant="icon-button-2"
-                        danger
-                        size="small"
-                        icon={<DeleteOutlined />}
-                        onClick={() => setDeleteConfirmOpen(true)}
-                        title="Delete table"
-                    />
-
-
-                </ActionBar>
-            </TableHeader>
-
-            <HotWrapper>
-                {data.length === 0 ? (
-                    <CenterBox>
-                        <Empty
-                            image={Empty.PRESENTED_IMAGE_SIMPLE}
-                            description={<Text style={{ color: '#8b8fa8' }}>No rows in this table</Text>}
-                        />
-                    </CenterBox>
->>>>>>> c318904 (Ui using HOtTables)
                 ) : (
                     <HotTable
                         ref={hotRef}
                         data={data}
                         colHeaders={colHeaders}
                         columns={columns}
-<<<<<<< HEAD
                         colWidths={colWidths}
-=======
->>>>>>> c318904 (Ui using HOtTables)
                         rowHeaders={true}
                         width="100%"
                         height="auto"
                         autoRowSize={true}
-<<<<<<< HEAD
                         autoColumnSize={false}
-=======
-                        autoColumnSize={true}
->>>>>>> c318904 (Ui using HOtTables)
                         stretchH="all"
                         contextMenu={true}
                         manualColumnResize={true}
@@ -709,7 +473,6 @@ function PdfTableGrid({
                         selectionMode="multiple"
                         licenseKey="non-commercial-and-evaluation"
                         enterBeginsEditing={true}
-<<<<<<< HEAD
                         afterChange={(changes, source) => {
                             if (!changes || source === 'loadData') return
                             syncRowsFromGrid()
@@ -727,34 +490,11 @@ function PdfTableGrid({
                                 if (prev.length === rows.length && prev.every((value, idx) => value === rows[idx])) {
                                     return prev
                                 }
-=======
-                        afterSelectionEnd={(row, _col, row2) => {
-                            const rows: number[] = []
-
-                            const start = Math.min(row, row2)
-                            const end = Math.max(row, row2)
-
-                            for (let i = start; i <= end; i++) {
-                                rows.push(i)
-                            }
-
-                            selectedRowsRef.current = rows
-
-                            setSelectedRows((prev) => {
-                                if (
-                                    prev.length === rows.length &&
-                                    prev.every((value, index) => value === rows[index])
-                                ) {
-                                    return prev
-                                }
-
->>>>>>> c318904 (Ui using HOtTables)
                                 return rows
                             })
                         }}
                     />
                 )}
-<<<<<<< HEAD
             </div>
 
             <Modal open={bulkEditOpen} footer={null} onCancel={closeBulkEditModal} width="min(850px, calc(100vw - 24px))">
@@ -763,42 +503,11 @@ function PdfTableGrid({
 
                 <div className="mb-6">
                     <Button type="primary" icon={<PlusOutlined />} onClick={addRule}>
-=======
-            </HotWrapper>
-
-            <Modal
-                open={bulkEditOpen}
-                footer={null}
-                onCancel={() => setBulkEditOpen(false)}
-                width={850}
-            >
-                <Title level={5} style={{ marginBottom: 24 }}>
-                    Edit {selectedRows.length} rows
-                </Title>
-
-                <Text
-                    style={{
-                        display: 'block',
-                        marginBottom: 24,
-                        color: '#666',
-                    }}
-                >
-                    Pick columns, enter a shared value, and apply it to all selected rows.
-                </Text>
-
-                <div style={{ marginBottom: 24 }}>
-                    <Button
-                        type="primary"
-                        icon={<PlusOutlined />}
-                        onClick={addRule}
-                    >
->>>>>>> c318904 (Ui using HOtTables)
                         Add field
                     </Button>
                 </div>
 
                 {(() => {
-<<<<<<< HEAD
                     const selectedColumnKeys = new Set(rules.map((r) => r.column).filter((c): c is string => Boolean(c)))
 
                     return rules.map((rule, idx) => {
@@ -831,80 +540,12 @@ function PdfTableGrid({
 
                                 <div className="flex h-full items-end justify-start md:justify-center">
                                     <Button variant="icon-button-2" icon={<DeleteOutlined />} onClick={() => removeRule(idx)} className="h-11 w-11" />
-=======
-                    const selectedColumnKeys = new Set(
-                        rules
-                            .map((r) => r.column)
-                            .filter((c): c is string => Boolean(c))
-                    )
-
-                    return rules.map((rule, index) => {
-                        const availableColumns = table.columns.filter(
-                            (c) => c.key === rule.column || !selectedColumnKeys.has(c.key)
-                        )
-
-                        return (
-                            <div
-                                key={index}
-                                style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: '220px 1fr 40px',
-                                    gap: 16,
-                                    alignItems: 'start',
-                                    marginBottom: 16,
-                                }}
-                            >
-                                <div style={{ width: '100%' }}>
-                                    <Text style={{ display: 'block', marginBottom: 8 }}>
-                                        Field
-                                    </Text>
-
-                                    <Select
-                                        placeholder="Select field"
-                                        value={rule.column}
-                                        onChange={(value) =>
-                                            updateRule(index, 'column', value)
-                                        }
-                                        options={availableColumns.map((c) => ({
-                                            label: c.title,
-                                            value: c.key,
-                                        }))}
-                                        style={{ width: '100%' }}
-                                    />
-                                </div>
-
-                                <div style={{ width: '100%' }}>
-                                    <Text style={{ display: 'block', marginBottom: 8 }}>
-                                        Value
-                                    </Text>
-
-                                    <Input
-                                        placeholder="Select a field first"
-                                        value={rule.value}
-                                        disabled={!rule.column}
-                                        onChange={(e) =>
-                                            updateRule(index, 'value', e.target.value)
-                                        }
-                                        style={{ width: '100%' }}
-                                    />
-                                </div>
-
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <div style={{ height: 22 }} />
-                                    <Button
-                                        variant="icon-button-2"
-                                        icon={<DeleteOutlined />}
-                                        onClick={() => removeRule(index)}
-                                        style={{ width: 32, height: 32 }}
-                                    />
->>>>>>> c318904 (Ui using HOtTables)
                                 </div>
                             </div>
                         )
                     })
                 })()}
 
-<<<<<<< HEAD
                 <div className="mt-6 flex justify-end gap-3">
                     <Button onClick={closeBulkEditModal}>Cancel</Button>
                     <Button type="primary" onClick={applyBulkEdit}>Apply changes</Button>
@@ -1031,84 +672,18 @@ function PdfTableGrid({
                 <div className="flex justify-end gap-3">
                     <Button onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
                     <Button danger type="primary" onClick={() => { setDeleteConfirmOpen(false); onDelete() }}>
-=======
-                <div
-                    style={{
-                        display: 'flex',
-                        justifyContent: 'flex-end',
-                        gap: 12,
-                        marginTop: 24,
-                    }}
-                >
-                    <Button onClick={() => setBulkEditOpen(false)}>
-                        Cancel
-                    </Button>
-
-                    <Button
-                        type="primary"
-                        onClick={applyBulkEdit}
-                    >
-                        Apply changes
-                    </Button>
-                </div>
-            </Modal>
-            <Modal
-                open={deleteConfirmOpen}
-                footer={null}
-                onCancel={() => setDeleteConfirmOpen(false)}
-                width={420}
-            >
-                <Title level={5} style={{ marginBottom: 16 }}>
-                    Delete this table?
-                </Title>
-
-                <Text style={{ display: 'block', marginBottom: 24, color: '#666' }}>
-                    {`"${table.title || `Table ${index + 1}`}" and its ${table.rows.length} row${table.rows.length === 1 ? '' : 's'} will be removed from this view. This won't affect the original PDF.`}
-                </Text>
-
-                <div
-                    style={{
-                        display: 'flex',
-                        justifyContent: 'flex-end',
-                        gap: 12,
-                    }}
-                >
-                    <Button onClick={() => setDeleteConfirmOpen(false)}>
-                        Cancel
-                    </Button>
-
-                    <Button
-                        danger
-                        type="primary"
-                        onClick={() => {
-                            setDeleteConfirmOpen(false)
-                            onDelete()
-                        }}
-                    >
->>>>>>> c318904 (Ui using HOtTables)
                         Delete table
                     </Button>
                 </div>
             </Modal>
-<<<<<<< HEAD
         </div>
     )
 }
 
-=======
-
-        </TableSection>
-    )
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
->>>>>>> c318904 (Ui using HOtTables)
 export default function UploadDetailPage() {
     const params = useParams()
     const uploadId = params.id as string
 
-<<<<<<< HEAD
     const { data: upload, isLoading, isError, refetch } = useGetAiPdfUploadDetailQuery(uploadId)
     const lineItemFields = LINE_ITEM_FIELD_OPTIONS
     const [syncUpload, { isLoading: isSyncing }] = useSyncAiPdfUploadMutation()
@@ -1256,16 +831,6 @@ export default function UploadDetailPage() {
         }
 
         setSyncColumnsRequestToken((prev) => prev + 1)
-=======
-    const { data: upload, isLoading, isError } = useGetAiPdfUploadDetailQuery(uploadId)
-
-    const [tables, setTables] = useState<AiPdfTable[]>([])
-    const lastUploadIdRef = useRef<string | null>(null)
-
-    if (upload && lastUploadIdRef.current !== upload.id) {
-        lastUploadIdRef.current = upload.id
-        setTables(upload.tables)
->>>>>>> c318904 (Ui using HOtTables)
     }
 
     const handleDeleteTable = (tableId: string) => {
@@ -1281,7 +846,6 @@ export default function UploadDetailPage() {
 
         const merged = mergeTables(tables)
         setTables([merged])
-<<<<<<< HEAD
         Message.success(`Merged ${tables.length} tables into one (${merged.columns.length} columns, ${merged.rows.length} rows)`)
     }
 
@@ -1292,41 +856,20 @@ export default function UploadDetailPage() {
             <div className="min-h-screen bg-[#f8f9fc] p-4 sm:p-6 lg:p-8">
                 <div className="flex min-h-75 items-center justify-center"><Spin size="large" /></div>
             </div>
-=======
-        Message.success(
-            `Merged ${tables.length} tables into one (${merged.columns.length} columns, ${merged.rows.length} rows)`
-        )
-    }
-
-    if (isLoading) {
-        return (
-            <PageWrapper>
-                <CenterBox><Spin size="large" /></CenterBox>
-            </PageWrapper>
->>>>>>> c318904 (Ui using HOtTables)
         )
     }
 
     if (isError || !upload) {
         return (
-<<<<<<< HEAD
             <div className="min-h-screen bg-[#f8f9fc] p-4 sm:p-6 lg:p-8">
                 <div className="flex min-h-75 items-center justify-center">
                     <Empty description={<Text className="text-slate-400">Upload not found</Text>} />
                 </div>
             </div>
-=======
-            <PageWrapper>
-                <CenterBox>
-                    <Empty description={<Text style={{ color: '#8b8fa8' }}>Upload not found</Text>} />
-                </CenterBox>
-            </PageWrapper>
->>>>>>> c318904 (Ui using HOtTables)
         )
     }
 
     return (
-<<<<<<< HEAD
         <div className="min-h-screen bg-[#f8f9fc] p-4 sm:p-6 lg:p-8">
             <div className="mb-6 flex flex-col items-start justify-between gap-3 sm:mb-7 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
                 <Link href="/hottables">
@@ -1356,75 +899,20 @@ export default function UploadDetailPage() {
             <Title level={3} className="mb-6 text-[22px] font-bold text-[#1d1f2b]">
                 {isMergedView ? 'Table' : 'Tables'}
             </Title>
-=======
-        <PageWrapper>
-            <TopBar>
-                <Link href="/hottables">
-                    <BackButton icon={<ArrowLeftOutlined />}>
-                        Back to PDFs
-                    </BackButton>
-                </Link>
-
-                <MetaRow>
-                    <FileChip>
-                        <FileTextOutlined
-                            style={{ color: '#6366f1', fontSize: 13 }}
-                        />
-                        <Text
-                            style={{
-                                fontSize: 13,
-                                fontWeight: 500,
-                                color: '#1d1f2b',
-                            }}
-                        >
-                            {upload.fileName}
-                        </Text>
-                    </FileChip>
-
-                    <Tag
-                        style={{
-                            background: '#f0f1ff',
-                            color: '#6366f1',
-                            border: 'none',
-                            borderRadius: 6,
-                            fontWeight: 600,
-                        }}
-                    >
-                        {upload.tables.length}{' '}
-                        {upload.tables.length === 1 ? 'table' : 'tables'}
-                    </Tag>
-                </MetaRow>
-            </TopBar>
-
-            <PageTitle level={3}>Extracted Tables</PageTitle>
->>>>>>> c318904 (Ui using HOtTables)
 
             {upload.tables.length === 0 ? (
                 <Empty
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
-<<<<<<< HEAD
                     description={<Text className="text-slate-400">No tables found in this upload</Text>}
                 />
             ) : (
                 <>
                     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-=======
-                    description={
-                        <Text style={{ color: '#8b8fa8' }}>
-                            No tables found in this upload
-                        </Text>
-                    }
-                />
-            ) : (
-                <>
-                    <TablesWrapper>
->>>>>>> c318904 (Ui using HOtTables)
                         {tables.map((table, index) => (
                             <PdfTableGrid
                                 key={table.id}
                                 table={table}
                                 index={index}
-<<<<<<< HEAD
                                 isMergedTable={table.id.startsWith('merged-')}
                                 openUpdateColumnsRequest={syncColumnsRequestToken}
                                 onDelete={() => handleDeleteTable(table.id)}
@@ -1452,33 +940,5 @@ export default function UploadDetailPage() {
                 </>
             )}
         </div>
-=======
-                                onDelete={() => handleDeleteTable(table.id)}
-                            />
-                        ))}
-                    </TablesWrapper>
-
-                    <BottomActions>
-                        {tables.length >= 2 && (
-                            <Button onClick={handleMergeTables}>
-                                Merge Tables
-                            </Button>
-                        )}
-
-                        <Button
-                            type="primary"
-                            onClick={() => {
-                                Message.success(
-                                    'Sync functionality will be connected later'
-                                )
-                            }}
-                        >
-                            Sync Changes
-                        </Button>
-                    </BottomActions>
-                </>
-            )}
-        </PageWrapper>
->>>>>>> c318904 (Ui using HOtTables)
     )
 }
