@@ -120,7 +120,7 @@ export default function HotTablesPage() {
             <Button
               icon={<ArrowRightOutlined />}
               iconPlacement="end"
-              className="h-8 rounded-[7px] border border-slate-200 px-3 text-[13px] font-medium text-slate-800 hover:!border-indigo-500 hover:!text-indigo-500"
+              className="h-8 rounded-[7px] border border-slate-200 px-3 text-[13px] font-medium text-slate-800 hover:border-indigo-500! hover:text-indigo-500!"
             >
               Open
             </Button>
@@ -169,32 +169,32 @@ export default function HotTablesPage() {
       </Modal>
 
       {/* ── Hero ── */}
-      <div className="relative mb-8 flex items-center justify-between gap-8 overflow-hidden rounded-2xl bg-[linear-gradient(135deg,#1d1f2b_0%,#2d3250_100%)] px-12 py-12 before:pointer-events-none before:absolute before:right-20 before:top-[-80px] before:h-80 before:w-80 before:bg-[radial-gradient(circle,rgba(99,102,241,0.2)_0%,transparent_70%)] before:content-['']">
-        <div className="z-[1] flex-1">
+      <div className="relative mb-8 flex items-center justify-between gap-8 overflow-hidden rounded-2xl bg-[linear-gradient(135deg,#1d1f2b_0%,#2d3250_100%)] px-12 py-12 before:pointer-events-none before:absolute before:right-20 before:-top-20 before:h-80 before:w-80 before:bg-[radial-gradient(circle,rgba(99,102,241,0.2)_0%,transparent_70%)] before:content-['']">
+        <div className="z-1 flex-1">
           <div className="mb-5 flex items-center gap-2">
             <span className="inline-block h-2 w-2 rounded-full bg-indigo-500" />
             <span className="inline-block h-2 w-2 rounded-full bg-indigo-500" />
             <span className="inline-block h-2 w-2 rounded-full bg-white/20" />
             <span className="text-xs font-semibold uppercase tracking-[1.5px] text-indigo-500">PDF → Tables</span>
           </div>
-          <Title level={2} className="mb-3 text-[32px] font-bold tracking-[-0.5px] !text-white">
+          <Title level={2} className="mb-3 text-[32px] font-bold tracking-[-0.5px] text-white!">
             Extract tables from any PDF
           </Title>
-          <p className="mb-0 max-w-[480px] text-[15px] leading-7 text-white/60">
+          <p className="mb-0 max-w-120 text-[15px] leading-7 text-white/60">
             Upload a PDF containing one or more tables. The AI reads the document, identifies every
             table, and renders them as live, editable grids — ready to view, filter, and export.
           </p>
         </div>
 
-        <div className="z-[1] flex shrink-0 gap-6">
-          <div className="rounded-xl border border-white/10 bg-white/6 px-7 py-5 text-center backdrop-blur-[8px]">
-            <Title level={3} className="mb-1 text-[28px] font-bold !text-white">
+        <div className="z-1 flex shrink-0 gap-6">
+          <div className="rounded-xl border border-white/10 bg-white/6 px-7 py-5 text-center backdrop-blur-sm">
+            <Title level={3} className="mb-1 text-[28px] font-bold text-white!">
               {uploads.length}
             </Title>
             <span className="text-xs text-white/45">PDFs uploaded</span>
           </div>
-          <div className="rounded-xl border border-white/10 bg-white/6 px-7 py-5 text-center backdrop-blur-[8px]">
-            <Title level={3} className="mb-1 text-[28px] font-bold !text-white">
+          <div className="rounded-xl border border-white/10 bg-white/6 px-7 py-5 text-center backdrop-blur-sm">
+            <Title level={3} className="mb-1 text-[28px] font-bold text-white!">
               {totalTables}
             </Title>
             <span className="text-xs text-white/45">Tables extracted</span>
@@ -223,7 +223,7 @@ export default function HotTablesPage() {
             setSelectedFile(file)
             return false
           }}
-          className="[&_.ant-upload-drag]:!rounded-[10px] [&_.ant-upload-drag]:!border-2 [&_.ant-upload-drag]:!border-dashed [&_.ant-upload-drag]:!border-indigo-200 [&_.ant-upload-drag]:!bg-slate-50 [&_.ant-upload-drag]:!transition-all [&_.ant-upload-drag:hover]:!border-indigo-500 [&_.ant-upload-drag:hover]:!bg-indigo-50 [&_.ant-upload-drag-icon_.anticon]:!text-4xl [&_.ant-upload-drag-icon_.anticon]:!text-indigo-500 [&_.ant-upload-hint]:!text-[13px] [&_.ant-upload-hint]:!text-slate-400 [&_.ant-upload-text]:!text-[15px] [&_.ant-upload-text]:!font-semibold [&_.ant-upload-text]:!text-[#1d1f2b]"
+          className="[&_.ant-upload-drag]:rounded-[10px]! [&_.ant-upload-drag]:border-2! [&_.ant-upload-drag]:border-dashed! [&_.ant-upload-drag]:border-indigo-200! [&_.ant-upload-drag]:bg-slate-50! [&_.ant-upload-drag]:transition-all! [&_.ant-upload-drag:hover]:border-indigo-500! [&_.ant-upload-drag:hover]:!bg-indigo-50! [&_.ant-upload-drag-icon_.anticon]:text-4xl! [&_.ant-upload-drag-icon_.anticon]:text-indigo-500! [&_.ant-upload-hint]:text-[13px]! [&_.ant-upload-hint]:text-slate-400! [&_.ant-upload-text]:text-[15px]! [&_.[&_.ant-upload-text]:font-semibold! [&_.ant-upload-text]:text-[#1d1f2b]!"
         >
           <p className="ant-upload-drag-icon">
             <InboxOutlined />
@@ -241,7 +241,7 @@ export default function HotTablesPage() {
             loading={extracting}
             disabled={!selectedFile}
             onClick={handleUpload}
-            className="mt-4 h-10 rounded-lg border-indigo-500 bg-indigo-500 px-6 font-semibold hover:!border-indigo-600 hover:!bg-indigo-600"
+            className="mt-4 h-10 rounded-lg border-indigo-500 bg-indigo-500 px-6 font-semibold hover:border-indigo-600! hover:bg-indigo-600!"
           >
             {extracting ? 'Extracting…' : 'Upload & Extract'}
           </Button>

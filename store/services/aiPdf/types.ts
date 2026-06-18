@@ -15,6 +15,33 @@ export type AiPdfLineItemFieldOption = {
 
 export type AiPdfLineItemMapping = Record<string, string>
 
+// Derived client-side from upload tables + rows, not a persisted DB record.
+export type AiPdfLineItemRow = {
+  rowSourceId: string | null
+  pdfTableId: string
+  sourceTableTitle: string | null
+  rowIndex: number | null
+  lineNumber?: string | null
+  itemCode?: string | null
+  employeeId?: string | null
+  employeeName?: string | null
+  description?: string | null
+  department?: string | null
+  category?: string | null
+  email?: string | null
+  phone?: string | null
+  salary?: string | null
+  quantity?: string | null
+  unitPrice?: string | null
+  amount?: string | null
+  currency?: string | null
+  status?: string | null
+  referenceNo?: string | null
+  location?: string | null
+  notes?: string | null
+  [key: string]: unknown
+}
+
 // ─── Row ─────────────────────────────────────────────────────────────────────
 
 export type AiPdfTableRow = {
@@ -97,14 +124,6 @@ export type AiPdfSyncPayload = {
 
 export type AiPdfSyncSummary = {
   uploadId: string
-  summary: {
-    createdTables: number
-    updatedTables: number
-    deletedTables: number
-    createdRows: number
-    updatedRows: number
-    deletedRows: number
-  }
 }
 
 export type AiPdfDeleteSummary = {
@@ -116,6 +135,5 @@ export type AiPdfDeleteSummary = {
 export type AiPdfUploadListResponse = ApiResponse<{ uploads: AiPdfUploadListItem[] }>
 export type AiPdfUploadDetailResponse = ApiResponse<{ upload: AiPdfUpload }>
 export type AiPdfExtractResponse = ApiResponse<AiPdfExtractSummary>
-export type AiPdfLineItemFieldsResponse = ApiResponse<{ fields: AiPdfLineItemFieldOption[] }>
 export type AiPdfSyncResponse = ApiResponse<AiPdfSyncSummary>
 export type AiPdfDeleteResponse = ApiResponse<AiPdfDeleteSummary>
