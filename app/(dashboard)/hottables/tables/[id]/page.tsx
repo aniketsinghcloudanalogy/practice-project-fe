@@ -1,6 +1,10 @@
 'use client'
 
+<<<<<<< Updated upstream
 import React, { useRef, useState, useMemo, useEffect } from 'react'
+=======
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+>>>>>>> Stashed changes
 import Spin from '@/components/common/Spin'
 import Empty from '@/components/common/Empty'
 import Tag from '@/components/common/Tag'
@@ -20,10 +24,24 @@ import 'handsontable/styles/ht-theme-main.css'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import {
+<<<<<<< Updated upstream
     useGetAiPdfUploadDetailQuery,
     useSyncAiPdfUploadMutation,
 } from '@/store/services/aiPdf/apiSlice'
 import type { AiPdfSyncPayload, AiPdfTable, AiPdfTableRow } from '@/store/services/aiPdf/types'
+=======
+  useGetAiPdfUploadDetailQuery,
+    useGetAiPdfLineItemFieldsQuery,
+    useSyncAiPdfUploadMutation,
+} from '@/store/services/aiPdf/apiSlice'
+import type {
+    AiPdfLineItemFieldOption,
+    AiPdfLineItemMapping,
+    AiPdfSyncPayload,
+    AiPdfTable,
+    AiPdfTableRow,
+} from '@/store/services/aiPdf/types'
+>>>>>>> Stashed changes
 import Modal from '@/components/common/Modal'
 import Select from '@/components/common/Select'
 import Input from '@/components/common/Input'
@@ -32,6 +50,11 @@ import Typography from '@/components/common/Typography'
 registerAllModules()
 
 const { Title, Text } = Typography
+
+const createEmptyRule = () => ({
+    column: '',
+    value: '',
+})
 
 
 // ─── Merge utility ─────────────────────────────────────────────────────────
@@ -85,6 +108,7 @@ function mergeTables(tablesToMerge: AiPdfTable[]): AiPdfTable {
         id: `merged-${Date.now()}`,
         title: 'Merged Table',
         columns: mergedColumns,
+        lineItemColumnMapping: null,
         rows: mergedRows,
     } as AiPdfTable
 }
@@ -95,23 +119,37 @@ function PdfTableGrid({
     index,
     onDelete,
     onRowsChange,
+<<<<<<< Updated upstream
+=======
+    onLineItemMappingChange,
+    lineItemFields,
+>>>>>>> Stashed changes
 }: {
     table: AiPdfTable
     index: number
     onDelete: () => void
     onRowsChange: (tableId: string, rows: AiPdfTableRow[]) => void
+<<<<<<< Updated upstream
+=======
+    onLineItemMappingChange: (tableId: string, mapping: AiPdfLineItemMapping) => void
+    lineItemFields: AiPdfLineItemFieldOption[]
+>>>>>>> Stashed changes
 }) {
     const selectedRowsRef = useRef<number[]>([])
     const hotRef = useRef<HotTableClass>(null)
     const [bulkEditOpen, setBulkEditOpen] = useState(false)
+    const [updateColumnsOpen, setUpdateColumnsOpen] = useState(false)
     const [selectedRows, setSelectedRows] = useState<number[]>([])
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
 
+<<<<<<< Updated upstream
     const createEmptyRule = () => ({
         column: '',
         value: '',
     })
 
+=======
+>>>>>>> Stashed changes
     const [rules, setRules] = useState([createEmptyRule()])
 
     const colHeaders = useMemo(
@@ -134,6 +172,11 @@ function PdfTableGrid({
         [table.rows]
     )
 
+<<<<<<< Updated upstream
+=======
+    const lineItemMapping = table.lineItemColumnMapping || {}
+
+>>>>>>> Stashed changes
     const syncRowsFromGrid = () => {
         const hot = hotRef.current?.hotInstance
         if (!hot) return
@@ -232,6 +275,21 @@ function PdfTableGrid({
         )
 
         closeBulkEditModal()
+<<<<<<< Updated upstream
+=======
+    }
+
+    const updateLineItemMapping = (sourceColumnKey: string, targetField?: string) => {
+        const nextMapping = { ...lineItemMapping }
+
+        if (!targetField) {
+            delete nextMapping[sourceColumnKey]
+        } else {
+            nextMapping[sourceColumnKey] = targetField
+        }
+
+        onLineItemMappingChange(table.id, nextMapping)
+>>>>>>> Stashed changes
     }
 
 
@@ -268,6 +326,9 @@ function PdfTableGrid({
 
 
                     )}
+                    <AddButton onClick={() => setUpdateColumnsOpen(true)}>
+                        Update Columns
+                    </AddButton>
                     <Button
                         variant="icon-button-2"
                         danger
@@ -441,7 +502,18 @@ function PdfTableGrid({
                     })
                 })()}
 
+<<<<<<< Updated upstream
                 <div className="mt-6 flex justify-end gap-3">
+=======
+                <div
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        gap: 12,
+                        marginTop: 24,
+                    }}
+                >
+>>>>>>> Stashed changes
                     <Button onClick={closeBulkEditModal}>
                         Cancel
                     </Button>
@@ -451,6 +523,97 @@ function PdfTableGrid({
                         onClick={applyBulkEdit}
                     >
                         Apply changes
+                    </Button>
+                </div>
+            </Modal>
+            <Modal
+                open={updateColumnsOpen}
+                footer={null}
+                onCancel={() => setUpdateColumnsOpen(false)}
+                width={880}
+            >
+                <Title level={5} style={{ marginBottom: 16 }}>
+                    Update Columns for {table.title || `Table ${index + 1}`}
+                </Title>
+
+                <Text style={{ display: 'block', marginBottom: 24, color: '#666' }}>
+                    Map each extracted table column to a LineItems database field. Sync will use this mapping to create or update LineItems records.
+                </Text>
+
+                <div
+                    style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: 16,
+                        marginBottom: 16,
+                        padding: '0 8px',
+                    }}
+                >
+                    <Text strong>Extracted Table Column</Text>
+                    <Text strong>LineItems DB Column</Text>
+                </div>
+
+                <div style={{ display: 'grid', gap: 12 }}>
+                    {table.columns.map((column) => {
+                        const selectedTargetFields = new Set(
+                            Object.entries(lineItemMapping)
+                                .filter(([sourceKey]) => sourceKey !== column.key)
+                                .map(([, targetField]) => targetField)
+                        )
+
+                        const availableFieldOptions = lineItemFields.filter(
+                            (field) =>
+                                field.key === lineItemMapping[column.key] || !selectedTargetFields.has(field.key)
+                        )
+
+                        return (
+                            <div
+                                key={column.key}
+                                style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: '1fr 1fr',
+                                    gap: 16,
+                                    alignItems: 'center',
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        border: '1px solid #e8eaed',
+                                        borderRadius: 8,
+                                        background: '#fafbff',
+                                        padding: '10px 12px',
+                                    }}
+                                >
+                                    <Text style={{ display: 'block', fontWeight: 600 }}>{column.title}</Text>
+                                    <Text style={{ color: '#8b8fa8', fontSize: 12 }}>{column.key}</Text>
+                                </div>
+
+                                <Select
+                                    allowClear
+                                    placeholder="Select LineItems field"
+                                    value={lineItemMapping[column.key] || undefined}
+                                    onChange={(value) => updateLineItemMapping(column.key, value)}
+                                    options={availableFieldOptions.map((field) => ({
+                                        label: field.label,
+                                        value: field.key,
+                                    }))}
+                                    style={{ width: '100%' }}
+                                />
+                            </div>
+                        )
+                    })}
+                </div>
+
+                <div
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        gap: 12,
+                        marginTop: 24,
+                    }}
+                >
+                    <Button onClick={() => setUpdateColumnsOpen(false)}>
+                        Close
                     </Button>
                 </div>
             </Modal>
@@ -497,6 +660,10 @@ export default function UploadDetailPage() {
     const uploadId = params.id as string
 
     const { data: upload, isLoading, isError, refetch } = useGetAiPdfUploadDetailQuery(uploadId)
+<<<<<<< Updated upstream
+=======
+    const { data: lineItemFields = [] } = useGetAiPdfLineItemFieldsQuery()
+>>>>>>> Stashed changes
     const [syncUpload, { isLoading: isSyncing }] = useSyncAiPdfUploadMutation()
 
     const [tables, setTables] = useState<AiPdfTable[]>([])
@@ -505,7 +672,16 @@ export default function UploadDetailPage() {
     useEffect(() => {
         if (!upload || lastUploadIdRef.current === upload.id) return
         lastUploadIdRef.current = upload.id
+<<<<<<< Updated upstream
         setTables(upload.tables)
+=======
+        setTables(
+            upload.tables.map((table) => ({
+                ...table,
+                lineItemColumnMapping: table.lineItemColumnMapping || {},
+            }))
+        )
+>>>>>>> Stashed changes
     }, [upload])
 
     const handleRowsChange = (tableId: string, rows: AiPdfTableRow[]) => {
@@ -518,6 +694,7 @@ export default function UploadDetailPage() {
         )
     }
 
+<<<<<<< Updated upstream
     const buildSyncPayload = (currentTables: AiPdfTable[]): AiPdfSyncPayload => {
         return {
             tables: currentTables.map((table) => ({
@@ -544,11 +721,37 @@ export default function UploadDetailPage() {
     )
 
     const hasUnsyncedChanges = currentPayload !== initialPayload
+=======
+    const handleLineItemMappingChange = (tableId: string, mapping: AiPdfLineItemMapping) => {
+        setTables((prev) =>
+            prev.map((table) =>
+                table.id === tableId
+                    ? { ...table, lineItemColumnMapping: mapping }
+                    : table
+            )
+        )
+    }
+
+    const buildSyncPayload = (currentTables: AiPdfTable[]): AiPdfSyncPayload => ({
+        tables: currentTables.map((table) => ({
+            ...(table.id && !table.id.startsWith('merged-') ? { id: table.id } : {}),
+            title: table.title || null,
+            columns: table.columns,
+            lineItemMapping: table.lineItemColumnMapping || {},
+            rows: table.rows.map((row, rowIndex) => ({
+                ...(row.id ? { id: row.id } : {}),
+                rowData: row.rowData,
+                rowIndex: row.rowIndex ?? rowIndex,
+            })),
+        })),
+    })
+>>>>>>> Stashed changes
 
     const handleSyncChanges = async () => {
         try {
             const payload = buildSyncPayload(tables)
             await syncUpload({ uploadId, payload }).unwrap()
+<<<<<<< Updated upstream
 
             // Message.success(
             //     `Synced successfully (tables: +${result.summary.createdTables} / ~${result.summary.updatedTables} / -${result.summary.deletedTables}, rows: +${result.summary.createdRows} / ~${result.summary.updatedRows} / -${result.summary.deletedRows})`
@@ -560,6 +763,18 @@ export default function UploadDetailPage() {
 
             if (refreshed.data) {
                 setTables(refreshed.data.tables)
+=======
+            Message.success('Synced successfully')
+
+            const refreshed = await refetch()
+            if (refreshed.data) {
+                setTables(
+                    refreshed.data.tables.map((table) => ({
+                        ...table,
+                        lineItemColumnMapping: table.lineItemColumnMapping || {},
+                    }))
+                )
+>>>>>>> Stashed changes
             }
         } catch (error: unknown) {
             const fallback = 'Failed to sync table changes'
@@ -656,6 +871,11 @@ export default function UploadDetailPage() {
                                 index={index}
                                 onDelete={() => handleDeleteTable(table.id)}
                                 onRowsChange={handleRowsChange}
+<<<<<<< Updated upstream
+=======
+                                onLineItemMappingChange={handleLineItemMappingChange}
+                                lineItemFields={lineItemFields}
+>>>>>>> Stashed changes
                             />
                         ))}
                     </div>
@@ -670,6 +890,7 @@ export default function UploadDetailPage() {
                         <Button
                             type="primary"
                             loading={isSyncing}
+<<<<<<< Updated upstream
                             disabled={!hasUnsyncedChanges}
                             onClick={handleSyncChanges}
                             className={
@@ -677,6 +898,9 @@ export default function UploadDetailPage() {
                                     ? 'blur-[0.6px] opacity-70'
                                     : undefined
                             }
+=======
+                            onClick={handleSyncChanges}
+>>>>>>> Stashed changes
                         >
                             Sync Changes
                         </Button>

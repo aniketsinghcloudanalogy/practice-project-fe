@@ -3,6 +3,7 @@ import type {
   AiPdfUploadListItem,
   AiPdfUpload,
   AiPdfExtractSummary,
+<<<<<<< Updated upstream
   AiPdfSyncPayload,
   AiPdfSyncSummary,
   AiPdfDeleteSummary,
@@ -11,6 +12,16 @@ import type {
   AiPdfExtractResponse,
   AiPdfSyncResponse,
   AiPdfDeleteResponse,
+=======
+  AiPdfLineItemFieldOption,
+  AiPdfSyncPayload,
+  AiPdfSyncSummary,
+  AiPdfUploadListResponse,
+  AiPdfUploadDetailResponse,
+  AiPdfExtractResponse,
+  AiPdfLineItemFieldsResponse,
+  AiPdfSyncResponse,
+>>>>>>> Stashed changes
 } from './types'
 
 export const aiPdfApi = baseApi.injectEndpoints({
@@ -42,6 +53,11 @@ export const aiPdfApi = baseApi.injectEndpoints({
       ],
     }),
 
+    getAiPdfLineItemFields: builder.query<AiPdfLineItemFieldOption[], void>({
+      query: () => 'api/aipdf/line-item-fields',
+      transformResponse: (response: AiPdfLineItemFieldsResponse) => response.data.fields,
+    }),
+
     // POST /aipdf/extract — upload PDF and extract tables
     extractAiPdf: builder.mutation<AiPdfExtractSummary, File>({
       query: (file) => {
@@ -58,7 +74,10 @@ export const aiPdfApi = baseApi.injectEndpoints({
       invalidatesTags: [{ type: 'Pdfs' as const, id: 'AI-PDF-LIST' }],
     }),
 
+<<<<<<< Updated upstream
     // PUT /aipdf/:uploadId/sync — sync all table changes for an upload
+=======
+>>>>>>> Stashed changes
     syncAiPdfUpload: builder.mutation<AiPdfSyncSummary, { uploadId: string; payload: AiPdfSyncPayload }>({
       query: ({ uploadId, payload }) => ({
         url: `api/aipdf/${uploadId}/sync`,
@@ -72,6 +91,7 @@ export const aiPdfApi = baseApi.injectEndpoints({
       ],
     }),
 
+<<<<<<< Updated upstream
     deleteAiPdfUpload: builder.mutation<AiPdfDeleteSummary, string>({
       query: (uploadId) => ({
         url: `api/aipdf/${uploadId}`,
@@ -84,6 +104,8 @@ export const aiPdfApi = baseApi.injectEndpoints({
       ],
     }),
 
+=======
+>>>>>>> Stashed changes
   }),
   overrideExisting: true,
 })
@@ -91,7 +113,11 @@ export const aiPdfApi = baseApi.injectEndpoints({
 export const {
   useGetAiPdfUploadsQuery,
   useGetAiPdfUploadDetailQuery,
+  useGetAiPdfLineItemFieldsQuery,
   useExtractAiPdfMutation,
   useSyncAiPdfUploadMutation,
+<<<<<<< Updated upstream
   useDeleteAiPdfUploadMutation,
+=======
+>>>>>>> Stashed changes
 } = aiPdfApi
