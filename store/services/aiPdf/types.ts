@@ -76,11 +76,7 @@ export type AiPdfExtractSummary = {
   }[]
 }
 
-<<<<<<< Updated upstream
 // ─── Sync request/response (PUT /aipdf/:uploadId/sync) ──────────────────────
-
-=======
->>>>>>> Stashed changes
 export type AiPdfSyncRowInput = {
   id?: string
   rowData: Record<string, any>
@@ -91,10 +87,7 @@ export type AiPdfSyncTableInput = {
   id?: string
   title?: string | null
   columns: AiPdfColumn[]
-<<<<<<< Updated upstream
-=======
   lineItemMapping?: AiPdfLineItemMapping
->>>>>>> Stashed changes
   rows: AiPdfSyncRowInput[]
 }
 
@@ -114,23 +107,15 @@ export type AiPdfSyncSummary = {
   }
 }
 
-<<<<<<< Updated upstream
 export type AiPdfDeleteSummary = {
   uploadId: string
   deletedTables: number
 }
-
-=======
->>>>>>> Stashed changes
 // ─── API Response wrappers ───────────────────────────────────────────────────
 
 export type AiPdfUploadListResponse = ApiResponse<{ uploads: AiPdfUploadListItem[] }>
 export type AiPdfUploadDetailResponse = ApiResponse<{ upload: AiPdfUpload }>
 export type AiPdfExtractResponse = ApiResponse<AiPdfExtractSummary>
-<<<<<<< Updated upstream
-export type AiPdfSyncResponse = ApiResponse<AiPdfSyncSummary>
-export type AiPdfDeleteResponse = ApiResponse<AiPdfDeleteSummary>
-=======
 export type AiPdfLineItemFieldsResponse = ApiResponse<{ fields: AiPdfLineItemFieldOption[] }>
 export type AiPdfSyncResponse = ApiResponse<AiPdfSyncSummary>
->>>>>>> Stashed changes
+export type AiPdfDeleteResponse = ApiResponse<AiPdfDeleteSummary>

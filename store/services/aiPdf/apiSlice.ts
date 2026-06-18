@@ -1,38 +1,27 @@
 import { baseApi } from '../baseApi'
 import type {
-  AiPdfUploadListItem,
-  AiPdfUpload,
-  AiPdfExtractSummary,
-<<<<<<< Updated upstream
-  AiPdfSyncPayload,
-  AiPdfSyncSummary,
-  AiPdfDeleteSummary,
-  AiPdfUploadListResponse,
-  AiPdfUploadDetailResponse,
-  AiPdfExtractResponse,
-  AiPdfSyncResponse,
   AiPdfDeleteResponse,
-=======
-  AiPdfLineItemFieldOption,
-  AiPdfSyncPayload,
-  AiPdfSyncSummary,
-  AiPdfUploadListResponse,
-  AiPdfUploadDetailResponse,
+  AiPdfDeleteSummary,
   AiPdfExtractResponse,
+  AiPdfExtractSummary,
+  AiPdfLineItemFieldOption,
   AiPdfLineItemFieldsResponse,
+  AiPdfSyncPayload,
   AiPdfSyncResponse,
->>>>>>> Stashed changes
+  AiPdfSyncSummary,
+  AiPdfUpload,
+  AiPdfUploadDetailResponse,
+  AiPdfUploadListItem,
+  AiPdfUploadListResponse,
 } from './types'
 
 export const aiPdfApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-
     // GET /aipdf — list all uploads with table count
     getAiPdfUploads: builder.query<AiPdfUploadListItem[], void>({
       query: () => 'api/aipdf',
       keepUnusedDataFor: 300,
-      transformResponse: (response: AiPdfUploadListResponse) =>
-        response.data.uploads,
+      transformResponse: (response: AiPdfUploadListResponse) => response.data.uploads,
       providesTags: (result) =>
         result
           ? [
@@ -45,14 +34,14 @@ export const aiPdfApi = baseApi.injectEndpoints({
     // GET /aipdf/:uploadId — full detail with tables + rows
     getAiPdfUploadDetail: builder.query<AiPdfUpload, string>({
       query: (uploadId) => `api/aipdf/${uploadId}`,
-      transformResponse: (response: AiPdfUploadDetailResponse) =>
-        response.data.upload,
+      transformResponse: (response: AiPdfUploadDetailResponse) => response.data.upload,
       providesTags: (_result, _error, uploadId) => [
         { type: 'Pdfs' as const, id: `AI-PDF-${uploadId}` },
         { type: 'Pdfs' as const, id: 'AI-PDF-LIST' },
       ],
     }),
 
+    // GET /aipdf/line-item-fields — DB LineItems field options
     getAiPdfLineItemFields: builder.query<AiPdfLineItemFieldOption[], void>({
       query: () => 'api/aipdf/line-item-fields',
       transformResponse: (response: AiPdfLineItemFieldsResponse) => response.data.fields,
@@ -74,10 +63,7 @@ export const aiPdfApi = baseApi.injectEndpoints({
       invalidatesTags: [{ type: 'Pdfs' as const, id: 'AI-PDF-LIST' }],
     }),
 
-<<<<<<< Updated upstream
     // PUT /aipdf/:uploadId/sync — sync all table changes for an upload
-=======
->>>>>>> Stashed changes
     syncAiPdfUpload: builder.mutation<AiPdfSyncSummary, { uploadId: string; payload: AiPdfSyncPayload }>({
       query: ({ uploadId, payload }) => ({
         url: `api/aipdf/${uploadId}/sync`,
@@ -91,7 +77,7 @@ export const aiPdfApi = baseApi.injectEndpoints({
       ],
     }),
 
-<<<<<<< Updated upstream
+    // DELETE /aipdf/:uploadId — soft delete upload
     deleteAiPdfUpload: builder.mutation<AiPdfDeleteSummary, string>({
       query: (uploadId) => ({
         url: `api/aipdf/${uploadId}`,
@@ -103,9 +89,6 @@ export const aiPdfApi = baseApi.injectEndpoints({
         { type: 'Pdfs' as const, id: 'AI-PDF-LIST' },
       ],
     }),
-
-=======
->>>>>>> Stashed changes
   }),
   overrideExisting: true,
 })
@@ -116,8 +99,5 @@ export const {
   useGetAiPdfLineItemFieldsQuery,
   useExtractAiPdfMutation,
   useSyncAiPdfUploadMutation,
-<<<<<<< Updated upstream
   useDeleteAiPdfUploadMutation,
-=======
->>>>>>> Stashed changes
 } = aiPdfApi
