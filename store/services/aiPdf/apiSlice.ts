@@ -3,9 +3,14 @@ import type {
   AiPdfUploadListItem,
   AiPdfUpload,
   AiPdfExtractSummary,
+  AiPdfSyncPayload,
+  AiPdfSyncSummary,
+  AiPdfDeleteSummary,
   AiPdfUploadListResponse,
   AiPdfUploadDetailResponse,
   AiPdfExtractResponse,
+  AiPdfSyncResponse,
+  AiPdfDeleteResponse,
 } from './types'
 
 export const aiPdfApi = baseApi.injectEndpoints({
@@ -53,6 +58,32 @@ export const aiPdfApi = baseApi.injectEndpoints({
       invalidatesTags: [{ type: 'Pdfs' as const, id: 'AI-PDF-LIST' }],
     }),
 
+    // PUT /aipdf/:uploadId/sync — sync all table changes for an upload
+    syncAiPdfUpload: builder.mutation<AiPdfSyncSummary, { uploadId: string; payload: AiPdfSyncPayload }>({
+      query: ({ uploadId, payload }) => ({
+        url: `api/aipdf/${uploadId}/sync`,
+        method: 'PUT',
+        body: payload,
+      }),
+      transformResponse: (response: AiPdfSyncResponse) => response.data,
+      invalidatesTags: (_result, _error, { uploadId }) => [
+        { type: 'Pdfs' as const, id: `AI-PDF-${uploadId}` },
+        { type: 'Pdfs' as const, id: 'AI-PDF-LIST' },
+      ],
+    }),
+
+    deleteAiPdfUpload: builder.mutation<AiPdfDeleteSummary, string>({
+      query: (uploadId) => ({
+        url: `api/aipdf/${uploadId}`,
+        method: 'DELETE',
+      }),
+      transformResponse: (response: AiPdfDeleteResponse) => response.data,
+      invalidatesTags: (_result, _error, uploadId) => [
+        { type: 'Pdfs' as const, id: `AI-PDF-${uploadId}` },
+        { type: 'Pdfs' as const, id: 'AI-PDF-LIST' },
+      ],
+    }),
+
   }),
   overrideExisting: true,
 })
@@ -61,4 +92,6 @@ export const {
   useGetAiPdfUploadsQuery,
   useGetAiPdfUploadDetailQuery,
   useExtractAiPdfMutation,
+  useSyncAiPdfUploadMutation,
+  useDeleteAiPdfUploadMutation,
 } = aiPdfApi

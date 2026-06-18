@@ -68,8 +68,46 @@ export type AiPdfExtractSummary = {
   }[]
 }
 
+// ─── Sync request/response (PUT /aipdf/:uploadId/sync) ──────────────────────
+
+export type AiPdfSyncRowInput = {
+  id?: string
+  rowData: Record<string, any>
+  rowIndex?: number
+}
+
+export type AiPdfSyncTableInput = {
+  id?: string
+  title?: string | null
+  columns: AiPdfColumn[]
+  rows: AiPdfSyncRowInput[]
+}
+
+export type AiPdfSyncPayload = {
+  tables: AiPdfSyncTableInput[]
+}
+
+export type AiPdfSyncSummary = {
+  uploadId: string
+  summary: {
+    createdTables: number
+    updatedTables: number
+    deletedTables: number
+    createdRows: number
+    updatedRows: number
+    deletedRows: number
+  }
+}
+
+export type AiPdfDeleteSummary = {
+  uploadId: string
+  deletedTables: number
+}
+
 // ─── API Response wrappers ───────────────────────────────────────────────────
 
 export type AiPdfUploadListResponse = ApiResponse<{ uploads: AiPdfUploadListItem[] }>
 export type AiPdfUploadDetailResponse = ApiResponse<{ upload: AiPdfUpload }>
 export type AiPdfExtractResponse = ApiResponse<AiPdfExtractSummary>
+export type AiPdfSyncResponse = ApiResponse<AiPdfSyncSummary>
+export type AiPdfDeleteResponse = ApiResponse<AiPdfDeleteSummary>
