@@ -5,7 +5,7 @@ import { signIn, signOut, getSession } from 'next-auth/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import Button from '@/components/common/Button'
+import Button from '@/components/common/antd/Button'
 import Checkbox from '@/components/common/Checkbox'
 import Divider from '@/components/common/Divider'
 import Form from '@/components/common/Form'
@@ -56,7 +56,7 @@ const LoginForm = () => {
 			if (result?.ok) {
 				const session = await getSession()
 				const role = session?.user?.role
-				const isAdminRole = role === 'ADMIN' || role === 'SUPER_ADMIN'
+				const isAdminRole = Boolean(session?.user?.isAdmin) || role === 'ADMIN' || role === 'SUPER_ADMIN'
 				router.push(isAdminRole ? '/admin' : '/dashboard')
 				return
 			}

@@ -16,9 +16,13 @@ const shouldHideNavbar = (pathname: string) =>
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   );
 
-export default function NavbarGuard({ children }: Props) {
-  const pathname = usePathname() ?? "";
-  const hideNavbar = shouldHideNavbar(pathname);
+  const hideOn = ['/login', '/signup']
+  const appShellPrefixes = ['/admin', '/superAdminPartner', '/formBuilder', '/dashboard', '/contact',"/adminPartner","/dealRegAi"]
+  const shouldHide =
+    hideOn.includes(pathname) ||
+    appShellPrefixes.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    )
 
   return (
     <>

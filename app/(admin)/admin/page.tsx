@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { LuSearch } from "react-icons/lu";
 import type { ColumnsType } from "antd/es/table";
@@ -9,7 +9,7 @@ import Input from "@/components/common/Input";
 import Tag from "@/components/common/Tag";
 import Switch from "@/components/common/Switch";
 import Tooltip from "@/components/common/Tooltip";
-import { getUsers, toggleUserActive, type UserRow } from "@/lib/api/auth.api";
+import { useGetUsersQuery, useToggleUserActiveMutation, type UserRow } from "@/store/services";
 
 const roleColors: Record<string, string> = {
   USER: "blue",
@@ -18,47 +18,23 @@ const roleColors: Record<string, string> = {
 };
 
 export default function AdminPage() {
-  const { data: session, status } = useSession();
-  const accessToken = session?.accessToken ?? undefined;
+  const { data: session } = useSession();
   const currentUserId = session?.user?.id;
   const currentRole = session?.user?.role;
 
-  const [users, setUsers] = useState<UserRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [toggling, setToggling] = useState<string | null>(null);
+  const { data: users = [], isLoading: loading, error } = useGetUsersQuery();
+  const [toggleUserActive, { isLoading: toggling }] = useToggleUserActiveMutation();
+  const [togglingUserId, setTogglingUserId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    if (status === "loading") return;
-
-    const timerId = window.setTimeout(() => {
-      if (!accessToken) {
-        setLoading(false);
-        setError("No access token found. Please log in.");
-        return;
-      }
-      setLoading(true);
-      setError(null);
-      getUsers(accessToken)
-        .then((data) => setUsers(data))
-        .catch((error: unknown) => {
-          setError(error instanceof Error ? error.message : "Failed to fetch users");
-        })
-        .finally(() => setLoading(false));
-    }, 0);
-
-    return () => window.clearTimeout(timerId);
-  }, [accessToken, status]);
-
   const handleToggle = async (user: UserRow, checked: boolean) => {
-    if (!accessToken) return;
-    setToggling(user.id);
+    setTogglingUserId(user.id);
     try {
-      const updated = await toggleUserActive(user.id, checked, accessToken);
-      setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+      await toggleUserActive({ userId: user.id, isActive: checked }).unwrap();
+    } catch (error) {
+      console.error('Failed to toggle user active status:', error);
     } finally {
-      setToggling(null);
+      setTogglingUserId(null);
     }
   };
 
@@ -79,6 +55,14 @@ export default function AdminPage() {
       ellipsis: true,
     },
     {
+      title: "Organization",
+      dataIndex: "organizationName",
+      key: "organizationName",
+      width: 150,
+      ellipsis: true,
+      render: (v) => v ?? <span className="text-slate-400 italic">None</span>,
+    },
+    {
       title: "Role",
       dataIndex: "role",
       key: "role",
@@ -92,6 +76,22 @@ export default function AdminPage() {
       render: (role) => (
         <Tag variant="status" color={roleColors[role] ?? "default"}>
           {role}
+        </Tag>
+      ),
+    },
+    {
+      title: "Admin",
+      dataIndex: "isAdmin",
+      key: "isAdmin",
+      width: 100,
+      filters: [
+        { text: "Admin", value: true },
+        { text: "User", value: false },
+      ],
+      onFilter: (value, record) => record.isAdmin === value,
+      render: (isAdmin) => (
+        <Tag variant="status" color={isAdmin ? "purple" : "default"}>
+          {isAdmin ? "Yes" : "No"}
         </Tag>
       ),
     },
@@ -127,7 +127,7 @@ export default function AdminPage() {
       fixed: "right",
       render: (_, record) => {
         const isSelf = record.id === currentUserId;
-        const isAdminTarget = record.role === "ADMIN" || record.role === "SUPER_ADMIN";
+        const isAdminTarget = record.isAdmin || record.role === "ADMIN" || record.role === "SUPER_ADMIN";
         const canToggle = !isSelf && (!isAdminTarget || currentRole === "SUPER_ADMIN");
         const tooltipMsg = isSelf
           ? "Cannot deactivate yourself"
@@ -140,7 +140,7 @@ export default function AdminPage() {
           <Tooltip title={tooltipMsg}>
             <Switch
               checked={record.isActive}
-              loading={toggling === record.id}
+              loading={togglingUserId === record.id}
               disabled={!canToggle}
               onChange={(checked) => handleToggle(record, checked)}
               checkedChildren="ON"
@@ -157,7 +157,8 @@ export default function AdminPage() {
         const q = search.trim().toLowerCase();
         return (
           (u.name ?? "").toLowerCase().includes(q) ||
-          u.email.toLowerCase().includes(q)
+          u.email.toLowerCase().includes(q) ||
+          (u.organizationName ?? "").toLowerCase().includes(q)
         );
       })
     : users;
@@ -182,23 +183,25 @@ export default function AdminPage() {
 
       {error && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 sm:p-4">
-          <p className="text-sm text-red-800">{error}</p>
+          <p className="text-sm text-red-800">
+            {error && typeof error === 'object' && 'message' in error 
+              ? (error as any).message 
+              : 'Failed to fetch users'}
+          </p>
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-        <div className="w-full overflow-x-auto">
-          <Table<UserRow>
-            columns={columns}
-            dataSource={filtered}
-            rowKey="id"
-            loading={loading}
-            pagination={{ pageSize: 10, showSizeChanger: true, size: "small" }}
-            rowClassName={(record) => (!record.isActive ? "opacity-60" : "")}
-            scroll={{ x: 640 }}
-            size="middle"
-          />
-        </div>
+      <div className="w-full overflow-x-auto rounded-xl">
+        <Table<UserRow>
+          columns={columns}
+          dataSource={filtered}
+          rowKey="id"
+          loading={loading}
+          pagination={{ pageSize: 10, showSizeChanger: true, size: "small" }}
+          rowClassName={(record) => (!record.isActive ? "opacity-60" : "")}
+          scroll={{ x: 860 }}
+          size="middle"
+        />
       </div>
     </section>
   );

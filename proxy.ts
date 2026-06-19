@@ -25,8 +25,20 @@ type RouteAccessRule = {
  */
 const ROUTE_ACCESS: RouteAccessRule[] = [
   {
+    path: "/formBuilder",
+    allowedRoles: [ROLES.SUPER_ADMIN],
+  },
+  {
     path: "/superAdminPartner",
     allowedRoles: [ROLES.SUPER_ADMIN],
+  },
+  {
+    path: "/adminPartner",
+    allowedRoles: [ROLES.ADMIN],
+  },
+  {
+    path: "/dealRegAi",
+    allowedRoles: [ROLES.ADMIN],
   },
   {
     path: "/admin",
@@ -95,7 +107,10 @@ export default withAuth(
 
 export const config = {
   matcher: [
+    "/formBuilder/:path*",
     "/superAdminPartner/:path*",
+    "/adminPartner/:path*",
+    "/dealRegAi/:path*",
     "/admin/:path*",
     "/dashboard/:path*",
     "/contact/:path*",

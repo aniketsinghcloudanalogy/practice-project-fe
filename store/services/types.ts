@@ -145,3 +145,117 @@ export type ApiResponse<T> = {
 	message?: string
 	data: T
 }
+
+// ─── Partner Types ──────────────────────────────────────────────────────────
+
+export type PartnerData = {
+	externalId?: string | null
+	partnerName: string
+	parentPartner?: string | null
+	pmId?: string | null
+	url?: string | null
+	email?: string | null
+}
+
+export type Partner = PartnerData & {
+	id: number
+	createdAt?: string
+	updatedAt?: string
+}
+
+export type PartnerStats = {
+	totalPartners: number
+	totalPrograms: number
+	pending: number
+}
+
+export type PartnerProgram = {
+	id: number
+	partnerProgramName?: string
+	description?: string
+	verificationStep?: boolean
+	partnerId: number
+	partnerName: string
+	createdAt?: string
+	updatedAt?: string
+}
+
+export type PartnerProgramData = {
+	partnerName: string
+	partnerProgramName?: string
+	description?: string
+}
+
+export type PartnerRow = {
+	Id: number
+	"External id": string | null
+	"partner Name": string | null
+	"parent Partner": string | null
+	"PM Id": string | null
+	url: string | null
+	email: string | null
+	programs?: (PartnerProgram & { formStatus?: 'DRAFT' | 'SUBMITTED' | null; formCreatorId?: string | null })[]
+}
+
+// ─── Form Types ─────────────────────────────────────────────────────────────
+
+export interface FormSubmission {
+	id: string
+	formType: string
+	draftData: Record<string, unknown> | null
+	finalData: Record<string, unknown> | null
+	status: "DRAFT" | "SUBMITTED"
+	userId: string | null
+	creatorId: string | null
+	email: string | null
+	sessionId: string | null
+	submittedAt: string | null
+	createdAt: string
+	updatedAt: string
+}
+
+export interface FormDraftPayload {
+	formType: string
+	draftData: Record<string, unknown>
+	email?: string
+	sessionId?: string
+}
+
+export interface FormSubmitPayload {
+	formType: string
+	finalData: Record<string, unknown>
+	email?: string
+	sessionId?: string
+}
+
+export interface FormFilters {
+	formType?: string
+	status?: "DRAFT" | "SUBMITTED"
+	email?: string
+}
+
+// ─── Partner Form Types ─────────────────────────────────────────────────────
+
+export interface ProgramForm {
+	id: number
+	programId: number
+	formDesign: Record<string, unknown> | null
+	submittedDesign: Record<string, unknown> | null
+	status: "DRAFT" | "SUBMITTED"
+	createdAt: string
+	updatedAt: string
+}
+
+// ─── User Types ─────────────────────────────────────────────────────────────
+
+export type UserRow = {
+	id: string
+	name: string | null
+	email: string
+	role: string
+	isAdmin: boolean
+	isActive: boolean
+	organizationId: string | null
+	organizationName: string | null
+	createdAt: string
+}

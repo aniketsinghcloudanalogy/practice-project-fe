@@ -1,12 +1,10 @@
 "use client";
 
-import { useState } from "react";
-
-import Button from "@/components/common/Button";
+import Button from "@/components/common/antd/Button";
 import Form from "@/components/common/Form";
 import Input from "@/components/common/Input";
 import Select from "@/components/common/Select";
-import { addProgram } from "@/lib/api/partner.api";
+import { useAddProgramMutation } from "@/store/services";
 import { addProgramSchema } from "@/lib/validations/partner.schema";
 
 import type { ProgramFormValues } from "./types";
@@ -18,17 +16,19 @@ type PartnerNameOption = {
 
 type AddProgramFormProps = {
   partnerNameOptions: PartnerNameOption[];
+  defaultPartnerName?: string;
   onSubmit: (values: ProgramFormValues) => void;
   onCancel: () => void;
 };
 
 export default function AddProgramForm({
   partnerNameOptions,
+  defaultPartnerName,
   onSubmit,
   onCancel,
 }: AddProgramFormProps) {
   const [form] = Form.useForm<ProgramFormValues>();
-  const [loading, setLoading] = useState(false);
+  const [addProgram, { isLoading: loading }] = useAddProgramMutation();
 
   const onSubmitHandler = async (values: ProgramFormValues) => {
     const result = addProgramSchema.safeParse(values);
@@ -42,13 +42,12 @@ export default function AddProgramForm({
       return;
     }
     try {
-      setLoading(true);
-      await addProgram(result.data);
+      await addProgram(result.data).unwrap();
       onSubmit(result.data);
-    } catch {
-      form.setFields([{ name: "partnerName", errors: ["Failed to add program. Please try again."] }]);
-    } finally {
-      setLoading(false);
+    } catch (error: any) {
+      const errorMessage = error?.data?.message || error?.message || "Failed to add program. Please try again.";
+      form.setFields([{ name: "partnerName", errors: [errorMessage] }]);
+      console.error('Failed to add program:', error);
     }
   };
 
@@ -62,7 +61,7 @@ export default function AddProgramForm({
           form={form}
           layout="vertical"
           onFinish={onSubmitHandler}
-          initialValues={{ partnerName: "", partnerProgramName: "", description: "" }}
+          initialValues={{ partnerName: defaultPartnerName ?? "", partnerProgramName: "", description: "" }}
           className="space-y-5"
         >
           <div className="flex flex-col gap-4 sm:grid-cols-2">

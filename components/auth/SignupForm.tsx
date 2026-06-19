@@ -5,7 +5,7 @@ import { signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 
-import Button from "@/components/common/Button";
+import Button from "@/components/common/antd/Button";
 import Divider from "@/components/common/Divider";
 import Form from "@/components/common/Form";
 import Input from "@/components/common/Input";
@@ -48,7 +48,7 @@ const SignupForm = () => {
 
       if (!res) throw new Error('Signup failed.');
 
-      // Admin accounts (maildrop.cc) are inactive by default — no session created
+      // Admin accounts for existing organizations are inactive by default.
       if (!res.data) {
         setPending(true);
         return;
@@ -90,7 +90,7 @@ const SignupForm = () => {
         </div>
         <Typography.Title level={3} className="mb-0! font-semibold! text-slate-900!">Account Pending Activation</Typography.Title>
         <Typography.Text className="text-[13px] text-slate-500">
-          Your admin account has been created and is pending activation by a Super Admin.
+          Your admin account has been created and is pending activation.
         </Typography.Text>
         <Link href="/login" className="text-[13px] font-semibold text-violet-600 hover:text-violet-500">Back to Login</Link>
       </div>

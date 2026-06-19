@@ -2,7 +2,7 @@ import Modal from "@/components/common/Modal";
 
 import AddPartnerForm from "./AddPartnerForm";
 import AddProgramForm from "./AddProgramForm";
-import type { PartnerRow } from "./PartnerTable";
+import { type PartnerRow } from "@/store/services";
 import type { ModalType, ProgramFormValues } from "./types";
 
 type PartnerNameOption = {
@@ -13,6 +13,7 @@ type PartnerNameOption = {
 type PartnerModalsProps = {
   modalType: ModalType;
   partnerNameOptions: PartnerNameOption[];
+  defaultPartnerName?: string;
   onClose: () => void;
   onPartnerSubmit: (newPartner: PartnerRow) => void;
   onProgramSubmit: (values: ProgramFormValues) => void;
@@ -21,6 +22,7 @@ type PartnerModalsProps = {
 export default function PartnerModals({
   modalType,
   partnerNameOptions,
+  defaultPartnerName,
   onClose,
   onPartnerSubmit,
   onProgramSubmit,
@@ -46,6 +48,7 @@ export default function PartnerModals({
       {isProgram && (
         <AddProgramForm
           partnerNameOptions={partnerNameOptions}
+          defaultPartnerName={defaultPartnerName}
           onSubmit={onProgramSubmit}
           onCancel={onClose}
         />

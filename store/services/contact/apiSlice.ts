@@ -92,7 +92,7 @@ export const contactApi = baseApi.injectEndpoints({
             }),
         }),
     }),
-    overrideExisting: false,
+    overrideExisting: process.env.NODE_ENV === 'development',
 })
 
 export const {

@@ -1,42 +1,26 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { signOut, useSession } from "next-auth/react";
-import { MenuOutlined, CloseOutlined } from "@ant-design/icons";
-import { MdAdminPanelSettings, MdNotificationsNone } from "react-icons/md";
-import Avatar from "@/components/common/Avatar";
-import Button from "@/components/common/Button";
-import Dropdown from "@/components/common/Dropdown";
-import { logout } from "@/lib/api/auth.api";
-
-// Reusable fallback avatar shown when the user has no profile image
-const AdminAvatar = ({ size = 28 }: { size?: number }) => (
-  <div
-    style={{ width: size, height: size }}
-    className="flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-sm"
-  >
-    <MdAdminPanelSettings size={Math.round(size * 0.6)} />
-  </div>
-);
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { signOut, useSession } from 'next-auth/react'
+import { UserOutlined } from '@ant-design/icons'
+import Avatar from '@/components/common/Avatar'
+import Button from '@/components/common/antd/Button'
+import Dropdown from '@/components/common/Dropdown'
+import { logout } from '@/lib/api/auth.api'
 
 const Navbar = () => {
-  const router = useRouter();
-  const { data: session, status } = useSession();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const router = useRouter()
+  const { data: session, status } = useSession()
+  const isLoggedIn = status === 'authenticated'
+  const username = session?.user?.name
+  const userImage = session?.user?.image
+  const role = session?.user?.role
+  const isAdminRole = Boolean(session?.user?.isAdmin) || role === 'ADMIN' || role === 'SUPER_ADMIN'
+  const dashboardHref = isAdminRole ? '/admin' : '/dashboard'
 
-  const isLoggedIn = status === "authenticated";
-  const username = session?.user?.name;
-  const userImage = session?.user?.image;
-  const role = session?.user?.role;
-  const isAdminRole = role === "ADMIN" || role === "SUPER_ADMIN";
-  const dashboardHref = isAdminRole ? "/admin" : "/dashboard";
-
-  const handleLogout = useCallback(async () => {
-    setMobileOpen(false);
-
-    const token = session?.accessToken ?? "";
+  const handleLogout = async () => {
+    const token = session?.accessToken ?? ''
     if (token) {
       try {
         await logout(token);

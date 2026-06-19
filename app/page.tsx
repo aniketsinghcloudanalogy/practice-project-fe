@@ -1,6 +1,6 @@
 import { ArrowRight, BarChart3, CheckCircle2, Mail, ShieldCheck, Users } from 'lucide-react'
 import Link from 'next/link'
-import Button from '@/components/common/Button'
+import Button from '@/components/common/antd/Button'
 import Card from '@/components/common/Card'
 
 const highlights = [

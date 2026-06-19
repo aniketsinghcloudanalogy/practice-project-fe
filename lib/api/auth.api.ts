@@ -72,29 +72,6 @@ export const refreshToken = async (userId: string) => {
   return { user: d.user, accessToken: d.token };
 };
 
-export const getUsers = async (accessToken: string) => {
-  const res = await api.get("/api/users/list", {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  return res.data?.data as UserRow[];
-};
-
-export const toggleUserActive = async (userId: string, isActive: boolean, accessToken: string) => {
-  const res = await api.patch(`/api/users/${userId}/active`, { isActive }, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  return res.data?.data as UserRow;
-};
-
-export type UserRow = {
-  id: string;
-  name: string | null;
-  email: string;
-  role: string;
-  isActive: boolean;
-  createdAt: string;
-};
-
 export type PartnerRow = {
   Id: number;
   "External id": string | null;

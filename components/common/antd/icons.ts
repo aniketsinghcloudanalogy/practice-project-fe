@@ -18,5 +18,9 @@ export {
 	PhoneOutlined,
 	SendOutlined,
 	UserOutlined,
-	SaveOutlined
+	SaveOutlined,
+	DownloadOutlined,
+	CopyOutlined,
+	SettingOutlined,
+	UploadOutlined,
 } from '@ant-design/icons'
