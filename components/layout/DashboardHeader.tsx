@@ -85,10 +85,11 @@ const DashboardHeader = () => {
   }, []);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 h-16 border-b border-slate-200 bg-white">
-      <div className="flex h-full items-center justify-between px-4 sm:px-6">
-        {/* Left */}
-        <div className="flex items-center gap-3">
+    <header className="fixed inset-x-0 top-0 z-40 h-(--navbar-height) w-full border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
+      <div className="flex h-full w-full items-center justify-between px-3 sm:px-6">
+
+        {/* Left — hamburger (mobile) + title */}
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             type="button"
             onClick={openMobile}
@@ -114,8 +115,15 @@ const DashboardHeader = () => {
           </Link>
         </div>
 
-        {/* Right */}
-        <div className="flex items-center gap-2">
+        {/* Right — user + logout */}
+        <div className="flex items-center gap-2 sm:gap-4">
+          <div className="hidden items-center gap-1.5 text-sm text-slate-600 sm:flex">
+            <MdPerson size={16} />
+            <span className="max-w-30 truncate">
+              {session?.user?.name ?? session?.user?.email}
+            </span>
+          </div>
+
           <button
             type="button"
             className="relative rounded-lg p-2 text-slate-600 hover:bg-slate-100"

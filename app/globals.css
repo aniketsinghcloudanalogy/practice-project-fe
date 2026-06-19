@@ -5,17 +5,7 @@
   --foreground: #0f172a;
   --sidebar-width: 0px;
   --navbar-offset: 92px;
-<<<<<<< HEAD
-  --navbar-height: 69px;
-}
-
-@media (min-width: 769px) {
-  :root {
-    --sidebar-width: 92px;
-  }
-=======
   --navbar-height: 72px;
->>>>>>> b7fb3a9 (Fixed as per requirement)
 }
 
 body {
