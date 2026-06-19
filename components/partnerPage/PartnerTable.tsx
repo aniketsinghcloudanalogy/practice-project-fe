@@ -170,7 +170,8 @@ export default function PartnerTable({
     partnerColumns.push({
       title: "Actions",
       key: "actions",
-      width: 120,
+      width: 100,
+      fixed: "right" as const,
       render: (_: unknown, record: PartnerRow) => (
         <div className="flex items-center gap-2">
           <Button variant="soft" aria-label="Edit partner" onClick={() => onEdit(record)}>
@@ -187,7 +188,8 @@ export default function PartnerTable({
   const columns = [Table.EXPAND_COLUMN, ...partnerColumns];
 
   return (
-    <section className="mt-6">
+    <section className="mt-6 min-w-0">
+      {/* Toolbar */}
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3 flex-1">
           <h2 className="text-2xl font-semibold text-slate-900 shrink-0">All Partners</h2>

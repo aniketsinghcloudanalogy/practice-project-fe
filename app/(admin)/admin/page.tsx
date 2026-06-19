@@ -164,7 +164,7 @@ export default function AdminPage() {
     : users;
 
   return (
-    <section className="w-full space-y-4 px-2 sm:px-4 lg:px-6">
+    <section className="w-full min-w-0 space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">User Management</h1>

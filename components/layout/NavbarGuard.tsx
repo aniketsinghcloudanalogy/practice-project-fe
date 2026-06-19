@@ -1,15 +1,20 @@
-"use client"
+"use client";
 
-import { usePathname } from 'next/navigation'
-import type { ReactNode } from 'react'
-import Navbar from './Navbar'
+import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
+import Navbar from "./Navbar";
 
 type Props = {
-  children: ReactNode
-}
+  children: ReactNode;
+};
 
-export default function NavbarGuard({ children }: Props) {
-  const pathname = usePathname() ?? ''
+// Routes/sections that render their own header (DashboardHeader, AdminHeader, etc.)
+const HIDDEN_PREFIXES = ["/login", "/signup", "/admin", "/superAdminPartner", "/dashboard"];
+
+const shouldHideNavbar = (pathname: string) =>
+  HIDDEN_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
 
   const hideOn = ['/login', '/signup']
   const appShellPrefixes = ['/admin', '/superAdminPartner', '/formBuilder', '/dashboard', '/contact',"/adminPartner","/dealRegAi"]
@@ -21,7 +26,7 @@ export default function NavbarGuard({ children }: Props) {
 
   return (
     <>
-      {!shouldHide && (
+      {!hideNavbar && (
         <>
           <Navbar />
           <div className="shrink-0 pt-[var(--navbar-height)]" aria-hidden="true" />
@@ -29,5 +34,5 @@ export default function NavbarGuard({ children }: Props) {
       )}
       {children}
     </>
-  )
+  );
 }
