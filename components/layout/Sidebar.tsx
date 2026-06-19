@@ -87,10 +87,20 @@ const Sidebar = () => {
   const sidebarItems = itemsByRole[role]
 
   useEffect(() => {
-    document.documentElement.style.setProperty(
-      '--sidebar-width',
-      collapsed ? '92px' : '288px',
-    )
+    const applySidebarWidth = () => {
+      const isMobile = window.innerWidth <= 768
+      document.documentElement.style.setProperty(
+        '--sidebar-width',
+        isMobile ? '0px' : collapsed ? '92px' : '288px',
+      )
+    }
+
+    applySidebarWidth()
+    window.addEventListener('resize', applySidebarWidth)
+
+    return () => {
+      window.removeEventListener('resize', applySidebarWidth)
+    }
   }, [collapsed])
 
   const activeKey = useMemo(() => {

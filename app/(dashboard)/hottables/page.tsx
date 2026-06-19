@@ -133,7 +133,7 @@ export default function HotTablesPage() {
   const totalTables = uploads.reduce((sum, u) => sum + u._count.tables, 0)
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
       {contextHolder}
 
       <Modal
@@ -169,7 +169,7 @@ export default function HotTablesPage() {
       </Modal>
 
       {/* ── Hero ── */}
-      <div className="relative mb-8 flex items-center justify-between gap-8 overflow-hidden rounded-2xl bg-[linear-gradient(135deg,#1d1f2b_0%,#2d3250_100%)] px-12 py-12 before:pointer-events-none before:absolute before:right-20 before:-top-20 before:h-80 before:w-80 before:bg-[radial-gradient(circle,rgba(99,102,241,0.2)_0%,transparent_70%)] before:content-['']">
+      <div className="relative mb-6 flex flex-col gap-6 overflow-hidden rounded-2xl bg-[linear-gradient(135deg,#1d1f2b_0%,#2d3250_100%)] px-5 py-6 before:pointer-events-none before:absolute before:right-20 before:-top-20 before:h-80 before:w-80 before:bg-[radial-gradient(circle,rgba(99,102,241,0.2)_0%,transparent_70%)] before:content-[''] sm:mb-8 sm:px-8 sm:py-8 lg:flex-row lg:items-center lg:justify-between lg:gap-8 lg:px-12 lg:py-12">
         <div className="z-1 flex-1">
           <div className="mb-5 flex items-center gap-2">
             <span className="inline-block h-2 w-2 rounded-full bg-indigo-500" />
@@ -177,24 +177,24 @@ export default function HotTablesPage() {
             <span className="inline-block h-2 w-2 rounded-full bg-white/20" />
             <span className="text-xs font-semibold uppercase tracking-[1.5px] text-indigo-500">PDF → Tables</span>
           </div>
-          <Title level={2} className="mb-3 text-[32px] font-bold tracking-[-0.5px] text-white!">
+          <Title level={2} className="mb-3 text-[24px] font-bold tracking-[-0.5px] text-white! sm:text-[28px] lg:text-[32px]">
             Extract tables from any PDF
           </Title>
-          <p className="mb-0 max-w-120 text-[15px] leading-7 text-white/60">
+          <p className="mb-0 max-w-full text-[14px] leading-6 text-white/60 sm:max-w-120 sm:text-[15px] sm:leading-7">
             Upload a PDF containing one or more tables. The AI reads the document, identifies every
             table, and renders them as live, editable grids — ready to view, filter, and export.
           </p>
         </div>
 
-        <div className="z-1 flex shrink-0 gap-6">
-          <div className="rounded-xl border border-white/10 bg-white/6 px-7 py-5 text-center backdrop-blur-sm">
-            <Title level={3} className="mb-1 text-[28px] font-bold text-white!">
+        <div className="z-1 grid w-full shrink-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:w-auto lg:gap-6">
+          <div className="rounded-xl border border-white/10 bg-white/6 px-5 py-4 text-center backdrop-blur-sm sm:px-7 sm:py-5">
+            <Title level={3} className="mb-1 text-[24px] font-bold text-white! sm:text-[28px]">
               {uploads.length}
             </Title>
             <span className="text-xs text-white/45">PDFs uploaded</span>
           </div>
-          <div className="rounded-xl border border-white/10 bg-white/6 px-7 py-5 text-center backdrop-blur-sm">
-            <Title level={3} className="mb-1 text-[28px] font-bold text-white!">
+          <div className="rounded-xl border border-white/10 bg-white/6 px-5 py-4 text-center backdrop-blur-sm sm:px-7 sm:py-5">
+            <Title level={3} className="mb-1 text-[24px] font-bold text-white! sm:text-[28px]">
               {totalTables}
             </Title>
             <span className="text-xs text-white/45">Tables extracted</span>
@@ -203,8 +203,8 @@ export default function HotTablesPage() {
       </div>
 
       {/* ── Upload ── */}
-      <div className="mb-6 rounded-xl border border-slate-200 bg-white p-7">
-        <div className="mb-5 flex items-center justify-between">
+      <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 sm:p-6 lg:p-7">
+        <div className="mb-5 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
           <Title level={4} className="mb-0 text-base font-semibold text-[#1d1f2b]">
             Upload a PDF
           </Title>
@@ -241,7 +241,7 @@ export default function HotTablesPage() {
             loading={extracting}
             disabled={!selectedFile}
             onClick={handleUpload}
-            className="mt-4 h-10 rounded-lg border-indigo-500 bg-indigo-500 px-6 font-semibold hover:border-indigo-600! hover:bg-indigo-600!"
+            className="mt-4 h-10 w-full rounded-lg border-indigo-500 bg-indigo-500 px-6 font-semibold hover:border-indigo-600! hover:bg-indigo-600! sm:w-auto"
           >
             {extracting ? 'Extracting…' : 'Upload & Extract'}
           </Button>
@@ -249,8 +249,8 @@ export default function HotTablesPage() {
       </div>
 
       {/* ── Upload List ── */}
-      <div className="mb-6 rounded-xl border border-slate-200 bg-white p-7">
-        <div className="mb-5 flex items-center justify-between">
+      <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 sm:p-6 lg:p-7">
+        <div className="mb-5 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
           <Title level={4} className="mb-0 text-base font-semibold text-[#1d1f2b]">
             Your PDFs
           </Title>
@@ -275,14 +275,17 @@ export default function HotTablesPage() {
             />
           </div>
         ) : (
-          <Table
-            dataSource={uploads}
-            columns={tableColumns}
-            rowKey="id"
-            pagination={{ pageSize: 8, size: 'small' }}
-            size="middle"
-            className="overflow-hidden rounded-lg"
-          />
+          <div className="overflow-x-auto">
+            <Table
+              dataSource={uploads}
+              columns={tableColumns}
+              rowKey="id"
+              pagination={{ pageSize: 8, size: 'small' }}
+              size="middle"
+              scroll={{ x: 760 }}
+              className="overflow-hidden rounded-lg"
+            />
+          </div>
         )}
       </div>
     </div>
