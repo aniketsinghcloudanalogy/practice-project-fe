@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { App } from 'antd';
 import { useRouter } from 'next/navigation';
 import Table from '@/components/common/Table';
-import Button from '@/components/common/Button';
+import Button from '@/components/common/antd/Button';
 import Modal from '@/components/common/Modal';
 import AntdModal from '@/components/common/antd/Modal';
 import Form from '@/components/common/Form';

@@ -2,15 +2,13 @@
 
 import { useState } from "react";
 import { App } from "antd";
-import { isAxiosError } from "axios";
 
-import Button from "@/components/common/Button";
+import Button from "@/components/common/antd/Button";
 import Form from "@/components/common/Form";
-import { addpartner } from "@/lib/api/partner.api";
+import { useAddPartnerMutation, type PartnerRow } from "@/store/services";
 
 import PartnerFormFields from "./PartnerFormFields";
 import type { PartnerFormValues } from "./types";
-import type { PartnerRow } from "./types";
 
 type AddPartnerFormProps = {
   onSubmit: (newPartner: PartnerRow) => void;
@@ -20,23 +18,18 @@ type AddPartnerFormProps = {
 export default function AddPartnerForm({ onSubmit, onCancel }: AddPartnerFormProps) {
   const { message } = App.useApp();
   const [form] = Form.useForm<PartnerFormValues>();
-  const [loading, setLoading] = useState(false);
+  const [addPartner, { isLoading: loading }] = useAddPartnerMutation();
 
   const onSubmitHandler = async (values: PartnerFormValues) => {
     try {
-      setLoading(true);
-      const response = await addpartner(values);
+      const response = await addPartner(values).unwrap();
       message.success("Partner created successfully");
       form.resetFields();
       onSubmit(response.data);
-    } catch (error) {
-      if (isAxiosError(error)) {
-        message.error(error.response?.data?.message || "Request failed");
-      } else {
-        console.error(error);
-      }
-    } finally {
-      setLoading(false);
+    } catch (error: any) {
+      const errorMessage = error?.data?.message || error?.message || "Request failed";
+      message.error(errorMessage);
+      console.error('Failed to add partner:', error);
     }
   };
 

@@ -1,17 +1,5 @@
 import type { AddPartnerInput, AddProgramInput } from "@/lib/validations/partner.schema";
 
-export type PartnerRow = {
-  id: number;
-  externalId: string | null;
-  partnerName: string;
-  parentPartner: string | null;
-  pmId: string | null;
-  url: string | null;
-  email: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
-
 export type PartnerProgramRow = {
   id: number;
   partnerProgramName: string;
@@ -21,6 +9,8 @@ export type PartnerProgramRow = {
   loginTemplate: string | null;
   loginScript: string | null;
   partnerId: number;
+  formStatus?: 'DRAFT' | 'SUBMITTED' | null;
+  formCreatorId?: string | null;
 };
 
 export type ModalType = "partner" | "program" | "edit-partner" | null;

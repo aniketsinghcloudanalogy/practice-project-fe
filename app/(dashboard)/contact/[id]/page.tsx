@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { App } from 'antd';
 import { useParams, useRouter } from 'next/navigation';
-import Button from '@/components/common/Button';
+import Button from '@/components/common/antd/Button';
 import Form from '@/components/common/Form';
 import Input from '@/components/common/Input';
 import Card from '@/components/common/Card';

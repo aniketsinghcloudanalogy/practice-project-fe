@@ -1,119 +1,234 @@
 'use client'
+import { useState } from 'react'
+import { Input } from 'antd'
+import { DeleteOutlined, HolderOutlined, PlusOutlined, CopyOutlined } from '@ant-design/icons'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable'
 import { useDroppable } from '@dnd-kit/core'
-import Typography from '@/components/common/antd/Typography'
-import Button from '@/components/common/antd/Button'
-import Tooltip from '@/components/common/antd/Tooltip'
-import Tag from '@/components/common/antd/Tag'
-import { PlusOutlined } from '@/components/common/antd/icons'
-import { BsGripVertical, BsLayoutSplit, BsLayoutThreeColumns, BsGear } from 'react-icons/bs'
 import { useFormBuilder } from './store'
-import DraggableField from './DraggableField'
-import type { FormSection, FieldType } from './types'
+import FieldCard from './DraggableField'
+import type { SectionDef, FieldDef } from './types'
 
-const { Text, Title } = Typography
-
-interface Props {
-  section: FormSection
-  onAddField: (sectionId: string, type: FieldType) => void
+function groupIntoRows(fields: FieldDef[]): FieldDef[][] {
+  const rows: FieldDef[][] = []
+  let current: FieldDef[] = []
+  for (const f of fields) {
+    if (f.col === 'full') {
+      if (current.length > 0) { rows.push(current); current = [] }
+      rows.push([f])
+    } else {
+      current.push(f)
+      if (current.length === 3) { rows.push(current); current = [] }
+    }
+  }
+  if (current.length > 0) rows.push(current)
+  return rows
 }
 
-function DroppableFieldArea({ sectionId, children }: { sectionId: string; children: React.ReactNode }) {
-  const { setNodeRef, isOver } = useDroppable({ id: `droppable_${sectionId}` })
+function SectionDropZone({ sectionId, dragging, hasFields }: { sectionId: string; dragging: boolean; hasFields: boolean }) {
+  const { setNodeRef, isOver } = useDroppable({ id: `drop-${sectionId}` })
+  const { dispatch } = useFormBuilder()
+
+  if (hasFields) {
+    // Only show the drop strip when actively dragging
+    if (!dragging) return null
+    return (
+      <div
+        ref={setNodeRef}
+        style={{
+          height: 36,
+          border: `2px dashed ${isOver ? '#2F54EB' : '#d1d5db'}`,
+          borderRadius: 8,
+          marginTop: 8,
+          background: isOver ? '#eef2ff' : 'transparent',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 12, fontWeight: 500,
+          color: isOver ? '#2F54EB' : '#9ca3af',
+          transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+          transform: isOver ? 'scale(1.01)' : 'scale(1)',
+        }}
+      >
+        {isOver ? '↓ Drop here' : 'Drop field here'}
+      </div>
+    )
+  }
+
+  // Empty section — show helpful CTA
   return (
     <div
       ref={setNodeRef}
       style={{
-        minHeight: 60, borderRadius: 8, padding: 4, transition: 'all 0.15s',
-        border: `1.5px dashed ${isOver ? '#7c3aed' : '#e2e8f0'}`,
-        background: isOver ? 'rgba(124,58,237,0.03)' : 'transparent',
+        minHeight: 90,
+        border: `2px dashed ${isOver ? '#2F54EB' : '#e5e7eb'}`,
+        borderRadius: 10,
+        background: isOver ? '#eef2ff' : '#fafbfc',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexDirection: 'column', gap: 6,
+        transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+        cursor: 'default',
+        transform: isOver ? 'scale(1.01)' : 'scale(1)',
       }}
     >
-      {children}
+      {isOver ? (
+        <>
+          <div style={{ fontSize: 22, color: '#2F54EB' }}>↓</div>
+          <div style={{ fontSize: 12, color: '#2F54EB', fontWeight: 600 }}>Release to drop</div>
+        </>
+      ) : (
+        <>
+          <div style={{ fontSize: 12, color: '#9ca3af', fontWeight: 500 }}>
+            Drag fields here or click from sidebar
+          </div>
+          <button
+            onClick={() => dispatch({ type: 'ADD_FIELD', sectionId, fieldType: 'text' })}
+            style={{
+              marginTop: 4, padding: '5px 14px', borderRadius: 6,
+              border: '1px dashed #c7d4f8', background: '#f8faff',
+              cursor: 'pointer', fontSize: 12, fontWeight: 500, color: '#2F54EB',
+              display: 'flex', alignItems: 'center', gap: 5,
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#eef2ff'; (e.currentTarget as HTMLElement).style.borderColor = '#2F54EB' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#f8faff'; (e.currentTarget as HTMLElement).style.borderColor = '#c7d4f8' }}
+          >
+            <PlusOutlined style={{ fontSize: 11 }} /> Add a text field
+          </button>
+        </>
+      )}
     </div>
   )
 }
 
-export default function DraggableSection({ section, onAddField }: Props) {
-  const { setActivePanel, activePanel } = useFormBuilder()
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id })
+interface Props { section: SectionDef; dragging: boolean }
 
-  const isActive = activePanel?.kind === 'section' && activePanel.sectionId === section.id
+export default function DraggableSection({ section, dragging }: Props) {
+  const { dispatch, snapshot } = useFormBuilder()
+  const [editing, setEditing] = useState(false)
+  const [titleVal, setTitleVal] = useState(section.title)
+  const [hovered, setHovered] = useState(false)
 
-  const gridStyle: React.CSSProperties =
-    section.columns === 2
-      ? { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }
-      : { display: 'flex', flexDirection: 'column', gap: 8 }
+  const {
+    attributes, listeners, setNodeRef, setActivatorNodeRef,
+    transform, transition, isDragging,
+  } = useSortable({ id: section.id, animateLayoutChanges: () => false })
+
+  const rows = groupIntoRows(section.fields)
+  const hasFields = section.fields.length > 0
 
   return (
     <div
       ref={setNodeRef}
       style={{
         transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.45 : 1,
-        border: `1.5px solid ${isActive ? '#7c3aed' : '#e2e8f0'}`,
-        borderRadius: 14,
-        background: '#fff',
-        boxShadow: isActive ? '0 0 0 3px rgba(124,58,237,0.1), 0 4px 16px rgba(0,0,0,0.06)' : '0 2px 8px rgba(0,0,0,0.05)',
+        transition: transition ? `${transition}, box-shadow 0.2s, border-color 0.2s` : 'transform 200ms ease, box-shadow 0.2s, border-color 0.2s',
+        opacity: isDragging ? 0.4 : 1,
+        marginBottom: 12,
+        borderRadius: 10,
+        border: `1.5px solid ${isDragging ? '#2F54EB' : hovered ? '#c7d4f8' : '#e5e7eb'}`,
+        background: '#ffffff',
         overflow: 'hidden',
+        boxShadow: isDragging
+          ? '0 12px 28px rgba(47,84,235,0.2)'
+          : hovered
+            ? '0 2px 10px rgba(0,0,0,0.06)'
+            : '0 1px 3px rgba(0,0,0,0.02)',
       }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
+      {/* Section Header */}
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px',
-        background: isActive ? 'linear-gradient(90deg,#fdf4ff,#f5f3ff)' : '#f8fafc',
-        borderBottom: '1px solid #f1f5f9',
+        display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
+        background: isDragging ? '#eef2ff' : '#f9fafb', borderBottom: '1px solid #f3f4f6',
+        transition: 'background 0.15s',
       }}>
-        <div {...attributes} {...listeners} style={{ color: '#cbd5e1', cursor: 'grab', fontSize: 16, display: 'flex', alignItems: 'center' }}>
-          <BsGripVertical />
-        </div>
-        <div style={{ flex: 1 }}>
-          <Title level={5} style={{ margin: 0, fontSize: 14, color: '#1e293b' }}>
-            {section.title || 'Untitled Section'}
-          </Title>
-          {section.description && <Text style={{ fontSize: 12, color: '#94a3b8' }}>{section.description}</Text>}
-        </div>
-        <Tag variant="purple" icon={section.columns === 2 ? <BsLayoutSplit style={{ marginRight: 4 }} /> : <BsLayoutThreeColumns style={{ marginRight: 4 }} />}>
-          {section.columns === 2 ? '2 Col' : '1 Col'}
-        </Tag>
-        <Tooltip title="Section settings">
-          <Button
-            variant="ghost"
+        <span
+          ref={setActivatorNodeRef}
+          {...attributes}
+          {...listeners}
+          style={{
+            color: hovered ? '#9ca3af' : '#d1d5db', cursor: 'grab', fontSize: 15,
+            display: 'flex', touchAction: 'none', flexShrink: 0, transition: 'color 0.15s',
+          }}
+        >
+          <HolderOutlined />
+        </span>
+
+        {editing ? (
+          <Input
+            autoFocus
+            value={titleVal}
             size="small"
-            icon={<BsGear />}
-            style={{ color: isActive ? '#7c3aed' : '#94a3b8' }}
-            onClick={() => setActivePanel({ kind: 'section', sectionId: section.id })}
+            style={{ flex: 1, fontWeight: 600, color: '#111827', fontSize: 13 }}
+            onChange={e => setTitleVal(e.target.value)}
+            onBlur={() => {
+              snapshot()
+              dispatch({ type: 'RENAME_SECTION', sectionId: section.id, title: titleVal })
+              setEditing(false)
+            }}
+            onPressEnter={() => {
+              snapshot()
+              dispatch({ type: 'RENAME_SECTION', sectionId: section.id, title: titleVal })
+              setEditing(false)
+            }}
           />
-        </Tooltip>
+        ) : (
+          <span
+            style={{ flex: 1, fontWeight: 600, color: '#111827', fontSize: 13, cursor: 'text', lineHeight: 1.4 }}
+            onDoubleClick={() => { setTitleVal(section.title); setEditing(true) }}
+            title="Double-click to rename"
+          >
+            {section.title}
+          </span>
+        )}
+
+        <span style={{ fontSize: 11, color: '#9ca3af', marginRight: 4, whiteSpace: 'nowrap' }}>
+          {section.fields.length} field{section.fields.length !== 1 ? 's' : ''}
+        </span>
+
+        <button
+          onClick={() => dispatch({ type: 'DELETE_SECTION', sectionId: section.id })}
+          style={{
+            background: 'none', border: '1px solid #fca5a5', cursor: 'pointer',
+            color: '#ef4444', fontSize: 12, display: 'flex', padding: '3px 6px',
+            borderRadius: 5, alignItems: 'center', flexShrink: 0, transition: 'all 0.15s',
+            opacity: hovered ? 1 : 0.6,
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#fee2e2' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none' }}
+          title="Delete section"
+        >
+          <DeleteOutlined />
+        </button>
       </div>
 
-      <div style={{ padding: 12 }}>
-        <SortableContext items={section.fields.map(f => f.id)} strategy={verticalListSortingStrategy}>
-          <DroppableFieldArea sectionId={section.id}>
-            <div style={gridStyle}>
-              {section.fields.length === 0 && (
-                <div style={{ gridColumn: section.columns === 2 ? 'span 2' : undefined, textAlign: 'center', padding: '20px 0' }}>
-                  <Text style={{ fontSize: 13, color: '#cbd5e1' }}>Click a field type on the left to add fields</Text>
+      {/* Field Grid */}
+      <div style={{ padding: '10px 12px' }}>
+        <SortableContext items={section.fields.map(f => f.id)} strategy={rectSortingStrategy}>
+          {hasFields && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {rows.map((row, ri) => (
+                <div
+                  key={ri}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: row[0]?.col === 'full'
+                      ? '1fr'
+                      : `repeat(${row.length}, 1fr)`,
+                    gap: 8,
+                  }}
+                >
+                  {row.map(field => (
+                    <FieldCard key={field.id} field={field} sectionId={section.id} />
+                  ))}
                 </div>
-              )}
-              {section.fields.map(field => (
-                <DraggableField key={field.id} field={field} sectionId={section.id} columns={section.columns} />
               ))}
             </div>
-          </DroppableFieldArea>
+          )}
         </SortableContext>
 
-        <Button
-          variant="dashed"
-          icon={<PlusOutlined />}
-          size="small"
-          style={{ marginTop: 10, width: '100%' }}
-          onClick={() => onAddField(section.id, 'text')}
-        >
-          Add Text Field
-        </Button>
+        <SectionDropZone sectionId={section.id} dragging={dragging} hasFields={hasFields} />
       </div>
     </div>
   )

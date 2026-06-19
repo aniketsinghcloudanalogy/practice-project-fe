@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useSidebar } from '@/store/features/dashboard/sidebarContext'
-import { FaHandshake,FaWpforms } from "react-icons/fa";
+import { FaHandshake, FaRobot } from "react-icons/fa";
 import {
   MdHome,
   MdDescription,
@@ -62,7 +62,8 @@ const itemsByRole: Record<UserRole, SidebarItem[]> = {
     { key: 'dashboard',  label: 'Dashboard',   icon: <MdDashboard size={20} />,        href: '/admin' },
     { key: 'users',      label: 'Users',        icon: <MdPeople size={20} /> },
     { key: 'contacts',   label: 'Contacts',     icon: <MdPerson size={20} />,           href: '/contact' },
-    { key: 'analytics',  label: 'Analytics',    icon: <MdBarChart size={20} /> },
+    { key: 'partners',   label: 'Partners',     icon: <FaHandshake size={20} />,          href: '/adminPartner' },
+    { key: 'dealregai',  label: 'DealRegAi',   icon: <FaRobot size={20} />,            href: '/dealRegAi' },
     { key: 'manage',     label: 'Manage',       icon: <MdManageAccounts size={20} /> },
     { key: 'settings',   label: 'Settings',     icon: <MdSettings size={20} /> },
   ],
@@ -71,7 +72,6 @@ const itemsByRole: Record<UserRole, SidebarItem[]> = {
     { key: 'users',       label: 'Users',         icon: <MdSupervisorAccount size={20} /> },
     { key: 'contacts',    label: 'Contacts',      icon: <MdPerson size={20} />,             href: '/contact' },
     { key: 'partners',   label: 'Partners',     icon: <FaHandshake size={20} />,          href: '/superAdminPartner' },
-    { key: 'Form-Builder', label: 'Form Builder',   icon: <FaWpforms size={20} /> , href: '/formBuilder' },
     { key: 'security',    label: 'Security',      icon: <MdSecurity size={20} /> },
     { key: 'settings',    label: 'Settings',      icon: <MdSettings size={20} /> },
   ],

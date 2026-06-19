@@ -1,12 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import { App } from "antd";
-import Button from "@/components/common/Button";
+import Button from "@/components/common/antd/Button";
 import Drawer from "@/components/common/Drawer";
 import Form from "@/components/common/Form";
-import { updatePartner } from "@/lib/api/partner.api";
+import { useUpdatePartnerMutation, type PartnerRow } from "@/store/services";
 import { addPartnerSchema } from "@/lib/validations/partner.schema";
-import type { PartnerRow } from "./types";
 
 import PartnerFormFields from "./PartnerFormFields";
 import type { PartnerFormValues } from "./types";
@@ -26,16 +25,16 @@ export default function EditPartnerDrawer({
 }: EditPartnerDrawerProps) {
   const { message } = App.useApp();
   const [form] = Form.useForm<PartnerFormValues>();
-  const [loading, setLoading] = useState(false);
+  const [updatePartner, { isLoading: loading }] = useUpdatePartnerMutation();
 
   useEffect(() => {
     if (!open || !partner) return;
 
     form.setFieldsValue({
-      externalId: partner.externalId,
-      partnerName: partner.partnerName ?? "",
-      parentPartner: partner.parentPartner ?? "",
-      pmId: partner.pmId ?? "",
+      externalId: partner["External id"],
+      partnerName: partner["partner Name"] ?? "",
+      parentPartner: partner["parent Partner"] ?? "",
+      pmId: partner["PM Id"] ?? "",
       url: partner.url ?? "",
       email: partner.email ?? "",
     });
@@ -71,19 +70,18 @@ export default function EditPartnerDrawer({
         }
         if (!partner) return;
         try {
-          setLoading(true);
-          await updatePartner(partner.id, result.data);
+          await updatePartner({ partnerId: partner.Id, body: result.data }).unwrap();
           message.success("Partner updated successfully");
           onSubmit(result.data);
-        } catch (err: unknown) {
-          const status = (err as { response?: { status?: number } })?.response?.status;
+        } catch (error: any) {
+          const status = error?.status;
           if (status === 400) {
             form.setFields([{ name: "partnerName", errors: ["Partner with this name already exists"] }]);
           } else {
-            message.error("Failed to update partner. Please try again.");
+            const errorMessage = error?.data?.message || error?.message || "Failed to update partner. Please try again.";
+            message.error(errorMessage);
           }
-        } finally {
-          setLoading(false);
+          console.error('Failed to update partner:', error);
         }
       }}
       className="mt-4"

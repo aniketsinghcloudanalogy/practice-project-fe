@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { logout } from "@/lib/api/auth.api";
 import {
@@ -10,16 +10,47 @@ import {
   MdLogout,
   MdDashboard,
   MdMenu,
+  MdPeople,
 } from "react-icons/md";
 import { useSidebar } from "@/store/features/dashboard/sidebarContext";
-import Button from "../common/Button";
+import Button from "../common/antd/Button";
 
 const AdminHeader = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const { data: session } = useSession();
   const { openMobile } = useSidebar();
 
   const role = session?.user?.role;
+
+  // Get page context
+  const getPageContext = () => {
+    if (pathname?.includes('/adminPartner') || pathname?.includes('/superAdminPartner')) {
+      return {
+        title: 'Partner Programs',
+        subtitle: 'Manage partner programs and forms',
+        icon: <MdPeople className="text-xl text-violet-700" />,
+        href: role === 'SUPER_ADMIN' ? '/superAdminPartner' : '/adminPartner'
+      };
+    }
+    if (pathname?.includes('/dealRegAi')) {
+      return {
+        title: 'DealRegAi',
+        subtitle: 'AI-powered deal registration',
+        icon: <MdDashboard className="text-xl text-violet-700" />,
+        href: '/dealRegAi'
+      };
+    }
+    // Default to dashboard
+    return {
+      title: 'Admin Panel',
+      subtitle: 'Management Dashboard',
+      icon: <MdSettings className="text-xl text-violet-700" />,
+      href: '/admin'
+    };
+  };
+
+  const pageContext = getPageContext();
 
   const handleLogout = async () => {
     const token = session?.accessToken ?? "";
@@ -52,19 +83,19 @@ const AdminHeader = () => {
 </div> 
           <div className="flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100">
-              <MdSettings className="text-xl text-violet-700" />
+              {pageContext.icon}
             </div>
 
             <div>
               <Link
-                href="/admin"
+                href={pageContext.href}
                 className="block text-lg font-semibold text-slate-900"
               >
-                Admin Panel
+                {pageContext.title}
               </Link>
 
               <p className="text-xs text-slate-500">
-                Management Dashboard
+                {pageContext.subtitle}
               </p>
             </div>
           </div>

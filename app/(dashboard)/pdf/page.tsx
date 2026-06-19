@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Button from "@/components/common/Button";
+import Button from "@/components/common/antd/Button";
 import Input from "@/components/common/Input";
 import message from "@/components/common/Message";
 import { StyledPdfPage } from "@/components/pdf/PdfPage.styles";

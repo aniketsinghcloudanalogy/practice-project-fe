@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import { UserOutlined } from '@ant-design/icons'
 import Avatar from '@/components/common/Avatar'
-import Button from '@/components/common/Button'
+import Button from '@/components/common/antd/Button'
 import Dropdown from '@/components/common/Dropdown'
 import { logout } from '@/lib/api/auth.api'
 

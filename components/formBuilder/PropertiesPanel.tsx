@@ -1,153 +1,273 @@
 'use client'
-import Button from '@/components/common/antd/Button'
-import Input from '@/components/common/antd/Input'
-import Select from '@/components/common/antd/Select'
-import Switch from '@/components/common/antd/Switch'
-import Divider from '@/components/common/antd/Divider'
-import Typography from '@/components/common/antd/Typography'
-import { PlusOutlined, DeleteOutlined } from '@/components/common/antd/icons'
-import { BsXLg } from 'react-icons/bs'
+import { useState, useEffect } from 'react'
+import { Button, Input, Switch, Divider } from 'antd'
+import { PlusOutlined, DeleteOutlined, HolderOutlined, CloseOutlined, CopyOutlined } from '@ant-design/icons'
+import {
+  DndContext, PointerSensor, useSensor, useSensors, closestCenter, type DragEndEvent,
+} from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy, arrayMove, useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useFormBuilder } from './store'
-import type { FieldOption } from './types'
+import type { FieldDef, ColSpan } from './types'
 
-const { Text, Title } = Typography
+const COL_OPTIONS: { value: ColSpan; label: string }[] = [
+  { value: 'begin', label: '1/3' }, { value: 'mid', label: '2/3' },
+  { value: 'end', label: '3/3' }, { value: 'full', label: 'Full' },
+]
 
-export default function PropertiesPanel() {
-  const { form, dispatch, activePanel, setActivePanel } = useFormBuilder()
-  if (!activePanel) return null
-  const close = () => setActivePanel(null)
+const HAS_OPTIONS = ['multi-select', 'drop-down', 'radio']
 
-  if (activePanel.kind === 'form') {
-    return (
-      <PanelWrapper title="Form Settings" onClose={close}>
-        <PanelField label="Form Title">
-          <Input value={form.title} onChange={e => dispatch({ type: 'SET_FORM', payload: { title: e.target.value } })} placeholder="Form title" />
-        </PanelField>
-        <PanelField label="Description">
-          <Input.TextArea value={form.description} rows={3} onChange={e => dispatch({ type: 'SET_FORM', payload: { description: e.target.value } })} placeholder="Form description" />
-        </PanelField>
-        <Divider style={{ margin: '8px 0' }} />
-        <div style={{ background: '#f8fafc', borderRadius: 8, padding: '10px 12px' }}>
-          <Text style={{ fontSize: 11, color: '#94a3b8' }}>Form ID</Text><br />
-          <Text code style={{ fontSize: 11 }}>{form.id}</Text>
-        </div>
-      </PanelWrapper>
-    )
-  }
-
-  if (activePanel.kind === 'section') {
-    const section = form.sections.find(s => s.id === activePanel.sectionId)
-    if (!section) return null
-    const update = (payload: object) => dispatch({ type: 'UPDATE_SECTION', sectionId: section.id, payload })
-    return (
-      <PanelWrapper title="Section Settings" onClose={close}>
-        <PanelField label="Section Title">
-          <Input value={section.title} onChange={e => update({ title: e.target.value })} placeholder="Section title" />
-        </PanelField>
-        <PanelField label="Description">
-          <Input.TextArea value={section.description} rows={2} onChange={e => update({ description: e.target.value })} placeholder="Description" />
-        </PanelField>
-        <PanelField label="Layout">
-          <Select value={section.columns} onChange={v => update({ columns: v })} style={{ width: '100%' }}
-            options={[{ label: '1 Column', value: 1 }, { label: '2 Columns', value: 2 }]} />
-        </PanelField>
-        <Divider style={{ margin: '8px 0' }} />
-        <Button variant="danger" icon={<DeleteOutlined />} block onClick={() => { dispatch({ type: 'DELETE_SECTION', sectionId: section.id }); close() }}>
-          Delete Section
-        </Button>
-      </PanelWrapper>
-    )
-  }
-
-  if (activePanel.kind === 'field') {
-    const section = form.sections.find(s => s.id === activePanel.sectionId)
-    const field = section?.fields.find(f => f.id === activePanel.fieldId)
-    if (!section || !field) return null
-    const update = (payload: object) => dispatch({ type: 'UPDATE_FIELD', sectionId: section.id, fieldId: field.id, payload })
-    const hasOptions = ['select', 'multiselect', 'radio', 'checkbox'].includes(field.type)
-
-    return (
-      <PanelWrapper title="Field Settings" onClose={close}>
-        <PanelField label="Label">
-          <Input value={field.label} onChange={e => update({ label: e.target.value })} placeholder="Field label" />
-        </PanelField>
-        {!['divider', 'heading'].includes(field.type) && (
-          <PanelField label="Placeholder">
-            <Input value={field.placeholder} onChange={e => update({ placeholder: e.target.value })} placeholder="Placeholder" />
-          </PanelField>
-        )}
-        <PanelField label="Help Text">
-          <Input value={field.description} onChange={e => update({ description: e.target.value })} placeholder="Helper text" />
-        </PanelField>
-        {section.columns === 2 && (
-          <PanelField label="Column Span">
-            <Select value={field.colSpan ?? 1} onChange={v => update({ colSpan: v })} style={{ width: '100%' }}
-              options={[{ label: 'Half Width (1 col)', value: 1 }, { label: 'Full Width (2 cols)', value: 2 }]} />
-          </PanelField>
-        )}
-        {!['divider', 'heading'].includes(field.type) && (
-          <PanelField label="Required">
-            <Switch checked={field.required} onChange={v => update({ required: v })} size="small" />
-          </PanelField>
-        )}
-        {hasOptions && (
-          <>
-            <Divider style={{ margin: '8px 0' }}>
-              <Text style={{ fontSize: 11, color: '#94a3b8' }}>Options</Text>
-            </Divider>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {(field.options ?? []).map((opt: FieldOption, i: number) => (
-                <div key={i} style={{ display: 'flex', gap: 6 }}>
-                  <Input size="small" value={opt.label} placeholder="Label"
-                    onChange={e => {
-                      const opts = [...(field.options ?? [])]
-                      opts[i] = { ...opts[i], label: e.target.value }
-                      update({ options: opts })
-                    }} />
-                  <Button size="small" variant="danger" icon={<DeleteOutlined />}
-                    onClick={() => update({ options: (field.options ?? []).filter((_, idx) => idx !== i) })} />
-                </div>
-              ))}
-              <Button size="small" variant="dashed" icon={<PlusOutlined />}
-                onClick={() => update({ options: [...(field.options ?? []), { label: `Option ${(field.options?.length ?? 0) + 1}`, value: `option_${Date.now()}` }] })}>
-                Add Option
-              </Button>
-            </div>
-          </>
-        )}
-        <Divider style={{ margin: '8px 0' }} />
-        <Button variant="danger" icon={<DeleteOutlined />} block
-          onClick={() => { dispatch({ type: 'DELETE_FIELD', sectionId: section.id, fieldId: field.id }); close() }}>
-          Delete Field
-        </Button>
-      </PanelWrapper>
-    )
-  }
-
-  return null
-}
-
-function PanelWrapper({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+function Label({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 16px 12px', borderBottom: '1px solid #f1f5f9' }}>
-        <Title level={5} style={{ margin: 0, fontSize: 14, color: '#1e293b' }}>{title}</Title>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: 14, display: 'flex', alignItems: 'center' }}>
-          <BsXLg />
-        </button>
-      </div>
-      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {children}
-      </div>
+    <div style={{ fontSize: 11.5, fontWeight: 600, color: '#6b7280', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      {children}
     </div>
   )
 }
 
-function PanelField({ label, children }: { label: string; children: React.ReactNode }) {
+function SortableOption({ opt, idx, onChange, onDelete }: {
+  opt: string; idx: number; onChange: (v: string) => void; onDelete: () => void
+}) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
+    id: `opt-${idx}`, animateLayoutChanges: () => false,
+  })
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <Text style={{ fontSize: 12, fontWeight: 500, color: '#64748b' }}>{label}</Text>
-      {children}
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition: transition ?? 'transform 200ms ease',
+        opacity: isDragging ? 0.4 : 1,
+        display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5,
+      }}
+    >
+      <span
+        ref={setActivatorNodeRef}
+        {...attributes}
+        {...listeners}
+        style={{ color: '#d1d5db', cursor: 'grab', display: 'flex', fontSize: 14, touchAction: 'none', flexShrink: 0 }}
+      >
+        <HolderOutlined />
+      </span>
+      <Input
+        size="small"
+        value={opt}
+        onChange={e => onChange(e.target.value)}
+        style={{ flex: 1, fontSize: 13 }}
+        placeholder={`Option ${idx + 1}`}
+      />
+      <button
+        onClick={onDelete}
+        style={{
+          background: 'none', border: '1px solid #fca5a5', borderRadius: 5,
+          cursor: 'pointer', color: '#ef4444', padding: '3px 7px',
+          display: 'flex', alignItems: 'center', fontSize: 12, flexShrink: 0,
+          transition: 'background 0.15s',
+        }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#fff5f5' }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none' }}
+      >
+        <DeleteOutlined />
+      </button>
+    </div>
+  )
+}
+
+export default function PropertiesPanel() {
+  const { form, dispatch, activeFieldId, activeSectionId, setActiveField, snapshot } = useFormBuilder()
+
+  const section = form.sections.find(s => s.id === activeSectionId)
+  const field = section?.fields.find(f => f.id === activeFieldId)
+
+  // localOptions synced to current field — updates on field switch AND when field.options changes externally
+  const [localOptions, setLocalOptions] = useState<string[]>(field?.options ?? [])
+
+  useEffect(() => {
+    if (field) setLocalOptions([...(field.options ?? [])])
+  }, [activeFieldId, field?.options?.length])
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+
+  if (!field || !section) return null
+
+  const push = (payload: Partial<FieldDef>) =>
+    dispatch({ type: 'UPDATE_FIELD', sectionId: section.id, fieldId: field.id, payload })
+
+  const pushOptions = (opts: string[]) => {
+    setLocalOptions(opts)
+    dispatch({ type: 'UPDATE_FIELD', sectionId: section.id, fieldId: field.id, payload: { options: opts } })
+  }
+
+  const onOptionDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return
+    const ids = localOptions.map((_, i) => `opt-${i}`)
+    const from = ids.indexOf(active.id as string)
+    const to = ids.indexOf(over.id as string)
+    if (from >= 0 && to >= 0) {
+      snapshot()
+      pushOptions(arrayMove(localOptions, from, to))
+    }
+  }
+
+  const handleDuplicate = () => {
+    dispatch({ type: 'DUPLICATE_FIELD', sectionId: section.id, fieldId: field.id })
+  }
+
+  const handleDelete = () => {
+    dispatch({ type: 'DELETE_FIELD', sectionId: section.id, fieldId: field.id })
+    setActiveField(null, null)
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Header */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '12px 14px', borderBottom: '1px solid #f3f4f6', background: '#fff',
+        flexShrink: 0,
+      }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>
+            {field.type.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+          </div>
+          <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 1 }}>Field Properties</div>
+        </div>
+        <button
+          onClick={() => setActiveField(null, null)}
+          style={{
+            background: '#f9fafb', border: '1px solid #e5e7eb', cursor: 'pointer',
+            color: '#6b7280', display: 'flex', fontSize: 12, padding: '5px 7px', borderRadius: 6,
+            transition: 'all 0.15s',
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#f3f4f6' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#f9fafb' }}
+        >
+          <CloseOutlined />
+        </button>
+      </div>
+
+      {/* Body */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '14px 14px 0' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+          <div>
+            <Label>Label</Label>
+            <Input
+              value={field.label}
+              onChange={e => push({ label: e.target.value })}
+              onBlur={snapshot}
+              placeholder="Field label"
+            />
+          </div>
+
+          <div>
+            <Label>Placeholder</Label>
+            <Input
+              value={field.placeholder}
+              onChange={e => push({ placeholder: e.target.value })}
+              onBlur={snapshot}
+              placeholder="Placeholder text"
+            />
+          </div>
+
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '10px 12px', border: '1px solid #f3f4f6', borderRadius: 8, background: '#fafafa',
+          }}>
+            <div>
+              <div style={{ fontSize: 13, color: '#111827', fontWeight: 500 }}>Required</div>
+              <div style={{ fontSize: 11, color: '#9ca3af' }}>Mark this field as required</div>
+            </div>
+            <Switch checked={field.required} onChange={v => { snapshot(); push({ required: v }) }} />
+          </div>
+
+          <div>
+            <Label>Column Width</Label>
+            <div style={{ display: 'flex', gap: 4, background: '#f3f4f6', padding: 3, borderRadius: 8 }}>
+              {COL_OPTIONS.map(c => (
+                <button
+                  key={c.value}
+                  onClick={() => { snapshot(); push({ col: c.value }) }}
+                  style={{
+                    flex: 1, padding: '5px 0', fontSize: 12, fontWeight: 600,
+                    borderRadius: 6, cursor: 'pointer', border: 'none',
+                    background: field.col === c.value ? '#fff' : 'transparent',
+                    color: field.col === c.value ? '#2F54EB' : '#6b7280',
+                    boxShadow: field.col === c.value ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {HAS_OPTIONS.includes(field.type) && (
+            <div>
+              <Divider style={{ margin: '0 0 12px' }} />
+              <Label>Options</Label>
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onOptionDragEnd}>
+                <SortableContext items={localOptions.map((_, i) => `opt-${i}`)} strategy={verticalListSortingStrategy}>
+                  {localOptions.map((opt, i) => (
+                    <SortableOption
+                      key={`${activeFieldId}-${i}`}
+                      opt={opt} idx={i}
+                      onChange={v => { const o = [...localOptions]; o[i] = v; pushOptions(o) }}
+                      onDelete={() => { snapshot(); pushOptions(localOptions.filter((_, j) => j !== i)) }}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
+              <Button
+                type="dashed"
+                size="small"
+                icon={<PlusOutlined />}
+                block
+                style={{ borderColor: '#c7d4f8', color: '#2F54EB', borderRadius: 6, marginTop: 4 }}
+                onClick={() => { snapshot(); pushOptions([...localOptions, `Option ${localOptions.length + 1}`]) }}
+              >
+                Add Option
+              </Button>
+            </div>
+          )}
+
+          <Divider style={{ margin: '4px 0' }} />
+
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button
+              size="small"
+              icon={<CopyOutlined />}
+              onClick={handleDuplicate}
+              style={{ flex: 1, borderRadius: 6, borderColor: '#c7d4f8', color: '#2F54EB' }}
+            >
+              Duplicate
+            </Button>
+            <Button
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={handleDelete}
+              style={{ flex: 1, borderRadius: 6 }}
+            >
+              Delete
+            </Button>
+          </div>
+
+          <div style={{ height: 14 }} />
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{
+        padding: '10px 14px', borderTop: '1px solid #f3f4f6', background: '#fafafa', flexShrink: 0,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
+          <span style={{ fontSize: 11.5, color: '#6b7280' }}>Changes apply instantly</span>
+        </div>
+      </div>
     </div>
   )
 }

@@ -1,58 +1,42 @@
 export type FieldType =
+  | 'text-content'
+  | 'add-section'
   | 'text'
-  | 'textarea'
-  | 'number'
+  | 'multi-select'
+  | 'drop-down'
+  | 'date'
+  | 'time'
+  | 'currency'
+  | 'contact'
   | 'email'
-  | 'phone'
-  | 'select'
-  | 'multiselect'
+  | 'textarea'
+  | 'table'
+  | 'attachment'
   | 'checkbox'
   | 'radio'
-  | 'date'
-  | 'file'
-  | 'divider'
-  | 'heading'
+  | 'toggle'
+  | 'line-break'
 
-export interface FieldOption {
-  label: string
-  value: string
-}
+export type ColSpan = 'begin' | 'mid' | 'end' | 'full'
 
-export interface FormField {
+export interface FieldDef {
   id: string
   type: FieldType
   label: string
-  placeholder?: string
+  placeholder: string
   required: boolean
-  description?: string
-  options?: FieldOption[]
-  validation?: {
-    min?: number
-    max?: number
-    pattern?: string
-    message?: string
-  }
-  colSpan?: 1 | 2
+  col: ColSpan
+  options: string[]
 }
 
-export interface FormSection {
+export interface SectionDef {
   id: string
   title: string
-  description?: string
-  columns: 1 | 2
-  fields: FormField[]
+  fields: FieldDef[]
 }
 
 export interface FormSchema {
   id: string
   title: string
-  description?: string
-  sections: FormSection[]
-  createdAt: string
-  updatedAt: string
+  sections: SectionDef[]
 }
-
-export type PanelTarget =
-  | { kind: 'form' }
-  | { kind: 'section'; sectionId: string }
-  | { kind: 'field'; sectionId: string; fieldId: string }
