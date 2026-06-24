@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { App } from "antd";
 
-import Button from "@/components/common/antd/Button";
+import Button from "@/components/common/Button";
 import Form from "@/components/common/Form";
 import { useAddPartnerMutation, type PartnerRow } from "@/store/services";
 

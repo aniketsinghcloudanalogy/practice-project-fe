@@ -16,7 +16,7 @@ import {
   MdAdminPanelSettings,
 } from "react-icons/md";
 import { useSidebar } from "@/store/features/dashboard/sidebarContext";
-import Button from "../common/antd/Button";
+import Button from "@/components/common/Button";
 
 // Fallback avatar shown when the user has no profile image
 const AdminAvatar = ({ size = 36 }: { size?: number }) => (

@@ -1,16 +1,17 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import Button from "@/components/common/antd/Button";
+import Button from "@/components/common/Button";
 
 interface TopBarProps {
   partnerName: string;
   onReset: () => void;
   onSubmit: () => void;
   onSave: () => void;
+  loading?: boolean;
 }
 
-export default function TopBar({ partnerName, onReset, onSubmit, onSave }: TopBarProps) {
+export default function TopBar({ partnerName, onReset, onSubmit, onSave, loading }: TopBarProps) {
   const router = useRouter();
 
   return (
@@ -23,9 +24,9 @@ export default function TopBar({ partnerName, onReset, onSubmit, onSave }: TopBa
         <span className="text-slate-900 font-medium">{partnerName}</span>
       </div>
       <div className="flex items-center gap-2">
-        <Button variant="secondary" onClick={onReset}>Reset Form</Button>
-        <Button variant="secondary" onClick={onSubmit}>Submit Form</Button>
-        <Button variant="primary" onClick={onSave}>Save</Button>
+        <Button variant="secondary" onClick={onReset} disabled={loading}>Reset Form</Button>
+        <Button variant="secondary" onClick={onSubmit} disabled={loading} loading={loading}>Submit Form</Button>
+        <Button variant="primary" onClick={onSave} disabled={loading}>Save</Button>
       </div>
     </div>
   );

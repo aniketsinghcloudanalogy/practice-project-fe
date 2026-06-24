@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { LuPencil, LuTrash2 } from "react-icons/lu";
 
-import Button from "@/components/common/antd/Button";
+import Button from "@/components/common/Button";
 import Modal from "@/components/common/Modal";
 import { useGetProgramFormQuery, useDeleteProgramFormMutation } from "@/store/services";
 import type { ProgramForm } from "@/store/services";

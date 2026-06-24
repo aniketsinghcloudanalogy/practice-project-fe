@@ -1,7 +1,7 @@
 "use client";
 
 import { App } from 'antd'
-import Button from '@/components/common/antd/Button'
+import Button from '@/components/common/Button'
 import Form from '@/components/common/Form'
 import Input from '@/components/common/Input'
 import {  Phone } from 'lucide-react';

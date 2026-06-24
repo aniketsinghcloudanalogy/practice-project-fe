@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LuPencil, LuTrash2, LuEye, LuPlus } from "react-icons/lu";
 
-import Button from "@/components/common/antd/Button";
+import Button from "@/components/common/Button";
 import Switch from "@/components/common/Switch";
 import { useUpdateVerificationStepMutation } from "@/store/services";
 import type { PartnerProgramRow } from "./types";

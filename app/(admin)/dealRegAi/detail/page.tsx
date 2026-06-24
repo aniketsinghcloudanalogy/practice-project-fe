@@ -13,6 +13,7 @@ function DetailContent() {
   const { data: partnersData } = useGetPartnersQuery({ page: 1, limit: 100 });
 
   const [activeProgramId, setActiveProgramId] = useState<number | null>(null);
+  const [formLoading, setFormLoading] = useState(false);
   const formRef = useRef<any>(null);
   const initializedRef = useRef(false);
 
@@ -40,6 +41,9 @@ function DetailContent() {
 
   const activeProgram = programs.find((p) => p.programId === activeProgramId) ?? programs[0] ?? null;
 
+  // Get client form URL from partner data
+  const partnerUrl = (partnersData?.partners ?? []).find((p) => p.Id === opportunityId)?.url || null;
+
   const handleSelectProgram = useCallback((programId: number) => {
     setActiveProgramId(programId);
     const params = new URLSearchParams(searchParams.toString());
@@ -55,11 +59,21 @@ function DetailContent() {
     message.info("Form has been reset");
   };
   const handleSave = () => {
+    if (formLoading) return;
     const values = formRef.current?.getFieldsValue();
     console.log("Program ID:", activeProgram?.programId);
     console.log("Saved Data:", JSON.stringify(values, null, 2));
     message.success("Draft saved successfully");
   };
+
+  // Poll submitting state from form ref
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const isSubmitting = formRef.current?.__submitting ?? false;
+      setFormLoading(isSubmitting);
+    }, 200);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <section className="w-full space-y-4 px-2 sm:px-4 lg:px-6">
@@ -68,6 +82,7 @@ function DetailContent() {
         onReset={handleReset}
         onSubmit={handleSubmit}
         onSave={handleSave}
+        loading={formLoading}
       />
 
       <ProgramTabs
@@ -81,7 +96,7 @@ function DetailContent() {
         {programs.length > 0 ? (
           programs.map((prog) => (
             <div key={prog.programId} style={{ display: activeProgramId === prog.programId ? "block" : "none" }}>
-              <ProgramFormRenderer programId={prog.programId} partnerId={prog.partnerId} formRef={activeProgramId === prog.programId ? formRef : { current: null }} />
+              <ProgramFormRenderer programId={prog.programId} partnerId={prog.partnerId} formRef={activeProgramId === prog.programId ? formRef : { current: null }} clientUrl={partnerUrl} />
             </div>
           ))
         ) : (

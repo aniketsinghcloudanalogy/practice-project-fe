@@ -7,7 +7,7 @@ import { signOut, useSession } from 'next-auth/react'
 import { UserOutlined, MenuOutlined, CloseOutlined } from '@ant-design/icons'
 import { MdNotificationsNone } from 'react-icons/md'
 import Avatar from '@/components/common/Avatar'
-import Button from '@/components/common/antd/Button'
+import Button from '@/components/common/Button'
 import Dropdown from '@/components/common/Dropdown'
 import { logout } from '@/lib/api/auth.api'
 
