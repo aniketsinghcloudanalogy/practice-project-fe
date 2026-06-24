@@ -5,7 +5,7 @@ import { signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 
-import Button from "@/components/common/antd/Button";
+import Button from "@/components/common/Button";
 import Divider from "@/components/common/Divider";
 import Form from "@/components/common/Form";
 import Input from "@/components/common/Input";

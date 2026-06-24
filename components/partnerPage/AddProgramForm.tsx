@@ -1,6 +1,6 @@
 "use client";
 
-import Button from "@/components/common/antd/Button";
+import Button from "@/components/common/Button";
 import Form from "@/components/common/Form";
 import Input from "@/components/common/Input";
 import Select from "@/components/common/Select";

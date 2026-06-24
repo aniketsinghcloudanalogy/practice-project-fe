@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Table from "@/components/common/Table";
-import Button from "@/components/common/antd/Button";
+import Button from "@/components/common/Button";
 import Modal from "@/components/common/Modal";
 import Tag from "@/components/common/Tag";
 import { DeleteOutlined, EyeOutlined, FilePdfOutlined } from "@/components/common/antd/icons";

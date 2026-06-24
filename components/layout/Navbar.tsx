@@ -1,17 +1,28 @@
 "use client";
 
+import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
-import { UserOutlined } from '@ant-design/icons'
+import { UserOutlined, MenuOutlined, CloseOutlined } from '@ant-design/icons'
+import { MdNotificationsNone } from 'react-icons/md'
 import Avatar from '@/components/common/Avatar'
-import Button from '@/components/common/antd/Button'
+import Button from '@/components/common/Button'
 import Dropdown from '@/components/common/Dropdown'
 import { logout } from '@/lib/api/auth.api'
+
+function AdminAvatar({ size = 28 }: { size?: number }) {
+  return (
+    <div style={{ width: size, height: size, borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <UserOutlined style={{ fontSize: size * 0.5, color: '#64748b' }} />
+    </div>
+  )
+}
 
 const Navbar = () => {
   const router = useRouter()
   const { data: session, status } = useSession()
+  const [mobileOpen, setMobileOpen] = useState(false)
   const isLoggedIn = status === 'authenticated'
   const username = session?.user?.name
   const userImage = session?.user?.image
@@ -19,7 +30,7 @@ const Navbar = () => {
   const isAdminRole = Boolean(session?.user?.isAdmin) || role === 'ADMIN' || role === 'SUPER_ADMIN'
   const dashboardHref = isAdminRole ? '/admin' : '/dashboard'
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     const token = session?.accessToken ?? ''
     if (token) {
       try {

@@ -8,21 +8,17 @@ type Props = {
   children: ReactNode;
 };
 
-// Routes/sections that render their own header (DashboardHeader, AdminHeader, etc.)
-const HIDDEN_PREFIXES = ["/login", "/signup", "/admin", "/superAdminPartner", "/dashboard"];
+const HIDE_ON = ["/login", "/signup"];
+const APP_SHELL_PREFIXES = ["/admin", "/superAdminPartner", "/formBuilder", "/dashboard", "/contact", "/adminPartner", "/dealRegAi"];
 
-const shouldHideNavbar = (pathname: string) =>
-  HIDDEN_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
-  );
+export default function NavbarGuard({ children }: Props) {
+  const pathname = usePathname();
 
-  const hideOn = ['/login', '/signup']
-  const appShellPrefixes = ['/admin', '/superAdminPartner', '/formBuilder', '/dashboard', '/contact',"/adminPartner","/dealRegAi"]
-  const shouldHide =
-    hideOn.includes(pathname) ||
-    appShellPrefixes.some(
-      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-    )
+  const hideNavbar =
+    HIDE_ON.includes(pathname) ||
+    APP_SHELL_PREFIXES.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    );
 
   return (
     <>

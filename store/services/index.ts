@@ -8,6 +8,7 @@ export * from './partner/apiSlice'
 export * from './forms/apiSlice'
 export * from './partnerForms/apiSlice'
 export * from './user/apiSlice'
+export * from './dealreg/apiSlice'
 
 // Types
 export * from './types'

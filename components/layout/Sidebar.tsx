@@ -16,11 +16,10 @@ import {
   MdPeople,
   MdSettings,
   MdSecurity,
-  MdBarChart,
-  MdAdminPanelSettings,
   MdManageAccounts,
   MdSupervisorAccount,
 } from 'react-icons/md'
+import { HiAdjustmentsHorizontal } from "react-icons/hi2";
 import { MdArrowBack, MdArrowForward, MdClose } from 'react-icons/md'
 import Drawer from '@/components/common/Drawer'
 import SiderComponent from '@/components/common/Sidebar'
@@ -63,7 +62,7 @@ const itemsByRole: Record<UserRole, SidebarItem[]> = {
     { key: 'users',      label: 'Users',        icon: <MdPeople size={20} /> },
     { key: 'contacts',   label: 'Contacts',     icon: <MdPerson size={20} />,           href: '/contact' },
     { key: 'partners',   label: 'Partners',     icon: <FaHandshake size={20} />,          href: '/adminPartner' },
-    { key: 'dealregai',  label: 'DealRegAi',   icon: <FaRobot size={20} />,            href: '/dealRegAi' },
+    { key: 'dealregai',  label: 'DealRegAi',   icon: <HiAdjustmentsHorizontal size={20} />,            href: '/dealRegAi' },
     { key: 'manage',     label: 'Manage',       icon: <MdManageAccounts size={20} /> },
     { key: 'settings',   label: 'Settings',     icon: <MdSettings size={20} /> },
   ],

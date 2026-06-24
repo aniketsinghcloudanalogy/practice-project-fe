@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { LuPencil, LuSearch, LuTrash2 } from "react-icons/lu";
 
-import Button from "@/components/common/antd/Button";
+import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import Table from "@/components/common/Table";
 import Modal from "@/components/common/Modal";
