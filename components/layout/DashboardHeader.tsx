@@ -25,7 +25,7 @@ import { useSidebar } from "@/store/features/dashboard/sidebarContext";
 const AdminAvatar = ({ size = 40 }: { size?: number }) => (
   <div
     style={{ width: size, height: size }}
-    className="flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-sm"
+    className="flex shrink-0 items-center justify-center rounded-full bg-linear-to-br from-blue-500 to-indigo-600 text-white shadow-sm"
   >
     <MdAdminPanelSettings size={Math.round(size * 0.55)} />
   </div>
@@ -146,7 +146,7 @@ const DashboardHeader = () => {
               )}
 
               <div className="hidden text-left sm:block">
-                <p className="max-w-[140px] truncate text-sm font-medium">
+                <p className="max-w-35 truncate text-sm font-medium">
                   {displayName}
                 </p>
                 <p className="text-xs text-slate-500">Admin</p>

@@ -19,16 +19,12 @@ export {
 	SendOutlined,
 	UserOutlined,
 	SaveOutlined,
-<<<<<<< HEAD
 	DownloadOutlined,
 	CopyOutlined,
 	SettingOutlined,
 	UploadOutlined,
-=======
 	FileTextOutlined,
 	ArrowRightOutlined,
 	InboxOutlined,
-	UploadOutlined,
 	TableOutlined,
->>>>>>> c318904 (Ui using HOtTables)
 } from '@ant-design/icons'
