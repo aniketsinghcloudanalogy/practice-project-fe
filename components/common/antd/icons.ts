@@ -15,6 +15,7 @@ export {
 	LeftOutlined,
 	MailOutlined,
 	MessageOutlined,
+	MenuOutlined,
 	PhoneOutlined,
 	SendOutlined,
 	UserOutlined,

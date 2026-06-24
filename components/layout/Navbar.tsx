@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
-import { UserOutlined, MenuOutlined, CloseOutlined } from '@ant-design/icons'
+import { UserOutlined, MenuOutlined, CloseOutlined } from '@/components/common/antd/icons'
 import { MdNotificationsNone } from 'react-icons/md'
 import Avatar from '@/components/common/Avatar'
 import Button from '@/components/common/Button'
@@ -96,14 +96,14 @@ const Navbar = () => {
             {isLoggedIn ? (
               <div className="flex items-center gap-2.5">
                 {/* Notification bell - logged in only */}
-                <button
+                {/* <button
                   type="button"
                   aria-label="Notifications"
                   className="relative rounded-full p-2 text-slate-600 transition hover:bg-slate-100"
                 >
                   <MdNotificationsNone size={22} />
                   <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
-                </button>
+                </button> */}
 
                 {username && (
                   <span className="max-w-35 truncate text-sm font-medium text-slate-700">
@@ -112,13 +112,13 @@ const Navbar = () => {
                 )}
 
                 <Dropdown menuItems={menuItems} trigger={["hover"]} placement="bottomRight">
-                  <div className="flex cursor-pointer items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 p-0.5 pr-2.5 transition hover:border-blue-200 hover:bg-blue-50">
+                  <div className="flex cursor-pointer items-center justify-items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 p-0.5 pr-2.5 transition hover:border-blue-200 hover:bg-blue-50">
                     {userImage ? (
                       <Avatar size={28} src={userImage} />
                     ) : (
                       <AdminAvatar size={28} />
                     )}
-                    <span className="text-xs font-semibold text-slate-600">Account</span>
+                   
                   </div>
                 </Dropdown>
               </div>
