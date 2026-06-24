@@ -77,7 +77,7 @@ const Navbar = () => {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 h-[var(--navbar-height)] w-full border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur">
+      <header className="fixed inset-x-0 top-0 z-50 h-(--navbar-height) w-full border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur">
         <div className="mx-auto flex h-full w-full max-w-360 items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo */}
           <Link
@@ -106,7 +106,7 @@ const Navbar = () => {
                 </button>
 
                 {username && (
-                  <span className="max-w-[140px] truncate text-sm font-medium text-slate-700">
+                  <span className="max-w-35 truncate text-sm font-medium text-slate-700">
                     {username}
                   </span>
                 )}
@@ -168,7 +168,7 @@ const Navbar = () => {
 
       {/* Mobile drawer */}
       {mobileOpen && (
-        <div className="fixed inset-x-0 top-[var(--navbar-height)] z-40 border-b border-slate-200 bg-white px-4 py-4 shadow-lg sm:hidden">
+        <div className="fixed inset-x-0 top-(--navbar-height) z-40 border-b border-slate-200 bg-white px-4 py-4 shadow-lg sm:hidden">
           <div className="flex flex-col gap-3">
             {isLoggedIn && username && (
               <div className="flex items-center gap-2.5 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5">

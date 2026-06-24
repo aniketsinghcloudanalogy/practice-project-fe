@@ -9,7 +9,7 @@ type Props = {
 };
 
 const HIDE_ON = ["/login", "/signup"];
-const APP_SHELL_PREFIXES = ["/admin", "/superAdminPartner", "/formBuilder", "/dashboard", "/contact", "/adminPartner", "/dealRegAi"];
+const APP_SHELL_PREFIXES = ["/admin", "/superAdminPartner", "/formBuilder",  "/adminPartner", "/dealRegAi"];
 
 export default function NavbarGuard({ children }: Props) {
   const pathname = usePathname();
