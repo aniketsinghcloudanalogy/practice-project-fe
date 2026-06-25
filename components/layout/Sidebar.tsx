@@ -54,8 +54,8 @@ const itemsByRole: Record<UserRole, SidebarItem[]> = {
     { key: 'pdf', label: 'PDF Extraction', icon: <FilePdfOutlined />, href: '/pdf' },
     { key: 'accounts', label: 'Accounts', icon: <MdGroup size={20} /> },
     { key: 'customers', label: 'Customers', icon: <MdPeople size={20} />, href: '/customer' },
+      { key: 'opportunity', label: 'opportunity', icon: <MdPeople size={20} />, href: '/opportunity' },
     { key: 'contacts', label: 'Contacts', icon: <MdPerson size={20} />, href: '/contact' },
-    { key: 'opportunity', label: 'Opportunity', icon: <MdTrendingUp size={20} /> },
     { key: 'order', label: 'Order', icon: <MdShoppingCart size={20} /> },
   ],
   admin: [
