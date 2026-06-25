@@ -146,6 +146,53 @@ export type ApiResponse<T> = {
 	data: T
 }
 
+// ─── Customer Types ────────────────────────────────────────────────────────
+
+export type CustomerPayload = {
+	name?: string | null
+	currency?: string | null
+	website?: string | null
+	industry?: string | null
+	profileImage?: string | null
+	organization?: string | null
+}
+
+export type Customer = CustomerPayload & {
+	id: string
+	userId: string
+	isDeleted?: boolean
+	createdAt?: string
+	updatedAt?: string
+}
+
+// ─── Opportunity Types ─────────────────────────────────────────────────────
+
+export type OpportunityPayload = {
+	customerId: string
+	opportunityId?: string | null
+	syncedQuote?: number | null
+	organization?: string | null
+	title?: string | null
+	amount?: number | null
+	pdfUrl?: string[]
+	description?: string | null
+	closeDate?: string | null
+	expectedPrice?: number | null
+	addShipment?: boolean
+	rfqRfiNumber?: string | null
+	periodOfPerformanceStartDate?: string | null
+	periodOfPerformanceEndDate?: string | null
+	probability?: number | null
+}
+
+export type Opportunity = OpportunityPayload & {
+	id: string
+	userId: string
+	isDeleted?: boolean
+	createdAt?: string
+	updatedAt?: string
+}
+
 // ─── Partner Types ──────────────────────────────────────────────────────────
 
 export type PartnerData = {

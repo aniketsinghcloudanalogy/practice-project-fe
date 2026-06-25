@@ -3,12 +3,14 @@ export { baseApi } from './baseApi'
 
 // API Services
 export * from './contact/apiSlice'
+export * from './customer/apiSlice'
 export * from './pdf/apiSlice'
 export * from './partner/apiSlice'
 export * from './forms/apiSlice'
 export * from './partnerForms/apiSlice'
 export * from './user/apiSlice'
 export * from './dealreg/apiSlice'
+export * from './opportunity/apiSlice'
 
 // Types
 export * from './types'
