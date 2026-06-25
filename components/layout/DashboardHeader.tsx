@@ -93,16 +93,16 @@ const DashboardHeader = () => {
 
         {/* Left — hamburger (mobile) + title */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* <button
+          <button
             type="button"
             onClick={openMobile}
             aria-label="Open sidebar menu"
             className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 md:hidden"
           >
             <MdMenu size={24} />
-          </button> */}
+          </button>
 
-          <Link href="/dashboard" className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
               <LuLayoutDashboard size={20} />
             </div>
@@ -120,21 +120,8 @@ const DashboardHeader = () => {
 
         {/* Right — user + logout */}
         <div className="flex items-center gap-2 sm:gap-4">
-          <div className="hidden items-center gap-1.5 text-sm text-slate-600 sm:flex">
-            <MdPerson size={16} />
-            <span className="max-w-30 truncate">
-              {session?.user?.name ?? session?.user?.email}
-            </span>
-          </div>
-
-          <button
-            type="button"
-            className="relative rounded-lg p-2 text-slate-600 hover:bg-slate-100"
-            aria-label="Notifications"
-          >
-            <MdNotificationsNone size={24} />
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
-          </button>
+          
+      
 
           <div
             ref={dropdownRef}
@@ -164,7 +151,7 @@ const DashboardHeader = () => {
                   className="h-10 w-10 rounded-full object-cover"
                 />
               ) : (
-                <AdminAvatar size={40} />
+                <AdminAvatar size={30} />
               )}
 
               <div className="hidden text-left sm:block">

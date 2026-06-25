@@ -5,10 +5,55 @@ import { useParams, useRouter } from 'next/navigation'
 import Button from '@/components/common/Button'
 import Message from '@/components/common/Message'
 import Table from '@/components/common/Table'
+import Collapse from '@/components/common/Collapse'
 import type { ColumnsType } from '@/components/common/Table/types'
 import { useGetQuoteDetailQuery } from '@/store/services/quote/apiSlice'
-import type { QuoteFile } from '@/store/services/quote/types'
+import type { QuoteFile, QuoteLineItem } from '@/store/services/quote/types'
 import { ArrowLeftOutlined } from '@/components/common/antd/icons'
+
+const HIDDEN_LINE_ITEM_KEYS = new Set([
+  'id',
+  'isDeleted',
+  'quoteFileId',
+  'quote_file_id',
+  'quoteId',
+  'quote_id',
+  'userId',
+  'user_id',
+  'pdfTableId',
+  'pdf_table_id',
+  'sourceTableTitle',
+  'source_table_title',
+  'rowSourceId',
+  'row_source_id',
+  'rowIndex',
+  'row_index',
+])
+
+const formatCellValue = (value: unknown) => {
+  if (value === null || value === undefined || value === '') {
+    return '-'
+  }
+
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return String(value)
+  }
+
+  return JSON.stringify(value)
+}
+
+const hasMeaningfulValue = (value: unknown) => {
+  if (value === null || value === undefined) {
+    return false
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim()
+    return normalized !== '' && normalized !== '-' && normalized.toLowerCase() !== 'n/a'
+  }
+
+  return true
+}
 
 const QuoteDetailsPage = () => {
   const router = useRouter()
@@ -34,39 +79,68 @@ const QuoteDetailsPage = () => {
   const files = data?.files ?? []
   const loading = isLoading || isFetching
 
-  const columns: ColumnsType<QuoteFile> = useMemo(() => [
-    {
-      title: 'File Name',
-      dataIndex: 'file_name',
-      key: 'file_name',
-      render: (name: string) => <span className="font-medium text-slate-800">{name}</span>,
-    },
-    {
-      title: 'Line Items',
-      key: 'lineItems',
-      width: 150,
-      render: (_: unknown, record: QuoteFile) => (
-        <span className="font-semibold text-slate-900">{record.lineItems?.length ?? 0}</span>
-      ),
-    },
-    {
-      title: 'Uploaded',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      width: 180,
-      render: (createdAt: string) => (
-        <span className="text-slate-500">{new Date(createdAt).toLocaleDateString()}</span>
-      ),
-    },
-  ], [])
+  const collapseItems = useMemo(() => {
+    return files.map((file: QuoteFile) => {
+      const lineItems = file.lineItems ?? []
+      const candidateKeys = Array.from(new Set(
+        lineItems.flatMap((item) => Object.keys(item).filter((key) => !HIDDEN_LINE_ITEM_KEYS.has(key))),
+      ))
+      const visibleKeys = candidateKeys.filter((key) =>
+        lineItems.some((item) => hasMeaningfulValue(item[key])),
+      )
+
+      const lineItemColumns: ColumnsType<QuoteLineItem> = [
+        ...visibleKeys.map((key) => ({
+          title: key.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()),
+          dataIndex: key,
+          key,
+          render: (value: unknown) => <span className="text-slate-700">{formatCellValue(value)}</span>,
+        })),
+      ]
+
+      return {
+        key: file.id,
+        label: (
+          <div className="quote-file-header grid w-full grid-cols-1 items-start gap-1.5 px-3 py-3 text-white sm:grid-cols-[minmax(0,1fr)_minmax(220px,1fr)_220px] sm:items-center sm:gap-3 sm:px-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,1fr)_240px]">
+            <span className="truncate text-sm font-semibold sm:text-[1.02rem]">{file.file_name}</span>
+            <span className="text-sm font-medium sm:justify-self-center sm:text-center">Line Items: {lineItems.length}</span>
+            <span className="text-sm font-semibold sm:text-right">Created At: {new Date(file.created_at).toLocaleDateString()}</span>
+          </div>
+        ),
+        children: lineItems.length ? (
+          <Table
+            columns={lineItemColumns}
+            dataSource={lineItems}
+            rowKey={(record) => record.id}
+            scroll={{ x: 980 }}
+            pagination={{ pageSize: 10, showSizeChanger: false }}
+          />
+        ) : (
+          <p className="text-sm text-slate-500">No line items found for this file.</p>
+        ),
+      }
+    })
+  }, [files])
 
   return (
-    <div className="px-2 pb-3 pt-0 sm:px-4 sm:pb-6  lg:px-6 lg:pb-8">
+    <div className="px-2 pb-3 pt-3 sm:px-4 sm:pb-6 sm:pt-4 lg:px-6 lg:pb-8 lg:pt-5">
       {contextHolder}
-      <div className="flex gap-2">
-        <Button variant="secondary" onClick={() => router.push('/quote')}>
-          <ArrowLeftOutlined className="mr-2" />
-          Back to Quotes
+      <div className="mb-3 flex items-center">
+        <Button
+          variant="secondary"
+          onClick={() => router.push('/quote')}
+          style={{
+            height: 40,
+            padding: '0 14px',
+            borderRadius: 10,
+            fontSize: 14,
+            fontWeight: 600,
+          }}
+        >
+          <span className="inline-flex items-center gap-2">
+            <ArrowLeftOutlined />
+            Back to Quotes
+          </span>
         </Button>
       </div>
       <div className="mb-6 rounded-3xl border border-slate-200 bg-[linear-gradient(130deg,#ffffff_0%,#f0fdfa_100%)] p-6 shadow-sm">
@@ -107,18 +181,110 @@ const QuoteDetailsPage = () => {
           <span className="text-sm text-slate-500">{files.length} total</span>
         </div>
 
-        <div className="overflow-x-auto">
-          <Table
-            columns={columns}
-            dataSource={files}
-            rowKey="id"
-            loading={loading}
-            scroll={{ x: 680 }}
-            pagination={{ pageSize: 10, showSizeChanger: false }}
-            locale={{ emptyText: 'No files found for this quote.' }}
-          />
-        </div>
+        <Collapse
+          className="quote-files-collapse"
+          variant="panel"
+          items={collapseItems}
+          defaultActiveKey={collapseItems[0] ? [collapseItems[0].key] : []}
+          accordion
+          ghost
+        />
+        {!loading && !files.length && (
+          <p className="mt-3 text-sm text-slate-500">No files found for this quote.</p>
+        )}
+        {loading && <p className="mt-3 text-sm text-slate-500">Loading files...</p>}
       </div>
+
+      <style jsx global>{`
+        .quote-files-collapse.ant-collapse {
+          border: 0;
+          background: transparent;
+          box-shadow: none;
+        }
+
+        .quote-files-collapse .ant-collapse-item {
+          border: 0;
+          margin-bottom: 10px;
+          border-radius: 12px !important;
+          overflow: hidden !important;
+        }
+
+        .quote-files-collapse .ant-collapse-item:last-child {
+          margin-bottom: 0;
+        }
+
+        .quote-files-collapse .ant-collapse-item > .ant-collapse-header {
+          background: #517a9b;
+          color: #ffffff !important;
+          padding: 0 !important;
+          min-height: 56px;
+          border-radius: 12px !important;
+          overflow: hidden;
+        }
+
+        .quote-files-collapse .ant-collapse-header-text {
+          flex: 1;
+          min-width: 0;
+          width: 100%;
+        }
+
+        .quote-file-header > span {
+          min-width: 0;
+        }
+
+        .quote-files-collapse .ant-collapse-item-active > .ant-collapse-header {
+          border-radius: 12px 12px 0 0 !important;
+        }
+
+        .quote-files-collapse .ant-collapse-expand-icon {
+          color: #ffffff;
+          padding-inline-start: 10px;
+        }
+
+        .quote-files-collapse .ant-collapse-item > .ant-collapse-content {
+          border-top: 0;
+          background: #f8fafc;
+          border-radius: 0 0 12px 12px !important;
+          overflow: hidden;
+        }
+
+        .quote-files-collapse .ant-collapse-content-box {
+          padding: 14px;
+        }
+
+        @media (max-width: 640px) {
+          .quote-files-collapse .ant-collapse-item > .ant-collapse-header {
+            min-height: 48px;
+            padding-inline-end: 10px !important;
+          }
+
+          .quote-files-collapse .ant-collapse-expand-icon {
+            padding-inline-start: 8px;
+            padding-inline-end: 6px;
+          }
+
+          .quote-file-header {
+            gap: 4px;
+            padding-top: 8px;
+            padding-bottom: 8px;
+          }
+
+          .quote-file-header > span {
+            white-space: normal;
+            line-height: 1.25;
+          }
+
+          .quote-file-header > span:first-child {
+            font-size: 0.92rem;
+            font-weight: 600;
+          }
+
+          .quote-file-header > span:nth-child(2),
+          .quote-file-header > span:nth-child(3) {
+            font-size: 0.82rem;
+          }
+        }
+      `}</style>
     </div>
   )
 }
