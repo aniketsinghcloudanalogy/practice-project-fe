@@ -47,7 +47,7 @@ export const StyledSiderWrapper = styled.div<{ $variant: string }>`
     }
   `}
 
-  @media (max-width: 768px) {
+  @media (max-width: 767px) {
     .ant-layout-sider {
       display: none;
     }

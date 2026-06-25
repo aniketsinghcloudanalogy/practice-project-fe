@@ -43,6 +43,9 @@ const DashboardHeader = () => {
   const userEmail = session?.user?.email || "";
   const userImage = session?.user?.image;
 
+  const openDropdown = () => setDropdownOpen(true);
+  const closeDropdown = () => setDropdownOpen(false);
+
   const handleLogout = useCallback(async () => {
     try {
       // remove if your API logout is not needed
@@ -90,14 +93,14 @@ const DashboardHeader = () => {
 
         {/* Left — hamburger (mobile) + title */}
         <div className="flex items-center gap-2 sm:gap-3">
-          <button
+          {/* <button
             type="button"
             onClick={openMobile}
             aria-label="Open sidebar menu"
             className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 md:hidden"
           >
             <MdMenu size={24} />
-          </button>
+          </button> */}
 
           <Link href="/dashboard" className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
@@ -106,10 +109,10 @@ const DashboardHeader = () => {
 
             <div>
               <h1 className="text-sm font-semibold text-slate-900">
-                Dashboard
+                Practice Project
               </h1>
               <p className="hidden text-xs text-slate-500 sm:block">
-                Admin Panel
+                Workspace
               </p>
             </div>
           </Link>
@@ -133,7 +136,18 @@ const DashboardHeader = () => {
             <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
           </button>
 
-          <div ref={dropdownRef} className="relative">
+          <div
+            ref={dropdownRef}
+            className="relative"
+            onMouseEnter={openDropdown}
+            onMouseLeave={closeDropdown}
+            onFocus={openDropdown}
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                closeDropdown();
+              }
+            }}
+          >
             <button
               type="button"
               onClick={() => setDropdownOpen((prev) => !prev)}
@@ -157,7 +171,7 @@ const DashboardHeader = () => {
                 <p className="max-w-35 truncate text-sm font-medium">
                   {displayName}
                 </p>
-                <p className="text-xs text-slate-500">Admin</p>
+                <p className="text-xs text-slate-500">Workspace</p>
               </div>
 
               <MdKeyboardArrowDown
