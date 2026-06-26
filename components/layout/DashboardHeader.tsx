@@ -38,13 +38,36 @@ const DashboardHeader = () => {
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const displayName = session?.user?.name || session?.user?.email || "User";
   const userEmail = session?.user?.email || "";
   const userImage = session?.user?.image;
 
-  const openDropdown = () => setDropdownOpen(true);
-  const closeDropdown = () => setDropdownOpen(false);
+  const cancelCloseDropdown = useCallback(() => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  }, []);
+
+  const openDropdown = useCallback(() => {
+    cancelCloseDropdown();
+    setDropdownOpen(true);
+  }, [cancelCloseDropdown]);
+
+  const closeDropdown = useCallback(() => {
+    cancelCloseDropdown();
+    setDropdownOpen(false);
+  }, [cancelCloseDropdown]);
+
+  const scheduleCloseDropdown = useCallback(() => {
+    cancelCloseDropdown();
+    closeTimerRef.current = setTimeout(() => {
+      setDropdownOpen(false);
+      closeTimerRef.current = null;
+    }, 150);
+  }, [cancelCloseDropdown]);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -73,6 +96,14 @@ const DashboardHeader = () => {
 
     document.addEventListener("mousedown", handleOutsideClick);
     return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+      }
+    };
   }, []);
 
   // Close dropdown on Escape key
@@ -127,7 +158,7 @@ const DashboardHeader = () => {
             ref={dropdownRef}
             className="relative"
             onMouseEnter={openDropdown}
-            onMouseLeave={closeDropdown}
+            onMouseLeave={scheduleCloseDropdown}
             onFocus={openDropdown}
             onBlur={(event) => {
               if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
@@ -172,6 +203,8 @@ const DashboardHeader = () => {
             {dropdownOpen && (
               <div
                 role="menu"
+                onMouseEnter={cancelCloseDropdown}
+                onMouseLeave={scheduleCloseDropdown}
                 className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg"
               >
                 <div className="flex items-center gap-3 border-b px-4 py-3">

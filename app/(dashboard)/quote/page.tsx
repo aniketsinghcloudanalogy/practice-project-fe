@@ -66,7 +66,11 @@ const QuotePage = () => {
         data: quotes = [],
         isLoading,
         isFetching,
-    } = useGetQuotesQuery()
+    } = useGetQuotesQuery(undefined, {
+        refetchOnMountOrArgChange: false,
+        refetchOnFocus: true,
+        refetchOnReconnect: true,
+    })
     const [createQuote, { isLoading: creatingQuote }] = useCreateQuoteMutation()
 
     const loading = isLoading || isFetching
@@ -177,7 +181,7 @@ const QuotePage = () => {
             dataIndex: 'lineItemCount',
             key: 'lineItemCount',
             width: 140,
-            render: (count: number) => <span className="font-semibold text-slate-900">{count}</span>,
+            render: (count: number) => <span className="font-semibold text-slate-900">{count ?? 0}</span>,
         },
         {
             title: 'Status',

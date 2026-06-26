@@ -26,11 +26,27 @@ export type QuoteMutationQuote = {
 	formattedQuoteNumber: string
 }
 
-export type QuoteLineItem = Record<string, unknown> & {
+export type QuoteLineItem = {
+  id: string
+  lineNumber: string
+  description: string
+  columnName: string
+  pdfTableId: string
+  sourceTableTitle: string | null
+  rowIndex: number
+}
+
+export type QuoteExtractedTableRow = {
 	id: string
-	quoteFileId?: string
-	rowIndex?: number | null
-	isDeleted?: boolean
+	rowIndex: number | null
+	rowData: Record<string, unknown>
+}
+
+export type QuoteExtractedTable = {
+	id: string
+	title: string | null
+	columns: unknown[]
+	rows: QuoteExtractedTableRow[]
 }
 
 export type QuoteFile = {
@@ -38,9 +54,12 @@ export type QuoteFile = {
 	quote_id: string
 	pdf_upload_id: string
 	file_name: string
+	is_Verifed?: boolean
+	isVerified?: boolean
 	created_at: string
 	updated_at: string
 	lineItems: QuoteLineItem[]
+	tables?: QuoteExtractedTable[]
 }
 
 export type QuoteDetail = {
@@ -72,12 +91,19 @@ export type AddQuoteFilesPayload = {
 	files: File[]
 }
 
+export type VerifyQuoteFilePayload = {
+	quoteId: string
+	quoteFileId: string
+}
+
 export type QuoteMutationData = {
 	quote: QuoteMutationQuote
 	files: QuoteFile[]
 	lineItemCount: number
+	extractedRowCount?: number
 }
 
 export type QuoteListResponse = ApiResponse<{ quotes: QuoteListItem[] }>
 export type QuoteDetailResponse = ApiResponse<QuoteDetail>
 export type QuoteMutationResponse = ApiResponse<QuoteMutationData>
+export type VerifyQuoteFileResponse = ApiResponse<{ file: QuoteFile }>

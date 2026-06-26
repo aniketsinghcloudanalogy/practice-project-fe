@@ -8,6 +8,8 @@ import type {
 	QuoteListResponse,
 	QuoteMutationData,
 	QuoteMutationResponse,
+	VerifyQuoteFilePayload,
+	VerifyQuoteFileResponse,
 } from './types'
 
 const buildQuoteFormData = (files: File[], name?: string) => {
@@ -75,6 +77,17 @@ export const quoteApi = baseApi.injectEndpoints({
 			transformResponse: (response: QuoteMutationResponse) => response.data,
 			invalidatesTags: (result, _error, arg) => quoteMutationTags(arg.quoteId, result),
 		}),
+		verifyQuoteFile: builder.mutation<{ file: import('./types').QuoteFile }, VerifyQuoteFilePayload>({
+			query: ({ quoteId, quoteFileId }) => ({
+				url: `api/quotes/${quoteId}/files/${quoteFileId}/verify`,
+				method: 'PATCH',
+			}),
+			transformResponse: (response: VerifyQuoteFileResponse) => response.data,
+			invalidatesTags: (_result, _error, arg) => [
+				{ type: 'Quote' as const, id: arg.quoteId },
+				{ type: 'Quote' as const, id: 'LIST' },
+			],
+		}),
 	}),
 	overrideExisting: false,
 })
@@ -82,6 +95,8 @@ export const quoteApi = baseApi.injectEndpoints({
 export const {
 	useGetQuotesQuery,
 	useGetQuoteDetailQuery,
+	useLazyGetQuoteDetailQuery,
 	useCreateQuoteMutation,
 	useAddQuoteFilesMutation,
+	useVerifyQuoteFileMutation,
 } = quoteApi
