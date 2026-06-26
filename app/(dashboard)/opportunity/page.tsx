@@ -10,6 +10,8 @@ import Form from '@/components/common/Form';
 import Input from '@/components/common/Input';
 import Card from '@/components/common/Card';
 import { EditOutlined, DeleteOutlined } from '@/components/common/antd/icons';
+import AntdSelect from '@/components/common/antd/Select';
+import { useGetCustomersQuery } from '@/store/services/customer/apiSlice';
 import {
     useGetOpportunitiesQuery,
     useCreateOpportunityMutation,
@@ -46,10 +48,13 @@ const StatCard = ({
 const OpportunityPage = () => {
     const { message } = App.useApp();
     const { data: opportunities = [], isLoading, isFetching, error } = useGetOpportunitiesQuery();
+    const { data: customers = [] } = useGetCustomersQuery();
     const [createOpportunity, { isLoading: isCreating }] = useCreateOpportunityMutation();
     const [updateOpportunity, { isLoading: isUpdating }] = useUpdateOpportunityMutation();
     const [deleteOpportunity] = useDeleteOpportunityMutation();
 
+    const [isCustomerPickOpen, setIsCustomerPickOpen] = useState(false);
+    const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
     const [createForm] = Form.useForm();
@@ -66,8 +71,14 @@ const OpportunityPage = () => {
         }
     }, [editingOpportunity, editForm]);
 
+    const closeCustomerPick = useCallback(() => {
+        setIsCustomerPickOpen(false);
+        setSelectedCustomerId(null);
+    }, []);
+
     const closeCreate = useCallback(() => {
         setIsCreateOpen(false);
+        setSelectedCustomerId(null);
         createForm.resetFields();
     }, [createForm]);
 
@@ -76,9 +87,16 @@ const OpportunityPage = () => {
         editForm.resetFields();
     }, [editForm]);
 
+    const toNumbers = (values: Partial<OpportunityPayload>) => ({
+        ...values,
+        amount: values.amount != null && values.amount !== ('' as never) ? Number(values.amount) : null,
+        probability: values.probability != null && values.probability !== ('' as never) ? Number(values.probability) : null,
+        expectedPrice: values.expectedPrice != null && values.expectedPrice !== ('' as never) ? Number(values.expectedPrice) : null,
+    });
+
     const handleCreate = async (values: OpportunityPayload) => {
         try {
-            await createOpportunity(values).unwrap();
+            await createOpportunity({ ...toNumbers(values), customerId: selectedCustomerId! } as OpportunityPayload).unwrap();
             message.success('Opportunity created successfully');
             closeCreate();
         } catch {
@@ -89,7 +107,7 @@ const OpportunityPage = () => {
     const handleUpdate = async (values: Partial<OpportunityPayload>) => {
         if (!editingOpportunity) return;
         try {
-            await updateOpportunity({ id: editingOpportunity.id, body: values }).unwrap();
+            await updateOpportunity({ id: editingOpportunity.id, body: toNumbers(values) }).unwrap();
             message.success('Opportunity updated successfully');
             closeEdit();
         } catch {
@@ -195,33 +213,30 @@ const OpportunityPage = () => {
     const formFields = (
         <Form.Item noStyle>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-                <Form.Item label="Customer ID" name="customerId" rules={[{ required: true, message: 'Customer ID is required' }]}>
-                    <Input placeholder="Customer ID" />
-                </Form.Item>
                 <Form.Item label="Title" name="title">
                     <Input placeholder="Opportunity title" />
                 </Form.Item>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
                 <Form.Item label="Organization" name="organization">
                     <Input placeholder="Organization" />
                 </Form.Item>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
                 <Form.Item label="Amount" name="amount">
                     <Input placeholder="e.g. 50000" type="number" />
                 </Form.Item>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
                 <Form.Item label="Probability (%)" name="probability">
                     <Input placeholder="0 - 100" type="number" />
                 </Form.Item>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
                 <Form.Item label="Close Date" name="closeDate">
                     <Input placeholder="YYYY-MM-DD" />
                 </Form.Item>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
                 <Form.Item label="Expected Price" name="expectedPrice">
                     <Input placeholder="e.g. 45000" type="number" />
                 </Form.Item>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
                 <Form.Item label="RFQ/RFI Number" name="rfqRfiNumber">
                     <Input placeholder="RFQ/RFI #" />
                 </Form.Item>
@@ -240,7 +255,7 @@ const OpportunityPage = () => {
                     <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Opportunities</h1>
                     <p className="text-sm text-gray-400 mt-0.5">Manage your sales opportunities</p>
                 </div>
-                <Button type="primary" onClick={() => setIsCreateOpen(true)} className="w-full sm:w-auto">
+                <Button type="primary" onClick={() => setIsCustomerPickOpen(true)} className="w-full sm:w-auto">
                     + Create Opportunity
                 </Button>
             </div>
@@ -266,6 +281,38 @@ const OpportunityPage = () => {
                     />
                 </div>
             </Card>
+
+            {/* Customer Pick Modal */}
+            <Modal
+                title={<span className="text-base font-semibold">Select Customer</span>}
+                open={isCustomerPickOpen}
+                onCancel={closeCustomerPick}
+                width="min(400px, 95vw)"
+                variant="compact"
+                footer={
+                    <div className="flex justify-end gap-2 pt-2">
+                        <Button onClick={closeCustomerPick}>Cancel</Button>
+                        <Button
+                            type="primary"
+                            disabled={!selectedCustomerId}
+                            onClick={() => { setIsCustomerPickOpen(false); setIsCreateOpen(true); }}
+                        >
+                            Next
+                        </Button>
+                    </div>
+                }
+            >
+                <div className="flex items-center gap-4 mt-4">
+                    <span className="text-sm font-medium text-gray-700 whitespace-nowrap">Choose a customer</span>
+                    <AntdSelect
+                        placeholder="Select customer"
+                        options={customers.map((c) => ({ label: c.name || c.id, value: c.id }))}
+                        value={selectedCustomerId ?? undefined}
+                        onChange={(val) => setSelectedCustomerId(val as string)}
+                        style={{ flex: 1 }}
+                    />
+                </div>
+            </Modal>
 
             {/* Create Modal */}
             <Modal
