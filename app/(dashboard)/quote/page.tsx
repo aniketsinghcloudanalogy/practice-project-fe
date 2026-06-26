@@ -14,6 +14,7 @@ import {
     useGetQuotesQuery,
 } from '@/store/services/quote/apiSlice'
 import type { QuoteListItem } from '@/store/services/quote/types'
+import { formatQuoteNumber } from '@/utils/formatters'
 
 const { Dragger } = AntUpload
 
@@ -147,10 +148,10 @@ const QuotePage = () => {
     const columns: ColumnsType<QuoteListItem> = useMemo(() => [
         {
             title: 'Quote No',
-            dataIndex: 'formattedQuoteNumber',
-            key: 'formattedQuoteNumber',
+            dataIndex: 'quoteIndex',
+            key: 'quoteIndex',
             width: 180,
-            render: (_: string, record: QuoteListItem) => (
+            render: (_: number, record: QuoteListItem) => (
                 <button
                     type="button"
                     onClick={(event) => {
@@ -159,7 +160,7 @@ const QuotePage = () => {
                     }}
                     className="cursor-pointer text-left font-semibold text-cyan-700 hover:text-cyan-900"
                 >
-                    {record.formattedQuoteNumber}
+                    {formatQuoteNumber(record.quoteIndex)}
                 </button>
             ),
         },

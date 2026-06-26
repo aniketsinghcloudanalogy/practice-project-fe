@@ -4,7 +4,7 @@ import type { TagProps } from 'antd'
 
 export type TagVariant = 'default' | 'purple' | 'slate' | 'green' | 'red'
 
-interface Props extends TagProps {
+interface Props extends Omit<TagProps, 'variant'> {
   variant?: TagVariant
 }
 

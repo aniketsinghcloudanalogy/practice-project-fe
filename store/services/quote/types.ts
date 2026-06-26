@@ -3,7 +3,6 @@ import type { ApiResponse } from '../types'
 export type QuoteListItem = {
 	id: string
 	quoteIndex: number
-	formattedQuoteNumber: string
 	name: string
 	pdfUrl: string | null
 	status: string | null
@@ -23,7 +22,6 @@ export type QuoteMutationQuote = {
 	updated_at?: string | null
 	quoteIndex: number
 	pdfUrl: string | null
-	formattedQuoteNumber: string
 }
 
 export type QuoteLineItem = {
@@ -55,10 +53,8 @@ export type QuoteFile = {
 	pdf_upload_id: string
 	file_name: string
 	is_Verifed?: boolean
-	isVerified?: boolean
 	created_at: string
 	updated_at: string
-	lineItems: QuoteLineItem[]
 	tables?: QuoteExtractedTable[]
 }
 
@@ -67,7 +63,6 @@ export type QuoteDetail = {
 		id: string
 		userId: string
 		quoteIndex: number
-		formattedQuoteNumber: string
 		name: string
 		pdfUrl: string | null
 		status: string | null

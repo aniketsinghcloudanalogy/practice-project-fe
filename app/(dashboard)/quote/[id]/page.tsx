@@ -7,13 +7,16 @@ import Message from '@/components/common/Message'
 import Modal from '@/components/common/Modal'
 import Table from '@/components/common/Table'
 import Collapse from '@/components/common/Collapse'
+import Tabs from '@/components/common/Tabs'
 import type { ColumnsType } from '@/components/common/Table/types'
 import { QuoteFilesCollapseGlobalStyle } from '@/components/quote/QuoteDetails.styles'
 import { useGetQuoteDetailQuery, useVerifyQuoteFileMutation } from '@/store/services/quote/apiSlice'
 import type { QuoteExtractedTable, QuoteFile } from '@/store/services/quote/types'
 import { ArrowLeftOutlined, CheckOutlined, CloseOutlined } from '@/components/common/antd/icons'
+import { useAppSelector } from '@/store/hooks'
+import { selectDerivedLineItemsByFileId, selectDerivedTotalLineItemCount } from '@/store/services/quote/quoteSelectors'
+import { formatQuoteNumber } from '@/utils/formatters'
 
-// ─── helpers ────────────────────────────────────────────────────────────────
 
 const formatCellValue = (value: unknown): string => {
     if (value === null || value === undefined || value === '') return '-'
@@ -42,9 +45,9 @@ const getColumnNames = (table: QuoteExtractedTable): string[] => {
 
 const getTableRows = (table: QuoteExtractedTable) =>
     (table.rows ?? []).map((row, i) => ({
-            id: row.id || `${table.id}-row-${i}`,
-            ...(typeof row.rowData === 'object' && row.rowData !== null ? row.rowData : {}),
-        }))
+        id: row.id || `${table.id}-row-${i}`,
+        ...(typeof row.rowData === 'object' && row.rowData !== null ? row.rowData : {}),
+    }))
 
 const getRenderableTables = (file: QuoteFile) =>
     (file.tables ?? [])
@@ -56,7 +59,6 @@ const getRenderableTables = (file: QuoteFile) =>
         }))
         .filter((table) => table.columns.length > 0 || table.rows.length > 0)
 
-// ─── component ──────────────────────────────────────────────────────────────
 
 const QuoteDetailsPage = () => {
     const router = useRouter()
@@ -72,6 +74,17 @@ const QuoteDetailsPage = () => {
     )
     const [verifyQuoteFile, { isLoading: isVerifying }] = useVerifyQuoteFileMutation()
 
+    const lineItemsByFileIdSelector = React.useMemo(
+        () => selectDerivedLineItemsByFileId(quoteId ?? ''),
+        [quoteId],
+    )
+    const totalLineItemCountSelector = React.useMemo(
+        () => selectDerivedTotalLineItemCount(quoteId ?? ''),
+        [quoteId],
+    )
+    const lineItemsByFileId = useAppSelector(lineItemsByFileIdSelector)
+    const derivedLineItemCount = useAppSelector(totalLineItemCountSelector)
+
     React.useEffect(() => {
         if (error) messageApi.error('Failed to load quote details')
     }, [error, messageApi])
@@ -82,6 +95,21 @@ const QuoteDetailsPage = () => {
         }
 
         setPendingVerification(null)
+    }
+
+    const handleOpenHotTablesForFile = (file: Pick<QuoteFile, 'pdf_upload_id'>) => {
+        const uploadId = file.pdf_upload_id?.trim()
+
+        if (!uploadId) {
+            messageApi.error('Missing upload id for this file')
+            return
+        }
+
+        const nextPath = quoteId
+            ? `/hottables/tables/${uploadId}?from=quote&quoteId=${encodeURIComponent(quoteId)}`
+            : `/hottables/tables/${uploadId}`
+
+        router.push(nextPath)
     }
 
     const handleConfirmVerification = async () => {
@@ -99,23 +127,26 @@ const QuoteDetailsPage = () => {
     }
 
     const files = useMemo(() => data?.files ?? [], [data?.files])
-    const loading = isLoading || isFetching
-    const reviewFiles = useMemo(
-        () => files.filter((file) => !Boolean(file.is_Verifed ?? file.isVerified)),
+    const filesWithRenderableTables = useMemo(
+        () => files.filter((file) => getRenderableTables(file).length > 0),
         [files],
     )
+    const loading = isLoading || isFetching
+    const reviewFiles = useMemo(
+        () => filesWithRenderableTables.filter((file) => !Boolean(file.is_Verifed)),
+        [filesWithRenderableTables],
+    )
     const profitabilityFiles = useMemo(
-        () => files.filter((file) => Boolean(file.is_Verifed ?? file.isVerified)),
-        [files],
+        () => filesWithRenderableTables.filter((file) => Boolean(file.is_Verifed)),
+        [filesWithRenderableTables],
     )
     const visibleFiles = activeTab === 'review' ? reviewFiles : profitabilityFiles
 
-    // Use backend-computed count — no re-derivation needed
-    const lineItemCount = data?.counts.lineItemCount ?? 0
+    const lineItemCount = derivedLineItemCount
 
     const collapseItems = useMemo(() => visibleFiles.map((file: QuoteFile) => {
         const renderableTables = getRenderableTables(file)
-        const fileLineItemCount = file.lineItems?.length ?? 0
+        const fileLineItemCount = lineItemsByFileId[file.id]?.length ?? 0
         return {
             key: file.id,
             label: (
@@ -133,14 +164,14 @@ const QuoteDetailsPage = () => {
                         <Button
                             htmlType="button"
                             aria-label="Approve quote file"
-                            disabled={activeTab !== 'review' || Boolean(file.is_Verifed ?? file.isVerified) || isVerifying}
+                            disabled={activeTab !== 'review' || Boolean(file.is_Verifed) || isVerifying}
                             variant="icon-button-1"
                             className={`inline-flex h-8 w-8 items-center justify-center rounded-full border border-green-300 bg-green-50 text-green-700 transition-colors hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50 ${activeTab !== 'review' ? 'invisible pointer-events-none' : ''}`}
                             onClick={(e) => {
                                 e.stopPropagation()
 
                                 if (activeTab !== 'review') return
-                                if (!quoteId || Boolean(file.is_Verifed ?? file.isVerified)) return
+                                if (!quoteId || Boolean(file.is_Verifed)) return
 
                                 setPendingVerification({ id: file.id, file_name: file.file_name })
                             }}
@@ -149,14 +180,14 @@ const QuoteDetailsPage = () => {
                         </Button>
                         <Button
                             htmlType="button"
-                            aria-label="Reject quote file"
+                            aria-label="Open table editor"
                             disabled={activeTab !== 'review'}
                             variant="icon-button-2"
                             className={`inline-flex h-8 w-8 items-center justify-center rounded-full border border-red-300 bg-red-50 text-red-700 transition-colors hover:bg-red-100 ${activeTab !== 'review' ? 'invisible pointer-events-none' : ''}`}
                             onClick={(e) => {
                                 e.stopPropagation()
                                 if (activeTab !== 'review') return
-                                messageApi.info('Reject action will be implemented soon')
+                                handleOpenHotTablesForFile(file)
                             }}
                         >
                             <CloseOutlined />
@@ -164,7 +195,7 @@ const QuoteDetailsPage = () => {
                     </span>
                 </div>
             ),
-            children: renderableTables.length ? (
+            children: (
                 <div className="space-y-5">
                     {renderableTables.map((table) => {
                         const columns: ColumnsType<Record<string, unknown> & { id: string }> = [
@@ -212,28 +243,22 @@ const QuoteDetailsPage = () => {
                         )
                     })}
                 </div>
-            ) : (
-                <p className="text-sm text-slate-500">No extracted rows found for this file.</p>
             ),
         }
-    }), [activeTab, visibleFiles, isVerifying, messageApi, quoteId])
+    }), [activeTab, visibleFiles, isVerifying, messageApi, quoteId, lineItemsByFileId])
 
     // ← Fix late render: key forces Collapse to remount when data arrives,
     //   so defaultActiveKey is evaluated after files are populated
     const collapseKey = `${activeTab}-${visibleFiles[0]?.id ?? 'empty'}`
     const handleBackToQuotes = () => {
-        if (window.history.length > 1) {
-            router.back()
-            return
-        }
-
         router.push('/quote')
     }
 
     return (
+
         <div className="px-2 pb-3 pt-3 sm:px-4 sm:pb-6 sm:pt-4 lg:px-6 lg:pb-8 lg:pt-5">
             {contextHolder}
-
+            <QuoteFilesCollapseGlobalStyle />
             <Modal
                 open={Boolean(pendingVerification)}
                 title="Verify Quote File"
@@ -286,7 +311,7 @@ const QuoteDetailsPage = () => {
                     <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-teal-600">Quote Files</p>
                         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
-                            {data?.quote?.formattedQuoteNumber ?? 'Quote'}
+                            {typeof data?.quote?.quoteIndex === 'number' ? formatQuoteNumber(data.quote.quoteIndex) : 'Quote'}
                         </h1>
                         <p className="mt-2 text-sm text-slate-600">
                             {data?.quote?.name || 'Quote detail view'}
@@ -297,7 +322,7 @@ const QuoteDetailsPage = () => {
                 <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Files</p>
-                        <p className="mt-2 text-2xl font-semibold text-slate-900">{data?.counts.fileCount ?? 0}</p>
+                        <p className="mt-2 text-2xl font-semibold text-slate-900">{filesWithRenderableTables.length}</p>
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Line Items</p>
@@ -313,43 +338,41 @@ const QuoteDetailsPage = () => {
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
                 <div className="mb-4 flex items-center justify-between gap-3">
                     <h2 className="text-lg font-semibold text-slate-900">Quote Files</h2>
-                    <span className="text-sm text-slate-500">{files.length} total</span>
+                    <span className="text-sm text-slate-500">{filesWithRenderableTables.length} total</span>
                 </div>
 
-                <div className="mb-4 flex items-center gap-6 border-b border-slate-200">
-                    <button
-                        type="button"
-                        onClick={() => setActiveTab('review')}
-                        className={`-mb-px border-b-2 px-0 py-2 text-sm font-medium transition-colors ${
-                            activeTab === 'review'
-                                ? 'border-slate-900 text-slate-900'
-                                : 'border-transparent text-slate-600 hover:text-slate-900'
-                        }`}
-                    >
-                        Review Quotes
-                        {reviewFiles.length > 0 && (
-                            <span className="ml-1.5 inline-flex min-w-4 items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
-                                {reviewFiles.length}
-                            </span>
-                        )}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setActiveTab('profitability')}
-                        className={`-mb-px border-b-2 px-0 py-2 text-sm font-medium transition-colors ${
-                            activeTab === 'profitability'
-                                ? 'border-slate-900 text-slate-900'
-                                : 'border-transparent text-slate-600 hover:text-slate-900'
-                        }`}
-                    >
-                        Profitability
-                        {profitabilityFiles.length > 0 && (
-                            <span className="ml-1.5 inline-flex min-w-4 items-center justify-center rounded-full bg-emerald-600 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
-                                {profitabilityFiles.length}
-                            </span>
-                        )}
-                    </button>
-                </div>
+                <Tabs
+                    activeKey={activeTab}
+                    onChange={(key) => setActiveTab(key as 'review' | 'profitability')}
+                    items={[
+                        {
+                            key: 'review',
+                            label: (
+                                <span className="flex items-center gap-1.5">
+                                    Review Quotes
+                                    {reviewFiles.length > 0 && (
+                                        <span className="inline-flex min-w-4 items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
+                                            {reviewFiles.length}
+                                        </span>
+                                    )}
+                                </span>
+                            ),
+                        },
+                        {
+                            key: 'profitability',
+                            label: (
+                                <span className="flex items-center gap-1.5">
+                                    Profitability
+                                    {profitabilityFiles.length > 0 && (
+                                        <span className="inline-flex min-w-4 items-center justify-center rounded-full bg-emerald-600 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
+                                            {profitabilityFiles.length}
+                                        </span>
+                                    )}
+                                </span>
+                            ),
+                        },
+                    ]}
+                />
 
                 {loading && <p className="mt-3 text-sm text-slate-500">Loading files...</p>}
 
@@ -369,7 +392,7 @@ const QuoteDetailsPage = () => {
                 )}
             </div>
 
-                        <QuoteFilesCollapseGlobalStyle />
+
         </div>
     )
 }

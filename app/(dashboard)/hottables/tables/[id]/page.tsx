@@ -19,7 +19,7 @@ import { registerAllModules } from 'handsontable/registry'
 import 'handsontable/styles/handsontable.css'
 import 'handsontable/styles/ht-theme-main.css'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import {
     useGetAiPdfUploadDetailQuery,
     useSyncAiPdfUploadMutation,
@@ -429,7 +429,7 @@ function PdfTableGrid({
 
                     {isMergedTable && (
                         <Button variant="icon-button-1" size="small" onClick={openSingleColumnEditModal}>
-                          <EditOutlined/>
+                            <EditOutlined />
                         </Button>
                     )}
 
@@ -559,9 +559,9 @@ function PdfTableGrid({
                     <div>
                         <Text className="mb-2 block">Table Column</Text>
 
-                          <Select
-                                                        allowClear
-                                                        placeholder="Select table column"
+                        <Select
+                            allowClear
+                            placeholder="Select table column"
                             value={columnToEdit || undefined}
                             onChange={(value) => setColumnToEdit(value)}
                             options={table.columns.map((column) => ({
@@ -570,11 +570,11 @@ function PdfTableGrid({
                             }))}
                             style={{ width: '100%' }}
                         />
-                     
+
                     </div>
                     <div>
                         <Text className="mb-2 block">LineItems Field</Text>
-                           <Select
+                        <Select
                             allowClear
                             placeholder="Select LineItems field"
                             value={targetFieldToEdit || undefined}
@@ -585,7 +585,7 @@ function PdfTableGrid({
                             }))}
                             style={{ width: '100%' }}
                         />
-                      
+
                     </div>
                 </div>
 
@@ -597,7 +597,7 @@ function PdfTableGrid({
 
             <Modal open={updateColumnsOpen} footer={null} onCancel={() => setUpdateColumnsOpen(false)} width="min(880px, calc(100vw - 24px))">
                 <Title level={5} style={{ marginBottom: 16 }}>Update Columns </Title>
-               
+
 
                 <div className="mb-4 hidden gap-4 px-2 sm:grid sm:grid-cols-2">
                     <Text strong>Table Column</Text>
@@ -682,7 +682,13 @@ function PdfTableGrid({
 
 export default function UploadDetailPage() {
     const params = useParams()
+    const searchParams = useSearchParams()
     const uploadId = params.id as string
+    const from = searchParams.get('from')
+    const sourceQuoteId = searchParams.get('quoteId')
+    const isFromQuote = from === 'quote' && Boolean(sourceQuoteId)
+    const backHref = isFromQuote ? `/quote/${sourceQuoteId}` : '/hottables'
+    const backLabel = isFromQuote ? 'Back to QuoteFiles' : 'Back to Uploads'
 
     const { data: upload, isLoading, isError, refetch } = useGetAiPdfUploadDetailQuery(uploadId)
     const lineItemFields = LINE_ITEM_FIELD_OPTIONS
@@ -872,12 +878,14 @@ export default function UploadDetailPage() {
     return (
         <div className="min-h-screen bg-[#f8f9fc] p-4 sm:p-6 lg:p-8">
             <div className="mb-6 flex flex-col items-start justify-between gap-3 sm:mb-7 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-                <Link href="/hottables">
+                <Link href={backHref}>
                     <Button
                         icon={<ArrowLeftOutlined />}
-                        className="h-9 rounded-lg border border-slate-200 px-3 text-[13px] font-medium text-[#1d1f2b] hover:border-indigo-500! hover:text-indigo-500!"
+                        variant="secondary"
+                        style={{ height: 40, padding: '0 14px', borderRadius: 10, fontSize: 14, fontWeight: 600 }}
+
                     >
-                        Back to PDFs
+                        {backLabel}
                     </Button>
                 </Link>
 
