@@ -119,7 +119,7 @@ const AddressTabs = ({
           </Checkbox>
         </div>
         <Form form={billingForm} layout="vertical">
-          <AddressFields defaultLabel="Should this be your default billing address?" disabled={sameAsShipping} hideDefault={sameAsShipping} />
+          <AddressFields defaultLabel="Should this be your default billing address?" disabled={sameAsShipping} />
         </Form>
       </div>
 
