@@ -1,5 +1,5 @@
 import { baseApi } from "../baseApi";
-import type { Customer, CustomerPayload, ApiResponse } from "../types";
+import type { Customer, CustomerPayload, Address, AddressPayload, ApiResponse } from "../types";
 
 export const customerApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -87,6 +87,52 @@ export const customerApi = baseApi.injectEndpoints({
 
       invalidatesTags: ["Customer"],
     }),
+
+    // ─── Address Endpoints ────────────────────────────────────────────────
+    getAddresses: builder.query<Address[], string>({
+      query: (customerId) => `/api/customers/${customerId}/addresses`,
+      transformResponse: (response: ApiResponse<Address[]>) =>
+        Array.isArray(response.data) ? response.data : [],
+      providesTags: (_result, _error, customerId) => [
+        { type: "Address" as const, id: customerId },
+        { type: "Customer" as const, id: customerId },
+      ],
+    }),
+
+    createAddress: builder.mutation<ApiResponse<Address>, { customerId: string; body: AddressPayload }>({
+      query: ({ customerId, body }) => ({
+        url: `/api/customers/${customerId}/addresses`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { customerId }) => [
+        { type: "Address" as const, id: customerId },
+        { type: "Customer" as const, id: "LIST" },
+      ],
+    }),
+
+    updateAddress: builder.mutation<ApiResponse<Address>, { customerId: string; addressId: string; body: Partial<AddressPayload> }>({
+      query: ({ customerId, addressId, body }) => ({
+        url: `/api/customers/${customerId}/addresses/${addressId}`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { customerId }) => [
+        { type: "Address" as const, id: customerId },
+        { type: "Customer" as const, id: "LIST" },
+      ],
+    }),
+
+    deleteAddress: builder.mutation<ApiResponse<null>, { customerId: string; addressId: string }>({
+      query: ({ customerId, addressId }) => ({
+        url: `/api/customers/${customerId}/addresses/${addressId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_result, _error, { customerId }) => [
+        { type: "Address" as const, id: customerId },
+        { type: "Customer" as const, id: "LIST" },
+      ],
+    }),
   }),
   overrideExisting: process.env.NODE_ENV === "development",
 });
@@ -97,4 +143,8 @@ export const {
   useCreateCustomerMutation,
   useUpdateCustomerMutation,
   useDeleteCustomerMutation,
+  useGetAddressesQuery,
+  useCreateAddressMutation,
+  useUpdateAddressMutation,
+  useDeleteAddressMutation,
 } = customerApi;

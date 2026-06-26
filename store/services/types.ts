@@ -163,6 +163,31 @@ export type Customer = CustomerPayload & {
 	isDeleted?: boolean
 	createdAt?: string
 	updatedAt?: string
+	addresses?: Pick<Address, 'id' | 'addressLine' | 'city' | 'state' | 'zipCode' | 'country' | 'type' | 'isDefaultShipping' | 'isDefaultBilling'>[]
+	contacts?: { id: string; firstName: string; lastName?: string | null; email: string; primaryContact: string; secondaryContact?: string | null }[]
+}
+
+// ─── Address Types ────────────────────────────────────────────────────────
+
+export type AddressType = 'SHIPPING' | 'BILLING' | 'BOTH'
+
+export type AddressPayload = {
+	addressLine: string
+	city: string
+	state: string
+	zipCode: string
+	country: string
+	type: AddressType
+	isDefaultShipping?: boolean
+	isDefaultBilling?: boolean
+}
+
+export type Address = AddressPayload & {
+	id: string
+	userId: string
+	customerId: string
+	createdAt?: string
+	updatedAt?: string
 }
 
 // ─── Opportunity Types ─────────────────────────────────────────────────────
