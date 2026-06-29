@@ -1,5 +1,5 @@
 import { baseApi } from "../baseApi";
-import type { Customer, CustomerPayload, Address, AddressPayload, ApiResponse } from "../types";
+import type { Customer, CustomerPayload, Address, AddressPayload, Contact, ContactPayload, ApiResponse } from "../types";
 
 export const customerApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -136,6 +136,42 @@ export const customerApi = baseApi.injectEndpoints({
         { type: "Customer" as const, id: "LIST" },
       ],
     }),
+
+    // ─── Customer Contact Endpoints ───────────────────────────────────────
+    createCustomerContact: builder.mutation<ApiResponse<Contact>, { customerId: string; body: Omit<ContactPayload, 'customerId'> }>({
+      query: ({ customerId, body }) => ({
+        url: `/api/customers/${customerId}/contacts`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { customerId }) => [
+        { type: "Customer" as const, id: customerId },
+        { type: "Customer" as const, id: "LIST" },
+      ],
+    }),
+
+    updateCustomerContact: builder.mutation<ApiResponse<Contact>, { customerId: string; contactId: string; body: Partial<ContactPayload> }>({
+      query: ({ customerId, contactId, body }) => ({
+        url: `/api/customers/${customerId}/contacts/${contactId}`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { customerId }) => [
+        { type: "Customer" as const, id: customerId },
+        { type: "Customer" as const, id: "LIST" },
+      ],
+    }),
+
+    deleteCustomerContact: builder.mutation<ApiResponse<null>, { customerId: string; contactId: string }>({
+      query: ({ customerId, contactId }) => ({
+        url: `/api/customers/${customerId}/contacts/${contactId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_result, _error, { customerId }) => [
+        { type: "Customer" as const, id: customerId },
+        { type: "Customer" as const, id: "LIST" },
+      ],
+    }),
   }),
   overrideExisting: process.env.NODE_ENV === "development",
 });
@@ -150,4 +186,7 @@ export const {
   useCreateAddressMutation,
   useUpdateAddressMutation,
   useDeleteAddressMutation,
+  useCreateCustomerContactMutation,
+  useUpdateCustomerContactMutation,
+  useDeleteCustomerContactMutation,
 } = customerApi;

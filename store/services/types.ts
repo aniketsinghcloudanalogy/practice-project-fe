@@ -161,7 +161,7 @@ export type Customer = CustomerPayload & {
 	createdAt?: string
 	updatedAt?: string
 	addresses?: Pick<Address, 'id' | 'addressLine' | 'city' | 'state' | 'zipCode' | 'country' | 'type' | 'isDefaultShipping' | 'isDefaultBilling'>[]
-	contacts?: { id: string; firstName: string; lastName?: string | null; email: string; primaryContact: string; isPrimaryBillingContact?: boolean; isPrimaryShippingContact?: boolean }[]
+	contacts?: { id: string; firstName: string; lastName?: string | null; email: string; primaryContact: string; secondaryContact?: string | null; company?: string | null; contactType?: string; isPrimaryBillingContact?: boolean; isPrimaryShippingContact?: boolean }[]
 }
 
 // ─── Address Types ────────────────────────────────────────────────────────
