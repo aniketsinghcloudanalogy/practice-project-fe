@@ -152,6 +152,16 @@ const CustomerProfile = () => {
   };
 
   const addresses = (customer?.addresses ?? []) as Address[];
+  const isFirstAddress = addresses.length === 0;
+  const isSingleAddress = addresses.length === 1;
+  const lockBillingAddressDefault = isFirstAddress || Boolean(
+    editingAddr?.isDefaultBilling
+    && !addresses.some((address) => address.id !== editingAddr.id && address.isDefaultBilling)
+  );
+  const lockShippingAddressDefault = isFirstAddress || Boolean(
+    editingAddr?.isDefaultShipping
+    && !addresses.some((address) => address.id !== editingAddr.id && address.isDefaultShipping)
+  );
 
   // Deduplicate: if a SHIPPING address has an identical BILLING address, hide the BILLING entry
   const deduplicatedAddresses = addresses.filter((a) => {
@@ -167,17 +177,27 @@ const CustomerProfile = () => {
     );
   });
 
-  const filteredAddresses = deduplicatedAddresses.filter((a) => a.type === addrFilter);
+  const filteredAddresses = deduplicatedAddresses.filter((a) => {
+    if (a.type === addrFilter || a.type === 'BOTH') return true;
+    return addrFilter === 'BILLING' ? a.isDefaultBilling : a.isDefaultShipping;
+  });
 
   const addrColumns = [
     { title: 'Type', dataIndex: 'type', key: 'type', width: 180,
-      render: (type: string, addr: Address) => (
-        <div className="flex flex-wrap gap-1">
-          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${type === 'BILLING' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-green-600'}`}>{type}</span>
-          {addr.isDefaultBilling && <span className="text-xs font-medium px-2 py-0.5 rounded-full  text-blue-700  "><CheckOutlined /></span>}
-          {addr.isDefaultShipping && <span className="text-xs font-medium px-2 py-0.5 rounded-full  text-green-700  "><CheckOutlined /></span>}
-        </div>
-      ) },
+      render: (type: string, addr: Address) => {
+        const displayType = isSingleAddress ? addrFilter : type;
+
+        return (
+          <div className="flex flex-wrap gap-1">
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${displayType === 'BILLING' ? 'bg-blue-50 text-blue-600' : displayType === 'BOTH' ? 'bg-indigo-50 text-indigo-600' : 'bg-green-50 text-green-600'}`}>{displayType}</span>
+            {((addrFilter === 'BILLING' && addr.isDefaultBilling) || (addrFilter === 'SHIPPING' && addr.isDefaultShipping)) && (
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${addrFilter === 'BILLING' ? 'text-blue-700' : 'text-green-700'}`}>
+                <CheckOutlined />
+              </span>
+            )}
+          </div>
+        );
+      } },
     { title: 'Address', dataIndex: 'addressLine', key: 'addressLine' },
     { title: 'City', dataIndex: 'city', key: 'city' },
     { title: 'State', dataIndex: 'state', key: 'state' },
@@ -204,48 +224,76 @@ const CustomerProfile = () => {
       return;
     }
     if (editingAddr) {
-      const isBilling = editingAddr.type === 'BILLING';
-      const targetForm = isBilling ? billingForm : shippingForm;
-      targetForm.setFieldsValue({
+      const values = {
         addressLine: editingAddr.addressLine,
         city: editingAddr.city,
         state: editingAddr.state,
         zipCode: editingAddr.zipCode,
         country: editingAddr.country,
+      };
+      if (editingAddr.type === 'BOTH') {
+        shippingForm.setFieldsValue({
+          ...values,
+          isDefault: editingAddr.isDefaultShipping,
+        });
+        billingForm.setFieldsValue({
+          ...values,
+          isDefault: editingAddr.isDefaultBilling,
+        });
+        setSameAsShipping(true);
+        setAddrTab('SHIPPING');
+        return;
+      }
+      const isBilling = editingAddr.type === 'BILLING';
+      const targetForm = isBilling ? billingForm : shippingForm;
+      targetForm.setFieldsValue({
+        ...values,
         isDefault: isBilling ? editingAddr.isDefaultBilling : editingAddr.isDefaultShipping,
       });
       setAddrTab(isBilling ? 'BILLING' : 'SHIPPING');
+    } else {
+      shippingForm.setFieldsValue({ isDefault: isFirstAddress });
+      billingForm.setFieldsValue({ isDefault: isFirstAddress });
     }
   };
 
   const handleAddrSave = async () => {
     try {
-      const saves: Promise<unknown>[] = [];
+      const saves: Array<() => Promise<unknown>> = [];
+      const forceDefaultAddress = isFirstAddress || Boolean(editingAddr && isSingleAddress);
 
       const shippingValues = await shippingForm.validateFields().catch(() => null);
       if (shippingValues?.addressLine) {
-        const body = buildAddressPayload(shippingValues, 'SHIPPING');
-        if (editingAddr && editingAddr.type === 'SHIPPING') {
-          saves.push(updateAddress({ customerId: id, addressId: editingAddr.id, body }).unwrap());
+        const body = buildAddressPayload(
+          { ...shippingValues, isDefault: forceDefaultAddress || shippingValues.isDefault },
+          'SHIPPING',
+        );
+        if (editingAddr && (editingAddr.type === 'SHIPPING' || editingAddr.type === 'BOTH')) {
+          saves.push(() => updateAddress({ customerId: id, addressId: editingAddr.id, body }).unwrap());
         } else {
-          saves.push(createAddress({ customerId: id, body }).unwrap());
+          saves.push(() => createAddress({ customerId: id, body }).unwrap());
         }
       }
 
       if (!sameAsShipping) {
         const billingValues = await billingForm.validateFields().catch(() => null);
         if (billingValues?.addressLine) {
-          const body = buildAddressPayload(billingValues, 'BILLING');
+          const body = buildAddressPayload(
+            { ...billingValues, isDefault: forceDefaultAddress || billingValues.isDefault },
+            'BILLING',
+          );
           if (editingAddr && editingAddr.type === 'BILLING') {
-            saves.push(updateAddress({ customerId: id, addressId: editingAddr.id, body }).unwrap());
+            saves.push(() => updateAddress({ customerId: id, addressId: editingAddr.id, body }).unwrap());
           } else {
-            saves.push(createAddress({ customerId: id, body }).unwrap());
+            saves.push(() => createAddress({ customerId: id, body }).unwrap());
           }
         }
       }
 
       if (!saves.length) { message.warning('No address data to save'); return; }
-      await Promise.all(saves);
+      for (const save of saves) {
+        await save();
+      }
       message.success('Address saved');
       setAddrOpen(false);
     } catch (err: any) {
@@ -505,6 +553,8 @@ const CustomerProfile = () => {
             onTabChange={setAddrTab}
             sameAsShipping={sameAsShipping}
             onSameAsShippingChange={setSameAsShipping}
+            shippingDefaultDisabled={lockShippingAddressDefault}
+            billingDefaultDisabled={lockBillingAddressDefault}
           />
         </div>
       </Modal>

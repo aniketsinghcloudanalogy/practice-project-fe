@@ -28,9 +28,21 @@ interface AddressTabsProps {
   onTabChange: (tab: AddressTab) => void;
   sameAsShipping: boolean;
   onSameAsShippingChange: (val: boolean) => void;
+  shippingDefaultDisabled?: boolean;
+  billingDefaultDisabled?: boolean;
 }
 
-const AddressFields = ({ defaultLabel, disabled, hideDefault }: { defaultLabel: string; disabled?: boolean; hideDefault?: boolean }) => (
+const AddressFields = ({
+  defaultLabel,
+  disabled,
+  defaultDisabled,
+  hideDefault,
+}: {
+  defaultLabel: string;
+  disabled?: boolean;
+  defaultDisabled?: boolean;
+  hideDefault?: boolean;
+}) => (
   <>
     <Form.Item label="Address Line" name="addressLine" rules={disabled ? [] : [{ required: true, message: 'Address line is required' }]}>
       <Input placeholder="Enter here" disabled={disabled} />
@@ -53,7 +65,7 @@ const AddressFields = ({ defaultLabel, disabled, hideDefault }: { defaultLabel: 
     </div>
     {!hideDefault && (
       <Form.Item name="isDefault" valuePropName="checked">
-        <Checkbox disabled={disabled}>{defaultLabel}</Checkbox>
+        <Checkbox disabled={disabled || defaultDisabled}>{defaultLabel}</Checkbox>
       </Form.Item>
     )}
   </>
@@ -67,8 +79,14 @@ const AddressTabs = ({
   onTabChange,
   sameAsShipping,
   onSameAsShippingChange,
+  shippingDefaultDisabled,
+  billingDefaultDisabled,
 }: AddressTabsProps) => {
   const [activeTabState, setActiveTabState] = React.useState<ActiveTab>(activeTab);
+
+  React.useEffect(() => {
+    setActiveTabState(activeTab);
+  }, [activeTab]);
 
   const handleTabChange = (tab: ActiveTab) => {
     setActiveTabState(tab);
@@ -107,7 +125,10 @@ const AddressTabs = ({
       {/* Shipping tab */}
       <div className={activeTabState === 'SHIPPING' ? 'block' : 'hidden'}>
         <Form form={shippingForm} layout="vertical">
-          <AddressFields defaultLabel="Should this be your default shipping address?" />
+          <AddressFields
+            defaultLabel="Should this be your default shipping address?"
+            defaultDisabled={shippingDefaultDisabled}
+          />
         </Form>
       </div>
 
@@ -119,7 +140,11 @@ const AddressTabs = ({
           </Checkbox>
         </div>
         <Form form={billingForm} layout="vertical">
-          <AddressFields defaultLabel="Should this be your default billing address?" disabled={sameAsShipping} />
+          <AddressFields
+            defaultLabel="Should this be your default billing address?"
+            disabled={sameAsShipping}
+            defaultDisabled={billingDefaultDisabled}
+          />
         </Form>
       </div>
 
@@ -177,5 +202,9 @@ export const buildAddressPayload = (
   };
   if (type === 'SHIPPING') payload.isDefaultShipping = !!values.isDefault;
   if (type === 'BILLING') payload.isDefaultBilling = !!values.isDefault;
+  if (type === 'BOTH') {
+    payload.isDefaultShipping = !!values.isDefault;
+    payload.isDefaultBilling = !!values.isDefault;
+  }
   return payload;
 };
