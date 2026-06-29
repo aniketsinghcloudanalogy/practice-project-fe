@@ -107,6 +107,7 @@ export const customerApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (_result, _error, { customerId }) => [
         { type: "Address" as const, id: customerId },
+        { type: "Customer" as const, id: customerId },
         { type: "Customer" as const, id: "LIST" },
       ],
     }),
@@ -119,6 +120,7 @@ export const customerApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (_result, _error, { customerId }) => [
         { type: "Address" as const, id: customerId },
+        { type: "Customer" as const, id: customerId },
         { type: "Customer" as const, id: "LIST" },
       ],
     }),
@@ -130,6 +132,7 @@ export const customerApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (_result, _error, { customerId }) => [
         { type: "Address" as const, id: customerId },
+        { type: "Customer" as const, id: customerId },
         { type: "Customer" as const, id: "LIST" },
       ],
     }),

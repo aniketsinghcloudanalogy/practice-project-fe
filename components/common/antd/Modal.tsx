@@ -1,7 +1,7 @@
 'use client'
 import { Modal as AntModal } from 'antd'
 import type { ModalProps } from 'antd'
-
+ 
 export default function Modal({ styles, ...props }: ModalProps) {
   return (
     <AntModal
@@ -14,5 +14,7 @@ export default function Modal({ styles, ...props }: ModalProps) {
     />
   )
 }
-
+ 
 export type { ModalProps }
+ 
+ 

@@ -166,13 +166,16 @@ export default AddressTabs;
 export const buildAddressPayload = (
   values: AddressFormValues,
   type: AddressType,
-): AddressPayload => ({
-  addressLine: values.addressLine as string,
-  city: values.city as string,
-  state: values.state as string,
-  zipCode: values.zipCode as string,
-  country: values.country as string,
-  type,
-  isDefaultShipping: type === 'SHIPPING' ? !!(values.isDefault) : undefined,
-  isDefaultBilling: type === 'BILLING' ? !!(values.isDefault) : undefined,
-});
+): AddressPayload => {
+  const payload: AddressPayload = {
+    addressLine: values.addressLine,
+    city: values.city,
+    state: values.state,
+    zipCode: values.zipCode,
+    country: values.country,
+    type,
+  };
+  if (type === 'SHIPPING') payload.isDefaultShipping = !!values.isDefault;
+  if (type === 'BILLING') payload.isDefaultBilling = !!values.isDefault;
+  return payload;
+};

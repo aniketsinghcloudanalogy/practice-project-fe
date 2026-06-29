@@ -2,7 +2,6 @@ import { baseApi } from '../baseApi'
 import type {
     Contact,
     ContactPayload,
-    ContactMessagePayload,
     ApiResponse,
 } from '../types'
 
@@ -35,7 +34,7 @@ export const contactApi = baseApi.injectEndpoints({
                 method: 'POST',
                 body,
             }),
-            invalidatesTags: [{ type: 'Contact' as const, id: 'LIST' }],
+            invalidatesTags: [{ type: 'Contact' as const, id: 'LIST' }, { type: 'Customer' as const, id: 'LIST' }, 'Customer' as const],
         }),
         updateContact: builder.mutation<ApiResponse<Contact>, { id: string; body: Partial<ContactPayload> }>({
             query: ({ id, body }) => ({
@@ -62,7 +61,10 @@ export const contactApi = baseApi.injectEndpoints({
                     // Let endpoint consumer handle mutation failure UI.
                 }
             },
-            invalidatesTags: (_result, _error, arg) => [{ type: 'Contact' as const, id: arg.id }],
+            invalidatesTags: (_result, _error, arg) => [
+                { type: 'Contact' as const, id: arg.id },
+                'Customer' as const,
+            ],
         }),
         deleteContact: builder.mutation<ApiResponse<null>, string>({
             query: (contactId) => ({
@@ -82,14 +84,10 @@ export const contactApi = baseApi.injectEndpoints({
                     patchResult.undo()
                 }
             },
-            invalidatesTags: (_result, _error, contactId) => [{ type: 'Contact' as const, id: contactId }],
-        }),
-        submitContactMessage: builder.mutation<ApiResponse<unknown>, ContactMessagePayload>({
-            query: (body) => ({
-                url: '/api/contacts',
-                method: 'POST',
-                body,
-            }),
+            invalidatesTags: (_result, _error, contactId) => [
+                { type: 'Contact' as const, id: contactId },
+                'Customer' as const,
+            ],
         }),
     }),
     overrideExisting: process.env.NODE_ENV === 'development',
@@ -101,5 +99,4 @@ export const {
     useCreateContactMutation,
     useUpdateContactMutation,
     useDeleteContactMutation,
-    useSubmitContactMessageMutation,
 } = contactApi

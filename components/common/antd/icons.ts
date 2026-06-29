@@ -23,4 +23,5 @@ export {
 	CopyOutlined,
 	SettingOutlined,
 	UploadOutlined,
+	CheckOutlined ,
 } from '@ant-design/icons'
