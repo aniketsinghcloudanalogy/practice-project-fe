@@ -143,9 +143,9 @@ const Sidebar = () => {
         closable={false}
       >
         <DrawerBrandBlock>
-          <BrandMark>PM</BrandMark>
+        
           <BrandCopy>
-            <BrandTitle>Project May</BrandTitle>
+            <BrandTitle>Explorer</BrandTitle>
             <BrandSubtitle>Welcome</BrandSubtitle>
           </BrandCopy>
           <button

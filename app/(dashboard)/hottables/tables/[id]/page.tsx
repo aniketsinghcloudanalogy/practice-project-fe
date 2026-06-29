@@ -19,7 +19,7 @@ import { registerAllModules } from 'handsontable/registry'
 import 'handsontable/styles/handsontable.css'
 import 'handsontable/styles/ht-theme-main.css'
 import Link from 'next/link'
-import { useParams, useSearchParams } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import {
     useGetAiPdfUploadDetailQuery,
     useSyncAiPdfUploadMutation,
@@ -51,6 +51,48 @@ const normalizeFieldKey = (value: string) => value.trim().replace(/[_\s-]+/g, ''
 const getDisplayFileName = (name: string | null | undefined): string => (name ?? '').trim().replace(/\.pdf$/i, '')
 const isEmptyCellValue = (value: unknown) =>
     value === null || value === undefined || (typeof value === 'string' && (value.trim() === '' || value.trim().toUpperCase() === 'NULL'))
+
+const MANUAL_COLUMN_LABELS = Array.from({ length: 26 }, (_, index) => String.fromCharCode(65 + index))
+const MANUAL_DEFAULT_ROWS = 15
+
+const createManualTable = (uploadId: string): AiPdfTable => {
+    const tableId = `manual-${uploadId}`
+    const columns = MANUAL_COLUMN_LABELS.map((label) => ({
+        key: `col_${label}`,
+        title: label,
+        dataType: 'text',
+    }))
+
+    const rows = Array.from({ length: MANUAL_DEFAULT_ROWS }, (_, rowIndex) => {
+        const rowData = columns.reduce<Record<string, unknown>>((acc, column) => {
+            acc[column.key] = ''
+            return acc
+        }, {})
+
+        return {
+            id: '',
+            pdfTableId: tableId,
+            rowData,
+            rowIndex,
+            isDeleted: false,
+            createdAt: '',
+            updatedAt: '',
+        }
+    })
+
+    return {
+        id: tableId,
+        pdfUploadId: uploadId,
+        userId: '',
+        title: 'Manual Table',
+        columns,
+        lineItemColumnMapping: {},
+        isDeleted: false,
+        createdAt: '',
+        updatedAt: '',
+        rows,
+    }
+}
 
 function mergeDuplicateColumnsInTable(
     table: AiPdfTable,
@@ -182,10 +224,13 @@ function PdfTableGrid({
     table,
     index,
     isMergedTable,
+    showSyncColumnHeaders,
     shouldOpenUpdateColumns,
     openUpdateColumnsRequest,
     onDelete,
     onRowsChange,
+    onColumnsAndRowsChange,
+    onSyncColumnHeaders,
     onUpdateSingleColumnTitle,
     onUpdateColumnMappings,
     onSaveColumnMappings,
@@ -194,10 +239,13 @@ function PdfTableGrid({
     table: AiPdfTable
     index: number
     isMergedTable: boolean
+    showSyncColumnHeaders: boolean
     shouldOpenUpdateColumns: boolean
     openUpdateColumnsRequest: number
     onDelete: () => void
     onRowsChange: (tableId: string, rows: AiPdfTableRow[]) => void
+    onColumnsAndRowsChange: (tableId: string, columns: AiPdfTable['columns'], rows: AiPdfTableRow[]) => void
+    onSyncColumnHeaders: (tableId: string) => void
     onUpdateSingleColumnTitle: (tableId: string, columnKey: string, targetField: string) => void
     onUpdateColumnMappings: (tableId: string, columns: AiPdfTable['columns'], mapping: AiPdfLineItemMapping) => void
     onSaveColumnMappings: (tableId: string, columns: AiPdfTable['columns'], mapping: AiPdfLineItemMapping) => Promise<void> | void
@@ -221,6 +269,126 @@ function PdfTableGrid({
     const colWidths = useMemo(() => table.columns.map(() => 180), [table.columns])
     const data = useMemo(() => table.rows.map((r) => ({ __rowId: r.id, ...r.rowData })), [table.rows])
     const lineItemMapping = table.lineItemColumnMapping || {}
+
+    const getNextManualColumnKey = (existingColumns: AiPdfTable['columns']) => {
+        const existingKeys = new Set(existingColumns.map((column) => column.key))
+
+        for (const label of MANUAL_COLUMN_LABELS) {
+            const candidate = `col_${label}`
+            if (!existingKeys.has(candidate)) {
+                return candidate
+            }
+        }
+
+        let suffix = existingColumns.length + 1
+        while (existingKeys.has(`col_${suffix}`)) {
+            suffix += 1
+        }
+        return `col_${suffix}`
+    }
+
+    const insertColumnsAt = (startIndex: number, amount: number) => {
+        if (!showSyncColumnHeaders || amount <= 0) return
+
+        const nextColumns = [...table.columns]
+        const insertedColumns: AiPdfTable['columns'] = []
+
+        for (let i = 0; i < amount; i += 1) {
+            const key = getNextManualColumnKey(nextColumns)
+            insertedColumns.push({
+                key,
+                title: key.replace(/^col_/, ''),
+                dataType: 'text',
+            })
+            nextColumns.splice(startIndex + i, 0, insertedColumns[i])
+        }
+
+        const nextRows = table.rows.map((row) => {
+            const nextRowData = { ...row.rowData }
+            insertedColumns.forEach((column) => {
+                nextRowData[column.key] = ''
+            })
+
+            return {
+                ...row,
+                rowData: nextRowData,
+            }
+        })
+
+        onColumnsAndRowsChange(table.id, nextColumns, nextRows)
+        Message.success(`Inserted ${amount} column${amount > 1 ? 's' : ''}`)
+    }
+
+    const removeColumnsAt = (startIndex: number, amount: number) => {
+        if (!showSyncColumnHeaders || amount <= 0) return
+        if (table.columns.length <= amount) {
+            Message.error('At least one column is required')
+            return
+        }
+
+        const removedKeys = table.columns
+            .slice(startIndex, startIndex + amount)
+            .map((column) => column.key)
+
+        const nextColumns = table.columns.filter((_, index) => index < startIndex || index >= startIndex + amount)
+        const nextRows = table.rows.map((row) => {
+            const nextRowData = { ...row.rowData }
+            removedKeys.forEach((key) => {
+                delete nextRowData[key]
+            })
+
+            return {
+                ...row,
+                rowData: nextRowData,
+            }
+        })
+
+        onColumnsAndRowsChange(table.id, nextColumns, nextRows)
+        Message.success(`Removed ${amount} column${amount > 1 ? 's' : ''}`)
+    }
+
+    const manualContextMenu = useMemo(() => {
+        if (!showSyncColumnHeaders) return true
+
+        return {
+            items: {
+                row_above: {},
+                row_below: {},
+                remove_row: {},
+                hsep1: { name: '---------' },
+                insert_column_left: {
+                    name: 'Insert column left',
+                    callback: (_key: string, selection: Array<{ start: { col: number } }>) => {
+                        const selectedCol = selection?.[0]?.start?.col ?? table.columns.length
+                        insertColumnsAt(Math.max(0, selectedCol), 1)
+                    },
+                },
+                insert_column_right: {
+                    name: 'Insert column right',
+                    callback: (_key: string, selection: Array<{ start: { col: number } }>) => {
+                        const selectedCol = selection?.[0]?.start?.col ?? (table.columns.length - 1)
+                        insertColumnsAt(Math.max(0, selectedCol + 1), 1)
+                    },
+                },
+                remove_manual_column: {
+                    name: 'Remove column',
+                    callback: (_key: string, selection: Array<{ start: { col: number }; end: { col: number } }>) => {
+                        const startCol = Math.max(0, selection?.[0]?.start?.col ?? 0)
+                        const endCol = Math.max(startCol, selection?.[0]?.end?.col ?? startCol)
+                        removeColumnsAt(startCol, (endCol - startCol) + 1)
+                    },
+                    disabled: () => table.columns.length <= 1,
+                },
+                hsep2: { name: '---------' },
+                undo: {},
+                redo: {},
+                make_read_only: {},
+                alignment: {},
+                copy: {},
+                cut: {},
+            },
+        }
+    }, [showSyncColumnHeaders, table.columns, table.rows])
 
     const syncRowsFromGrid = () => {
         const hot = hotRef.current?.hotInstance
@@ -414,6 +582,8 @@ function PdfTableGrid({
         Message.success('Column updated')
     }
 
+    const canDeleteTable = !isMergedTable && !showSyncColumnHeaders
+
     return (
         <div className={index > 0 ? 'border-t-2 border-slate-200' : undefined}>
             <div className="flex flex-col items-start justify-between gap-1 border-b border-slate-100 bg-slate-50 px-4 py- sm:px-5 lg:flex-row lg:items-center">
@@ -426,6 +596,12 @@ function PdfTableGrid({
                 </div>
 
                 <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:flex-nowrap">
+                    {showSyncColumnHeaders && (
+                        <Button size="small" onClick={() => onSyncColumnHeaders(table.id)}>
+                            Sync Column Headers
+                        </Button>
+                    )}
+
                     <Tag icon={<TableOutlined />} className="mr-0 rounded-md border-none bg-indigo-50 text-[12px] font-semibold text-indigo-500">
                         {table.rows.length} rows
                     </Tag>
@@ -436,7 +612,7 @@ function PdfTableGrid({
                         </Button>
                     )}
 
-                    {!isMergedTable && (
+                    {canDeleteTable && (
                         <Button
                             variant="icon-button-2"
                             danger
@@ -467,7 +643,7 @@ function PdfTableGrid({
                         autoRowSize={true}
                         autoColumnSize={false}
                         stretchH="all"
-                        contextMenu={true}
+                        contextMenu={manualContextMenu}
                         manualColumnResize={true}
                         manualRowResize={true}
                         filters={true}
@@ -684,26 +860,41 @@ function PdfTableGrid({
 }
 
 export default function UploadDetailPage() {
+    const router = useRouter()
     const params = useParams()
     const searchParams = useSearchParams()
     const uploadId = params.id as string
+    const mode = searchParams.get('mode')
+    const isManualMode = mode === 'manual'
     const from = searchParams.get('from')
     const sourceQuoteId = searchParams.get('quoteId')
     const isFromQuote = from === 'quote' && Boolean(sourceQuoteId)
     const backHref = isFromQuote ? `/quote/${sourceQuoteId}` : '/hottables'
     const backLabel = isFromQuote ? 'Back to QuoteFiles' : 'Back to Uploads'
 
-    const { data: upload, isLoading, isError, refetch } = useGetAiPdfUploadDetailQuery(uploadId)
+    const { data: upload, isLoading, isError, refetch } = useGetAiPdfUploadDetailQuery(uploadId, {
+        skip: isManualMode || !uploadId,
+    })
     const lineItemFields = LINE_ITEM_FIELD_OPTIONS
     const [syncUpload, { isLoading: isSyncing }] = useSyncAiPdfUploadMutation()
 
     const [tables, setTables] = useState<AiPdfTable[]>([])
+    const [hasManualHeadersSynced, setHasManualHeadersSynced] = useState(false)
     const [syncColumnsRequestToken, setSyncColumnsRequestToken] = useState(0)
     const [syncColumnsTargetTableId, setSyncColumnsTargetTableId] = useState<string | null>(null)
     const [lastSyncedPayload, setLastSyncedPayload] = useState('')
     const lastUploadIdRef = useRef<string | null>(null)
 
     useEffect(() => {
+        if (isManualMode) {
+            const manualTable = createManualTable(uploadId)
+            setTables([manualTable])
+            setHasManualHeadersSynced(false)
+            setLastSyncedPayload(JSON.stringify(buildSyncPayload([manualTable])))
+            lastUploadIdRef.current = manualTable.id
+            return
+        }
+
         if (!upload || lastUploadIdRef.current === upload.id) return
         lastUploadIdRef.current = upload.id
         const normalizedTables = upload.tables.map((table) => ({
@@ -712,10 +903,14 @@ export default function UploadDetailPage() {
         }))
         setTables(normalizedTables)
         setLastSyncedPayload(JSON.stringify(buildSyncPayload(normalizedTables)))
-    }, [upload])
+    }, [isManualMode, upload, uploadId])
 
     const handleRowsChange = (tableId: string, rows: AiPdfTableRow[]) => {
         setTables((prev) => prev.map((table) => (table.id === tableId ? { ...table, rows } : table)))
+    }
+
+    const handleColumnsAndRowsChange = (tableId: string, columns: AiPdfTable['columns'], rows: AiPdfTableRow[]) => {
+        setTables((prev) => prev.map((table) => (table.id === tableId ? { ...table, columns, rows } : table)))
     }
 
     const handleUpdateColumnMappings = (tableId: string, columns: AiPdfTable['columns'], mapping: AiPdfLineItemMapping) => {
@@ -769,7 +964,7 @@ export default function UploadDetailPage() {
 
     const buildSyncPayload = (currentTables: AiPdfTable[]): AiPdfSyncPayload => ({
         tables: currentTables.map((table) => ({
-            ...(table.id && !table.id.startsWith('merged-') ? { id: table.id } : {}),
+            ...(table.id && !table.id.startsWith('merged-') && !table.id.startsWith('manual-') ? { id: table.id } : {}),
             title: table.title || null,
             columns: table.columns,
             lineItemMapping: table.lineItemColumnMapping || {},
@@ -791,6 +986,14 @@ export default function UploadDetailPage() {
             await syncUpload({ uploadId, payload }).unwrap()
             Message.success(`Synced successfully. `)
 
+            if (isManualMode) {
+                setLastSyncedPayload(JSON.stringify(payload))
+                if (isFromQuote && sourceQuoteId) {
+                    router.push(`/quote/${sourceQuoteId}`)
+                }
+                return
+            }
+
             const refreshed = await refetch()
             if (refreshed.data) {
                 const normalizedTables = refreshed.data.tables.map((table) => ({
@@ -809,7 +1012,96 @@ export default function UploadDetailPage() {
         }
     }
 
+    const handleSyncColumnHeaders = (tableId: string) => {
+        if (!isManualMode) return
+
+        const targetTable = tables.find((table) => table.id === tableId)
+        if (!targetTable || targetTable.rows.length === 0) {
+            Message.error('Add at least one row before syncing headers')
+            return
+        }
+
+        const headerRow = targetTable.rows[0]
+        const selectedColumns = targetTable.columns
+            .map((column) => ({
+                column,
+                headerValue: String(headerRow.rowData[column.key] ?? '').trim(),
+            }))
+            .filter(({ headerValue }) => headerValue.length > 0)
+            .map(({ column, headerValue }) => ({
+                ...column,
+                title: headerValue,
+                dataType: column.dataType || 'text',
+            }))
+
+        if (selectedColumns.length === 0) {
+            Message.error('Enter at least one header value in the first row before syncing headers')
+            return
+        }
+
+        const nextRows = targetTable.rows.slice(1).map((row, rowIndex) => {
+            const nextRowData = selectedColumns.reduce<Record<string, unknown>>((acc, column) => {
+                acc[column.key] = row.rowData[column.key] ?? ''
+                return acc
+            }, {})
+
+            return {
+                ...row,
+                rowData: nextRowData,
+                rowIndex,
+            }
+        })
+
+        const nextTables = tables.map((table) =>
+            table.id === tableId
+                ? {
+                    ...table,
+                    columns: selectedColumns,
+                    rows: nextRows,
+                    lineItemColumnMapping: {},
+                }
+                : table
+        )
+
+        setTables(nextTables)
+        setHasManualHeadersSynced(true)
+        Message.success('Column headers synced')
+    }
+
+    const validateManualSyncState = (currentTables: AiPdfTable[]) => {
+        if (!hasManualHeadersSynced) {
+            Message.error('Sync column headers before syncing changes')
+            return false
+        }
+
+        const hasAtLeastOneHeader = currentTables.some((table) =>
+            table.columns.some((column) => column.title.trim().length > 0)
+        )
+
+        if (!hasAtLeastOneHeader) {
+            Message.error('Please sync at least one non-empty column header before syncing changes')
+            return false
+        }
+
+        const hasAtLeastOneDataRow = currentTables.some((table) =>
+            table.rows.some((row) =>
+                Object.values(row.rowData).some((value) => !isEmptyCellValue(value))
+            )
+        )
+
+        if (!hasAtLeastOneDataRow) {
+            Message.error('Please add at least one data row with values before syncing changes')
+            return false
+        }
+
+        return true
+    }
+
     const handleSyncChanges = async () => {
+        if (isManualMode && !validateManualSyncState(tables)) {
+            return
+        }
+
         await syncTables(tables)
     }
 
@@ -830,11 +1122,31 @@ export default function UploadDetailPage() {
             }
         })
 
+        if (isManualMode && !validateManualSyncState(nextTables)) {
+            return
+        }
+
         setTables(nextTables)
         await syncTables(nextTables)
     }
 
     const handleSyncButtonClick = () => {
+        if (isManualMode) {
+            if (!validateManualSyncState(tables)) {
+                return
+            }
+
+            const manualTableId = tables[0]?.id || null
+            if (!manualTableId) {
+                Message.error('No table found for column mapping')
+                return
+            }
+
+            setSyncColumnsTargetTableId(manualTableId)
+            setSyncColumnsRequestToken((prev) => prev + 1)
+            return
+        }
+
         const mergedTable = tables.find((table) => table.id.startsWith('merged-'))
         const singleTable = tables.length === 1 ? tables[0] : null
         const syncColumnsTargetId = mergedTable?.id || singleTable?.id || null
@@ -866,8 +1178,9 @@ export default function UploadDetailPage() {
 
     const isMergedView = tables.length === 1 && tables[0]?.id.startsWith('merged-')
     const isSyncDisabled = !hasUnsyncedChanges
+    const fileTagCount = isManualMode ? tables.length : upload?.tables.length ?? 0
 
-    if (isLoading) {
+    if (!isManualMode && isLoading) {
         return (
             <div className="min-h-screen bg-[#f8f9fc] p-4 sm:p-6 lg:p-8">
                 <div className="flex min-h-75 items-center justify-center"><Spin size="large" /></div>
@@ -875,7 +1188,7 @@ export default function UploadDetailPage() {
         )
     }
 
-    if (isError || !upload) {
+    if (!isManualMode && (isError || !upload)) {
         return (
             <div className="min-h-screen bg-[#f8f9fc] p-4 sm:p-6 lg:p-8">
                 <div className="flex min-h-75 items-center justify-center">
@@ -902,12 +1215,14 @@ export default function UploadDetailPage() {
                 <div className="flex w-full flex-wrap items-center gap-2.5 sm:w-auto sm:gap-3">
                     <div className="flex min-w-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-1.5">
                         <FileTextOutlined className="text-[13px] text-indigo-500" />
-                        <Text className="max-w-40 truncate text-[13px] font-medium text-[#1d1f2b] sm:max-w-65">{getDisplayFileName(upload.fileName) || upload.fileName}</Text>
+                        <Text className="max-w-40 truncate text-[13px] font-medium text-[#1d1f2b] sm:max-w-65">
+                            {isManualMode ? 'Manual Update Table' : getDisplayFileName(upload?.fileName) || upload?.fileName}
+                        </Text>
                     </div>
 
                     {!isMergedView && (
                         <Tag className="rounded-md border-none bg-indigo-50 font-semibold text-indigo-500">
-                            {upload.tables.length} {upload.tables.length === 1 ? 'table' : 'tables'}
+                            {fileTagCount} {fileTagCount === 1 ? 'table' : 'tables'}
                         </Tag>
                     )}
 
@@ -918,46 +1233,47 @@ export default function UploadDetailPage() {
                 {isMergedView ? 'Table' : 'Tables'}
             </Title>
 
-            {upload.tables.length === 0 ? (
+            {tables.length === 0 ? (
                 <Empty
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
                     description={<Text className="text-slate-400">No tables found in this upload</Text>}
                 />
             ) : (
-                <>
-                    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-                        {tables.map((table, index) => (
-                            <PdfTableGrid
-                                key={table.id}
-                                table={table}
-                                index={index}
-                                isMergedTable={table.id.startsWith('merged-')}
-                                shouldOpenUpdateColumns={table.id === syncColumnsTargetTableId}
-                                openUpdateColumnsRequest={syncColumnsRequestToken}
-                                onDelete={() => handleDeleteTable(table.id)}
-                                onRowsChange={handleRowsChange}
-                                onUpdateSingleColumnTitle={handleUpdateSingleColumnTitle}
-                                onUpdateColumnMappings={handleUpdateColumnMappings}
-                                onSaveColumnMappings={handleSaveColumnMappings}
-                                lineItemFields={lineItemFields}
-                            />
-                        ))}
-                    </div>
-
-                    <div className="mt-5 flex flex-col justify-end gap-3 sm:flex-row">
-                        {tables.length >= 2 && <Button className="w-full sm:w-auto" onClick={handleMergeTables}>Merge Tables</Button>}
-                        <Button
-                            type="primary"
-                            loading={isSyncing}
-                            disabled={isSyncDisabled}
-                            onClick={handleSyncButtonClick}
-                            className={`${isSyncDisabled ? 'blur-[0.6px] opacity-70' : ''} w-full sm:w-auto`}
-                        >
-                            Sync Changes
-                        </Button>
-                    </div>
-                </>
+                <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                    {tables.map((table, index) => (
+                        <PdfTableGrid
+                            key={table.id}
+                            table={table}
+                            index={index}
+                            isMergedTable={table.id.startsWith('merged-')}
+                            showSyncColumnHeaders={isManualMode}
+                            shouldOpenUpdateColumns={table.id === syncColumnsTargetTableId}
+                            openUpdateColumnsRequest={syncColumnsRequestToken}
+                            onDelete={() => handleDeleteTable(table.id)}
+                            onRowsChange={handleRowsChange}
+                            onColumnsAndRowsChange={handleColumnsAndRowsChange}
+                            onSyncColumnHeaders={handleSyncColumnHeaders}
+                            onUpdateSingleColumnTitle={handleUpdateSingleColumnTitle}
+                            onUpdateColumnMappings={handleUpdateColumnMappings}
+                            onSaveColumnMappings={handleSaveColumnMappings}
+                            lineItemFields={lineItemFields}
+                        />
+                    ))}
+                </div>
             )}
+
+            <div className="mt-5 flex flex-col justify-end gap-3 sm:flex-row">
+                {!isManualMode && tables.length >= 2 && <Button className="w-full sm:w-auto" onClick={handleMergeTables}>Merge Tables</Button>}
+                <Button
+                    type="primary"
+                    loading={isSyncing}
+                    disabled={isSyncDisabled}
+                    onClick={handleSyncButtonClick}
+                    className={`${isSyncDisabled ? 'blur-[0.6px] opacity-70' : ''} w-full sm:w-auto`}
+                >
+                    Sync Changes
+                </Button>
+            </div>
         </div>
     )
 }

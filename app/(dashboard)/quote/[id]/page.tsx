@@ -345,7 +345,19 @@ const QuoteDetailsPage = () => {
                             htmlType="button"
                             variant="dashed"
                             onClick={() => {
-                                messageApi.info('Manual Update will be available soon')
+                                if (!tableActionFile) return
+
+                                const uploadId = tableActionFile.pdf_upload_id?.trim()
+                                if (!uploadId) {
+                                    messageApi.error('Missing upload id for this file')
+                                    return
+                                }
+
+                                const nextPath = quoteId
+                                    ? `/hottables/tables/${uploadId}?mode=manual&from=quote&quoteId=${encodeURIComponent(quoteId)}`
+                                    : `/hottables/tables/${uploadId}?mode=manual`
+
+                                router.push(nextPath)
                                 closeTableActionModal()
                             }}
                         >
