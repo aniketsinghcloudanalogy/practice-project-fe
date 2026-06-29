@@ -52,6 +52,16 @@ const CustomerProfile = () => {
   const [addrFilter, setAddrFilter] = useState<'BILLING' | 'SHIPPING'>('SHIPPING');
 
   const contacts = (customer?.contacts ?? []) as Contact[];
+  const isSingleContact = contacts.length === 1;
+  const isFirstContact = contacts.length === 0;
+  const lockBillingDefault = isFirstContact || Boolean(
+    editingContact?.isPrimaryBillingContact
+    && !contacts.some((contact) => contact.id !== editingContact.id && contact.isPrimaryBillingContact)
+  );
+  const lockShippingDefault = isFirstContact || Boolean(
+    editingContact?.isPrimaryShippingContact
+    && !contacts.some((contact) => contact.id !== editingContact.id && contact.isPrimaryShippingContact)
+  );
 
   const contactColumns = [
     {
@@ -94,8 +104,13 @@ const CustomerProfile = () => {
         email: editingContact.email,
         primaryContact: editingContact.primaryContact,
         company: editingContact.company,
-        isPrimaryBillingContact: editingContact.isPrimaryBillingContact,
-        isPrimaryShippingContact: editingContact.isPrimaryShippingContact,
+        isPrimaryBillingContact: isSingleContact ? true : editingContact.isPrimaryBillingContact,
+        isPrimaryShippingContact: isSingleContact ? true : editingContact.isPrimaryShippingContact,
+      });
+    } else {
+      contactForm.setFieldsValue({
+        isPrimaryBillingContact: isFirstContact,
+        isPrimaryShippingContact: isFirstContact,
       });
     }
   };
@@ -103,16 +118,19 @@ const CustomerProfile = () => {
   const handleContactSave = async () => {
     try {
       const values = await contactForm.validateFields();
+      const body = (isFirstContact || isSingleContact)
+        ? { ...values, isPrimaryBillingContact: true, isPrimaryShippingContact: true }
+        : values;
       if (editingContact) {
-        await updateContact({ customerId: id, contactId: editingContact.id, body: values }).unwrap();
+        await updateContact({ customerId: id, contactId: editingContact.id, body }).unwrap();
       } else {
-        await createContact({ customerId: id, body: values }).unwrap();
+        await createContact({ customerId: id, body }).unwrap();
       }
       message.success('Contact saved');
       setContactOpen(false);
     } catch (err: any) {
       if (err?.errorFields) return;
-      message.error('Failed to save contact');
+      message.error(err?.data?.message || err?.message || 'Failed to save contact');
     }
   };
 
@@ -262,118 +280,113 @@ const CustomerProfile = () => {
   const defaultBilling = addresses.find((a) => a.isDefaultBilling);
 
   return (
-    <div className="px-4 pb-6 pt-0">
-      {/* Profile Info Cards */}
+    <div className="px-4 pb-6 pt-0 -ml-[92px] md:ml-0">
+      {/* Profile Info Cards — 2x2 grid: row1=(Avatar, ContactInfo), row2=(Overview, AddressInfo) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {/* Left column */}
-        <div className="flex flex-col gap-4">
-          {/* Avatar card */}
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="h-20 bg-linear-to-r from-indigo-500 to-violet-500" />
-            <div className="flex flex-col items-center -mt-8 pb-4 px-4">
-              <div className="w-16 h-16 rounded-full bg-linear-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-xl font-bold border-4 border-white">
-                {initials}
-              </div>
-              <h2 className="mt-2 text-base font-bold text-gray-900">{customer.name || '—'}</h2>
+        {/* Row 1, Col 1 — Avatar */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="h-20 bg-linear-to-r from-indigo-500 to-violet-500" />
+          <div className="flex flex-col items-center -mt-8 pb-4 px-4">
+            <div className="w-16 h-16 rounded-full bg-linear-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-xl font-bold border-4 border-white">
+              {initials}
             </div>
-          </div>
-          {/* Overview card */}
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-            <p className="text-xs font-semibold text-gray-400 tracking-widest mb-3">OVERVIEW</p>
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <div className="bg-blue-50 rounded-lg p-3 text-center">
-                <p className="text-lg font-bold text-blue-600">{contacts.length}</p>
-                <p className="text-xs text-blue-400">Contacts</p>
-              </div>
-              <div className="bg-purple-50 rounded-lg p-3 text-center">
-                <p className="text-lg font-bold text-purple-600">{addresses.length}</p>
-                <p className="text-xs text-purple-400">Addresses</p>
-              </div>
-            </div>
-            <div className="bg-gray-50 rounded-lg px-3 py-2 mb-2">
-              <p className="text-xs text-gray-400">INDUSTRY</p>
-              <p className="text-sm font-medium text-gray-700">{customer.industry || '—'}</p>
-            </div>
-            <div className="bg-gray-50 rounded-lg px-3 py-2">
-              <p className="text-xs text-gray-400">CUSTOMER ID</p>
-              <p className="text-xs font-mono text-gray-500 truncate">{customer.id}</p>
-            </div>
+            <h2 className="mt-2 text-base font-bold text-gray-900">{customer.name || '—'}</h2>
           </div>
         </div>
 
-        {/* Right column — Contact & Address Info */}
-        <div className="flex flex-col gap-4">
-          {/* Contact Information */}
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-            <p className="text-sm font-semibold text-gray-800">Contact Information</p>
-            <p className="text-xs text-gray-400 mb-4">Personal and contact details</p>
-            <div className="flex flex-col gap-3">
+        {/* Row 1, Col 2 — Contact Information */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <p className="text-sm font-semibold text-gray-800">Contact Information</p>
+          <p className="text-xs text-gray-400 mb-4">Personal and contact details</p>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 shrink-0">👤</div>
+              <div>
+                <p className="text-xs text-gray-400">FULL NAME</p>
+                <p className="text-sm font-medium text-gray-800">{customer.name || '—'}</p>
+              </div>
+            </div>
+            {primaryBilling && (
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 shrink-0">👤</div>
+                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">📋</div>
                 <div>
-                  <p className="text-xs text-gray-400">FULL NAME</p>
-                  <p className="text-sm font-medium text-gray-800">{customer.name || '—'}</p>
+                  <p className="text-xs text-gray-400">PRIMARY BILLING CONTACT</p>
+                  <p className="text-sm font-medium text-gray-800">{primaryBilling.firstName} {primaryBilling.lastName ?? ''}</p>
+                  <p className="text-xs text-gray-400">{primaryBilling.primaryContact}</p>
                 </div>
               </div>
-              {primaryBilling && (
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">📋</div>
-                  <div>
-                    <p className="text-xs text-gray-400">PRIMARY BILLING CONTACT</p>
-                    <p className="text-sm font-medium text-gray-800">{primaryBilling.firstName} {primaryBilling.lastName ?? ''}</p>
-                    <p className="text-xs text-gray-400">{primaryBilling.primaryContact}</p>
-                  </div>
+            )}
+            {primaryShipping && (
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-500 shrink-0">🚚</div>
+                <div>
+                  <p className="text-xs text-gray-400">PRIMARY SHIPPING CONTACT</p>
+                  <p className="text-sm font-medium text-gray-800">{primaryShipping.firstName} {primaryShipping.lastName ?? ''}</p>
+                  <p className="text-xs text-gray-400">{primaryShipping.primaryContact}</p>
                 </div>
-              )}
-              {primaryShipping && (
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-500 shrink-0">🚚</div>
-                  <div>
-                    <p className="text-xs text-gray-400">PRIMARY SHIPPING CONTACT</p>
-                    <p className="text-sm font-medium text-gray-800">{primaryShipping.firstName} {primaryShipping.lastName ?? ''}</p>
-                    <p className="text-xs text-gray-400">{primaryShipping.primaryContact}</p>
-                  </div>
-                </div>
-              )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Row 2, Col 1 — Overview */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <p className="text-xs font-semibold text-gray-400 tracking-widest mb-3">OVERVIEW</p>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <div className="bg-blue-50 rounded-lg p-3 text-center">
+              <p className="text-lg font-bold text-blue-600">{contacts.length}</p>
+              <p className="text-xs text-blue-400">Contacts</p>
+            </div>
+            <div className="bg-purple-50 rounded-lg p-3 text-center">
+              <p className="text-lg font-bold text-purple-600">{addresses.length}</p>
+              <p className="text-xs text-purple-400">Addresses</p>
             </div>
           </div>
+          <div className="bg-gray-50 rounded-lg px-3 py-2 mb-2">
+            <p className="text-xs text-gray-400">INDUSTRY</p>
+            <p className="text-sm font-medium text-gray-700">{customer.industry || '—'}</p>
+          </div>
+          <div className="bg-gray-50 rounded-lg px-3 py-2">
+            <p className="text-xs text-gray-400">CUSTOMER ID</p>
+            <p className="text-xs font-mono text-gray-500 truncate">{customer.id}</p>
+          </div>
+        </div>
 
-          {/* Address Information */}
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-            <p className="text-sm font-semibold text-gray-800">Address Information</p>
-            <p className="text-xs text-gray-400 mb-4">Default billing and shipping addresses</p>
-            <div className="flex flex-col gap-3">
-              {defaultShipping ? (
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-500 shrink-0">📦</div>
-                  <div>
-                    <p className="text-xs text-gray-400">DEFAULT SHIPPING ADDRESS</p>
-                    <p className="text-sm font-medium text-gray-800">{defaultShipping.addressLine}</p>
-                    <p className="text-xs text-gray-500">{[defaultShipping.city, defaultShipping.state, defaultShipping.zipCode, defaultShipping.country].filter(Boolean).join(', ')}</p>
-                  </div>
+        {/* Row 2, Col 2 — Address Information */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <p className="text-sm font-semibold text-gray-800">Address Information</p>
+          <p className="text-xs text-gray-400 mb-4">Default billing and shipping addresses</p>
+          <div className="flex flex-col gap-3">
+            {defaultShipping ? (
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-500 shrink-0">📦</div>
+                <div>
+                  <p className="text-xs text-gray-400">DEFAULT SHIPPING ADDRESS</p>
+                  <p className="text-sm font-medium text-gray-800">{defaultShipping.addressLine}</p>
+                  <p className="text-xs text-gray-500">{[defaultShipping.city, defaultShipping.state, defaultShipping.zipCode, defaultShipping.country].filter(Boolean).join(', ')}</p>
                 </div>
-              ) : (
-                <p className="text-xs text-gray-400">No default shipping address set</p>
-              )}
-              {defaultBilling ? (
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">💳</div>
-                  <div>
-                    <p className="text-xs text-gray-400">DEFAULT BILLING ADDRESS</p>
-                    <p className="text-sm font-medium text-gray-800">{defaultBilling.addressLine}</p>
-                    <p className="text-xs text-gray-500">{[defaultBilling.city, defaultBilling.state, defaultBilling.zipCode, defaultBilling.country].filter(Boolean).join(', ')}</p>
-                  </div>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400">No default shipping address set</p>
+            )}
+            {defaultBilling ? (
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">💳</div>
+                <div>
+                  <p className="text-xs text-gray-400">DEFAULT BILLING ADDRESS</p>
+                  <p className="text-sm font-medium text-gray-800">{defaultBilling.addressLine}</p>
+                  <p className="text-xs text-gray-500">{[defaultBilling.city, defaultBilling.state, defaultBilling.zipCode, defaultBilling.country].filter(Boolean).join(', ')}</p>
                 </div>
-              ) : (
-                <p className="text-xs text-gray-400">No default billing address set</p>
-              )}
-            </div>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400">No default billing address set</p>
+            )}
           </div>
         </div>
       </div>
 
       {/* Addresses Section */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <span className="text-base font-semibold text-gray-800">Addresses</span>
         <div className="flex items-center gap-2">
           <Select
@@ -383,19 +396,21 @@ const CustomerProfile = () => {
               { label: 'Billing', value: 'BILLING' },
               { label: 'Shipping', value: 'SHIPPING' },
             ]}
-            style={{ width: 120 }}
+            style={{ width: 110 }}
           />
           <Button type="primary" onClick={() => { setEditingAddr(null); setAddrOpen(true); }}>+ Add Address</Button>
         </div>
       </div>
 
-      <Table
-        dataSource={filteredAddresses}
-        columns={addrColumns}
-        rowKey="id"
-        pagination={false}
-        locale={{ emptyText: 'No addresses yet' }}
-      />
+      <div className="overflow-x-auto -mx-4 px-4">
+        <Table
+          dataSource={filteredAddresses}
+          columns={addrColumns}
+          rowKey="id"
+          pagination={false}
+          locale={{ emptyText: 'No addresses yet' }}
+        />
+      </div>
 
       {/* Contacts Section */}
       <div className="flex items-center justify-between mb-3 mt-6">
@@ -403,13 +418,15 @@ const CustomerProfile = () => {
         <Button type="primary" onClick={() => { setEditingContact(null); setContactOpen(true); }}>+ Add Contact</Button>
       </div>
 
-      <Table
-        dataSource={contacts}
-        columns={contactColumns}
-        rowKey="id"
-        pagination={false}
-        locale={{ emptyText: 'No contacts yet' }}
-      />
+      <div className="overflow-x-auto -mx-4 px-4">
+        <Table
+          dataSource={contacts}
+          columns={contactColumns}
+          rowKey="id"
+          pagination={false}
+          locale={{ emptyText: 'No contacts yet' }}
+        />
+      </div>
 
       <Modal
         title={editingContact ? 'Edit Contact' : 'Add Contact'}
@@ -451,10 +468,10 @@ const CustomerProfile = () => {
           </Form.Item>
           <div className="flex gap-4">
             <Form.Item name="isPrimaryBillingContact" valuePropName="checked">
-              <Checkbox>Primary Billing Contact</Checkbox>
+              <Checkbox disabled={lockBillingDefault}>Primary Billing Contact</Checkbox>
             </Form.Item>
             <Form.Item name="isPrimaryShippingContact" valuePropName="checked">
-              <Checkbox>Primary Shipping Contact</Checkbox>
+              <Checkbox disabled={lockShippingDefault}>Primary Shipping Contact</Checkbox>
             </Form.Item>
           </div>
         </Form>

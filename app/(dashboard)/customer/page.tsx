@@ -23,8 +23,8 @@ import type { Customer, CustomerPayload } from '@/store/services/types';
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
-const StatCard = ({ emoji, label, value, bg, color }: {
-    emoji: string; label: string; value: number; bg: string; color: string;
+const StatCard = ({ emoji, label, value, bg, color, className }: {
+    emoji: string; label: string; value: number; bg: string; color: string; className?: string;
 }) => (
     <Card className="rounded-2xl! shadow-sm border border-gray-100">
         <div className="flex items-center gap-4">
@@ -46,7 +46,7 @@ interface CustomerModalBodyProps {
 
 const CustomerModalBody = ({ form, onFinish }: CustomerModalBodyProps) => (
     <Form form={form} layout="vertical" onFinish={onFinish}>
-        <div className="grid grid-cols-2 gap-x-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
             <Form.Item label="Legal Name" name="name">
                 <Input placeholder="Enter here" />
             </Form.Item>
@@ -54,7 +54,7 @@ const CustomerModalBody = ({ form, onFinish }: CustomerModalBodyProps) => (
                 <Input placeholder="$" />
             </Form.Item>
         </div>
-        <div className="grid grid-cols-2 gap-x-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
             <Form.Item label="Industry" name="industry">
                 <Input placeholder="Apparel" />
             </Form.Item>
@@ -198,7 +198,7 @@ const CustomerPage = () => {
     return (
         <div className="px-2 pb-3 pt-0 sm:px-4 sm:pb-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-6">
-                <div>
+                <div className="text-center sm:text-left">
                     <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Customers</h1>
                     <p className="text-sm text-gray-400 mt-0.5">Manage your customer directory</p>
                 </div>
@@ -220,7 +220,7 @@ const CustomerPage = () => {
                         dataSource={customers}
                         rowKey="id"
                         loading={loading}
-                        scroll={{ x: 900 }}
+                        scroll={{ x: 700 }}
                         pagination={{ pageSize: 10, showSizeChanger: false, showTotal: (total) => `${total} customers` }}
                         locale={{ emptyText: '📭 No customers found. Create your first customer!' }}
                     />

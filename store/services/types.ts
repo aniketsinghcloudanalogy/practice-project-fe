@@ -3,10 +3,13 @@ export type ContactPayload = {
 	lastName?: string | null
 	email: string
 	primaryContact: string
+	secondaryContact?: string | null
 	company?: string | null
 	notes?: string | null
+	contactType?: 'PRIMARY' | 'SECONDARY'
 	isPrimaryBillingContact?: boolean
 	isPrimaryShippingContact?: boolean
+	customerId?: string | null
 }
 
 export type Contact = ContactPayload & {
@@ -161,7 +164,7 @@ export type Customer = CustomerPayload & {
 	createdAt?: string
 	updatedAt?: string
 	addresses?: Pick<Address, 'id' | 'addressLine' | 'city' | 'state' | 'zipCode' | 'country' | 'type' | 'isDefaultShipping' | 'isDefaultBilling'>[]
-	contacts?: { id: string; firstName: string; lastName?: string | null; email: string; primaryContact: string; secondaryContact?: string | null; company?: string | null; contactType?: string; isPrimaryBillingContact?: boolean; isPrimaryShippingContact?: boolean }[]
+	contacts?: Contact[]
 }
 
 // ─── Address Types ────────────────────────────────────────────────────────
