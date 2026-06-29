@@ -61,21 +61,21 @@ const itemsByRole: Record<UserRole, SidebarItem[]> = {
 
   ],
   admin: [
-    { key: 'dashboard',  label: 'Dashboard',   icon: <MdDashboard size={20} />,        href: '/admin' },
-    { key: 'users',      label: 'Users',        icon: <MdPeople size={20} /> },
-    { key: 'contacts',   label: 'Contacts',     icon: <MdPerson size={20} />,           href: '/contact' },
-    { key: 'partners',   label: 'Partners',     icon: <FaHandshake size={20} />,          href: '/adminPartner' },
-    { key: 'dealregai',  label: 'DealRegAi',   icon: <HiAdjustmentsHorizontal size={20} />,            href: '/dealRegAi' },
-    { key: 'manage',     label: 'Manage',       icon: <MdManageAccounts size={20} /> },
-    { key: 'settings',   label: 'Settings',     icon: <MdSettings size={20} /> },
+    { key: 'dashboard', label: 'Dashboard', icon: <MdDashboard size={20} />, href: '/admin' },
+    { key: 'users', label: 'Users', icon: <MdPeople size={20} /> },
+    { key: 'contacts', label: 'Contacts', icon: <MdPerson size={20} />, href: '/contact' },
+    { key: 'partners', label: 'Partners', icon: <FaHandshake size={20} />, href: '/adminPartner' },
+    { key: 'dealregai', label: 'DealRegAi', icon: <HiAdjustmentsHorizontal size={20} />, href: '/dealRegAi' },
+    { key: 'manage', label: 'Manage', icon: <MdManageAccounts size={20} /> },
+    { key: 'settings', label: 'Settings', icon: <MdSettings size={20} /> },
   ],
   super_admin: [
-    { key: 'dashboard',   label: 'Dashboard',    icon: <MdDashboard size={20} />,          href: '/admin' },
-    { key: 'users',       label: 'Users',         icon: <MdSupervisorAccount size={20} /> },
-    { key: 'contacts',    label: 'Contacts',      icon: <MdPerson size={20} />,             href: '/contact' },
-    { key: 'partners',   label: 'Partners',     icon: <FaHandshake size={20} />,          href: '/superAdminPartner' },
-    { key: 'security',    label: 'Security',      icon: <MdSecurity size={20} /> },
-    { key: 'settings',    label: 'Settings',      icon: <MdSettings size={20} /> },
+    { key: 'dashboard', label: 'Dashboard', icon: <MdDashboard size={20} />, href: '/admin' },
+    { key: 'users', label: 'Users', icon: <MdSupervisorAccount size={20} /> },
+    { key: 'contacts', label: 'Contacts', icon: <MdPerson size={20} />, href: '/contact' },
+    { key: 'partners', label: 'Partners', icon: <FaHandshake size={20} />, href: '/superAdminPartner' },
+    { key: 'security', label: 'Security', icon: <MdSecurity size={20} /> },
+    { key: 'settings', label: 'Settings', icon: <MdSettings size={20} /> },
   ],
 }
 
@@ -183,10 +183,10 @@ const Sidebar = () => {
       >
         <SidebarHeader $collapsed={collapsed}>
           <BrandBlock $collapsed={collapsed}>
-            {!collapsed && <BrandMark>PM</BrandMark>}
+
             {!collapsed && (
               <BrandCopy>
-                <BrandTitle>Project May</BrandTitle>
+                <BrandTitle>Explorer</BrandTitle>
                 <BrandSubtitle>Welcome</BrandSubtitle>
               </BrandCopy>
             )}

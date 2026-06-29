@@ -152,16 +152,18 @@ const QuotePage = () => {
             key: 'quoteIndex',
             width: 180,
             render: (_: number, record: QuoteListItem) => (
-                <button
-                    type="button"
+                <Button
+                    variant="bgclear"
+                    htmlType="button"
                     onClick={(event) => {
                         event.stopPropagation()
                         router.push(`/quote/${record.id}`)
                     }}
-                    className="cursor-pointer text-left font-semibold text-cyan-700 hover:text-cyan-900"
+                    className="px-0 text-left font-semibold text-cyan-700 hover:text-cyan-900!"
+                    style={{ height: 'auto' }}
                 >
                     {formatQuoteNumber(record.quoteIndex)}
-                </button>
+                </Button>
             ),
         },
         {
@@ -248,14 +250,16 @@ const QuotePage = () => {
                         {selectedFiles.map((file, index) => (
                             <div key={`${file.name}-${file.size}-${file.lastModified}`} className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2">
                                 <span className="truncate pr-3 text-sm text-slate-700">{file.name}</span>
-                                <button
-                                    type="button"
+                                <Button
+                                    variant="bgclear"
+                                    htmlType="button"
                                     onClick={() => removeSelectedFile(index)}
-                                    className="inline-flex h-7 w-7 items-center justify-center rounded text-rose-500 transition-colors hover:bg-rose-50 hover:text-rose-600"
+                                    className="inline-flex h-7 w-7 items-center justify-center rounded px-0 text-rose-500 transition-colors hover:bg-rose-50! hover:text-rose-600!"
+                                    style={{ height: 28, width: 28 }}
                                     aria-label={`Remove ${file.name}`}
                                 >
                                     <DeleteOutlined />
-                                </button>
+                                </Button>
                             </div>
                         ))}
                     </div>

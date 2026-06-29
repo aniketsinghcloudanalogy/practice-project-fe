@@ -48,6 +48,7 @@ const createEmptyRule = () => ({
 
 const normalizeColumnTitle = (title: string) => title.trim().replace(/\s+/g, ' ').toLowerCase()
 const normalizeFieldKey = (value: string) => value.trim().replace(/[_\s-]+/g, '').toLowerCase()
+const getDisplayFileName = (name: string | null | undefined): string => (name ?? '').trim().replace(/\.pdf$/i, '')
 const isEmptyCellValue = (value: unknown) =>
     value === null || value === undefined || (typeof value === 'string' && (value.trim() === '' || value.trim().toUpperCase() === 'NULL'))
 
@@ -181,6 +182,7 @@ function PdfTableGrid({
     table,
     index,
     isMergedTable,
+    shouldOpenUpdateColumns,
     openUpdateColumnsRequest,
     onDelete,
     onRowsChange,
@@ -192,6 +194,7 @@ function PdfTableGrid({
     table: AiPdfTable
     index: number
     isMergedTable: boolean
+    shouldOpenUpdateColumns: boolean
     openUpdateColumnsRequest: number
     onDelete: () => void
     onRowsChange: (tableId: string, rows: AiPdfTableRow[]) => void
@@ -297,12 +300,12 @@ function PdfTableGrid({
         setUpdateColumnsOpen(true)
     }
     useEffect(() => {
-        if (!isMergedTable || openUpdateColumnsRequest === 0) return
+        if (!shouldOpenUpdateColumns || openUpdateColumnsRequest === 0) return
         if (lastOpenedUpdateColumnsRequestRef.current === openUpdateColumnsRequest) return
 
         lastOpenedUpdateColumnsRequestRef.current = openUpdateColumnsRequest
         openUpdateColumnsModal()
-    }, [isMergedTable, openUpdateColumnsRequest])
+    }, [shouldOpenUpdateColumns, openUpdateColumnsRequest])
     const closeBulkEditModal = () => {
         setBulkEditOpen(false)
         resetBulkEditModal()
@@ -696,17 +699,19 @@ export default function UploadDetailPage() {
 
     const [tables, setTables] = useState<AiPdfTable[]>([])
     const [syncColumnsRequestToken, setSyncColumnsRequestToken] = useState(0)
+    const [syncColumnsTargetTableId, setSyncColumnsTargetTableId] = useState<string | null>(null)
+    const [lastSyncedPayload, setLastSyncedPayload] = useState('')
     const lastUploadIdRef = useRef<string | null>(null)
 
     useEffect(() => {
         if (!upload || lastUploadIdRef.current === upload.id) return
         lastUploadIdRef.current = upload.id
-        setTables(
-            upload.tables.map((table) => ({
-                ...table,
-                lineItemColumnMapping: table.lineItemColumnMapping || {},
-            }))
-        )
+        const normalizedTables = upload.tables.map((table) => ({
+            ...table,
+            lineItemColumnMapping: table.lineItemColumnMapping || {},
+        }))
+        setTables(normalizedTables)
+        setLastSyncedPayload(JSON.stringify(buildSyncPayload(normalizedTables)))
     }, [upload])
 
     const handleRowsChange = (tableId: string, rows: AiPdfTableRow[]) => {
@@ -776,9 +781,8 @@ export default function UploadDetailPage() {
         })),
     })
 
-    const initialPayload = useMemo(() => JSON.stringify(buildSyncPayload(upload?.tables || [])), [upload])
     const currentPayload = useMemo(() => JSON.stringify(buildSyncPayload(tables)), [tables])
-    const hasUnsyncedChanges = currentPayload !== initialPayload
+    const hasUnsyncedChanges = currentPayload !== lastSyncedPayload
 
     const syncTables = async (currentTables: AiPdfTable[]) => {
         try {
@@ -789,12 +793,14 @@ export default function UploadDetailPage() {
 
             const refreshed = await refetch()
             if (refreshed.data) {
-                setTables(
-                    refreshed.data.tables.map((table) => ({
-                        ...table,
-                        lineItemColumnMapping: table.lineItemColumnMapping || {},
-                    }))
-                )
+                const normalizedTables = refreshed.data.tables.map((table) => ({
+                    ...table,
+                    lineItemColumnMapping: table.lineItemColumnMapping || {},
+                }))
+                setTables(normalizedTables)
+                setLastSyncedPayload(JSON.stringify(buildSyncPayload(normalizedTables)))
+            } else {
+                setLastSyncedPayload(JSON.stringify(payload))
             }
         } catch (error: unknown) {
             const fallback = 'Failed to sync table changes'
@@ -830,12 +836,15 @@ export default function UploadDetailPage() {
 
     const handleSyncButtonClick = () => {
         const mergedTable = tables.find((table) => table.id.startsWith('merged-'))
+        const singleTable = tables.length === 1 ? tables[0] : null
+        const syncColumnsTargetId = mergedTable?.id || singleTable?.id || null
 
-        if (!mergedTable) {
+        if (!syncColumnsTargetId) {
             void handleSyncChanges()
             return
         }
 
+        setSyncColumnsTargetTableId(syncColumnsTargetId)
         setSyncColumnsRequestToken((prev) => prev + 1)
     }
 
@@ -856,6 +865,7 @@ export default function UploadDetailPage() {
     }
 
     const isMergedView = tables.length === 1 && tables[0]?.id.startsWith('merged-')
+    const isSyncDisabled = !hasUnsyncedChanges
 
     if (isLoading) {
         return (
@@ -892,7 +902,7 @@ export default function UploadDetailPage() {
                 <div className="flex w-full flex-wrap items-center gap-2.5 sm:w-auto sm:gap-3">
                     <div className="flex min-w-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-1.5">
                         <FileTextOutlined className="text-[13px] text-indigo-500" />
-                        <Text className="max-w-40 truncate text-[13px] font-medium text-[#1d1f2b] sm:max-w-65">{upload.fileName}</Text>
+                        <Text className="max-w-40 truncate text-[13px] font-medium text-[#1d1f2b] sm:max-w-65">{getDisplayFileName(upload.fileName) || upload.fileName}</Text>
                     </div>
 
                     {!isMergedView && (
@@ -922,6 +932,7 @@ export default function UploadDetailPage() {
                                 table={table}
                                 index={index}
                                 isMergedTable={table.id.startsWith('merged-')}
+                                shouldOpenUpdateColumns={table.id === syncColumnsTargetTableId}
                                 openUpdateColumnsRequest={syncColumnsRequestToken}
                                 onDelete={() => handleDeleteTable(table.id)}
                                 onRowsChange={handleRowsChange}
@@ -938,9 +949,9 @@ export default function UploadDetailPage() {
                         <Button
                             type="primary"
                             loading={isSyncing}
-                            disabled={!hasUnsyncedChanges}
+                            disabled={isSyncDisabled}
                             onClick={handleSyncButtonClick}
-                            className={`${!hasUnsyncedChanges ? 'blur-[0.6px] opacity-70' : ''} w-full sm:w-auto`}
+                            className={`${isSyncDisabled ? 'blur-[0.6px] opacity-70' : ''} w-full sm:w-auto`}
                         >
                             Sync Changes
                         </Button>

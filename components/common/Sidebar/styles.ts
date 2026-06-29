@@ -12,10 +12,18 @@ export const StyledSiderWrapper = styled.div<{ $variant: string }>`
     z-index: 30;
     height: calc(100vh - var(--navbar-height));
     overflow-y: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
     flex-shrink: 0;
     border-right: 1px solid rgba(148, 163, 184, 0.28);
     box-shadow: 12px 0 40px rgba(15, 23, 42, 0.08);
     transition: width 0.22s ease;
+  }
+
+  .ant-layout-sider::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
   }
 
   .ant-layout-sider-children {
