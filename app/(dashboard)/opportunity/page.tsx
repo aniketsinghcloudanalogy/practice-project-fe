@@ -210,9 +210,32 @@ const OpportunityPage = () => {
         },
     ], [handleDelete]);
 
+    const compactFormClass =
+        "mt-3 [&_.ant-form-item]:mb-3 [&_.ant-form-item-label]:pb-1 [&_.ant-form-item-label>label]:h-auto [&_.ant-form-item-label>label]:text-sm [&_.ant-input]:h-9 [&_.ant-input]:text-sm";
+
+    const compactModalStyles = {
+        header: {
+            padding: "0 12px 10px",
+            marginBottom: 0,
+            borderBottom: "1px solid #f1f5f9",
+        },
+        body: {
+            padding: "12px 12px 4px",
+            backgroundColor: "#ffffff",
+            maxHeight: "calc(100vh - 180px)",
+            overflowY: "auto" as const,
+        },
+        footer: {
+            padding: "10px 12px 12px",
+            borderTop: "1px solid #f1f5f9",
+            backgroundColor: "#ffffff",
+            borderRadius: "0 0 8px 8px",
+        },
+    };
+
     const formFields = (
         <Form.Item noStyle>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3">
                 <Form.Item label="Title" name="title">
                     <Input placeholder="Opportunity title" />
                 </Form.Item>
@@ -220,7 +243,7 @@ const OpportunityPage = () => {
                     <Input placeholder="Organization" />
                 </Form.Item>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3">
                 <Form.Item label="Amount" name="amount">
                     <Input placeholder="e.g. 50000" type="number" />
                 </Form.Item>
@@ -228,7 +251,7 @@ const OpportunityPage = () => {
                     <Input placeholder="0 - 100" type="number" />
                 </Form.Item>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3">
                 <Form.Item label="Close Date" name="closeDate">
                     <Input placeholder="YYYY-MM-DD" />
                 </Form.Item>
@@ -236,7 +259,7 @@ const OpportunityPage = () => {
                     <Input placeholder="e.g. 45000" type="number" />
                 </Form.Item>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3">
                 <Form.Item label="RFQ/RFI Number" name="rfqRfiNumber">
                     <Input placeholder="RFQ/RFI #" />
                 </Form.Item>
@@ -316,13 +339,15 @@ const OpportunityPage = () => {
 
             {/* Create Modal */}
             <Modal
-                title={<span className="text-base font-semibold">Create New Opportunity</span>}
+                title={<span className="text-sm font-semibold">Create New Opportunity</span>}
                 open={isCreateOpen}
                 onCancel={closeCreate}
-                width="min(560px, 95vw)"
+                width="min(500px, 95vw)"
                 variant="compact"
+                style={{ top: 16 }}
+                styles={compactModalStyles}
                 footer={
-                    <div className="flex justify-end gap-2 pt-2">
+                    <div className="flex justify-end gap-2">
                         <Button onClick={closeCreate}>Cancel</Button>
                         <Button type="primary" loading={isCreating} onClick={() => createForm.submit()}>
                             Create Opportunity
@@ -330,20 +355,22 @@ const OpportunityPage = () => {
                     </div>
                 }
             >
-                <Form form={createForm} layout="vertical" onFinish={handleCreate} className="mt-4">
+                <Form form={createForm} layout="vertical" onFinish={handleCreate} className={compactFormClass}>
                     {formFields}
                 </Form>
             </Modal>
 
             {/* Edit Modal */}
             <Modal
-                title={<span className="text-base font-semibold">Edit Opportunity</span>}
+                title={<span className="text-sm font-semibold">Edit Opportunity</span>}
                 open={!!editingOpportunity}
                 onCancel={closeEdit}
-                width="min(560px, 95vw)"
+                width="min(500px, 95vw)"
                 variant="compact"
+                style={{ top: 16 }}
+                styles={compactModalStyles}
                 footer={
-                    <div className="flex justify-end gap-2 pt-2">
+                    <div className="flex justify-end gap-2">
                         <Button onClick={closeEdit}>Cancel</Button>
                         <Button type="primary" loading={isUpdating} onClick={() => editForm.submit()}>
                             Save Changes
@@ -351,7 +378,7 @@ const OpportunityPage = () => {
                     </div>
                 }
             >
-                <Form form={editForm} layout="vertical" onFinish={handleUpdate} className="mt-4">
+                <Form form={editForm} layout="vertical" onFinish={handleUpdate} className={compactFormClass}>
                     {formFields}
                 </Form>
             </Modal>

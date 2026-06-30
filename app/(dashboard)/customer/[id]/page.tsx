@@ -33,7 +33,18 @@ import {
   useUpdateCustomerContactMutation,
   useDeleteCustomerContactMutation,
 } from "@/store/services/customer/apiSlice";
-import type { Address, Contact } from "@/store/services/types";
+import {
+  useGetOpportunitiesQuery,
+  useCreateOpportunityMutation,
+  useUpdateOpportunityMutation,
+  useDeleteOpportunityMutation,
+} from "@/store/services/opportunity/apiSlice";
+import type {
+  Address,
+  Contact,
+  Opportunity,
+  OpportunityPayload,
+} from "@/store/services/types";
 
 const CustomerProfile = () => {
   const { id } = useParams<{ id: string }>();
@@ -50,6 +61,242 @@ const CustomerProfile = () => {
   const [updateContact, { isLoading: isUpdatingContact }] =
     useUpdateCustomerContactMutation();
   const [deleteContact] = useDeleteCustomerContactMutation();
+
+  // ─── Opportunity state ──────────────────────────────────────────────
+  const { data: opportunities = [] } = useGetOpportunitiesQuery(id);
+  const [createOpportunity, { isLoading: isCreatingOpp }] =
+    useCreateOpportunityMutation();
+  const [updateOpportunity, { isLoading: isUpdatingOpp }] =
+    useUpdateOpportunityMutation();
+  const [deleteOpportunity] = useDeleteOpportunityMutation();
+
+  const [oppCreateOpen, setOppCreateOpen] = useState(false);
+  const [editingOpp, setEditingOpp] = useState<Opportunity | null>(null);
+  const [oppCreateForm] = Form.useForm();
+  const [oppEditForm] = Form.useForm();
+
+  const toNumbers = (values: Partial<OpportunityPayload>) => ({
+    ...values,
+    amount:
+      values.amount != null && values.amount !== ("" as never)
+        ? Number(values.amount)
+        : null,
+    probability:
+      values.probability != null && values.probability !== ("" as never)
+        ? Number(values.probability)
+        : null,
+    expectedPrice:
+      values.expectedPrice != null && values.expectedPrice !== ("" as never)
+        ? Number(values.expectedPrice)
+        : null,
+  });
+
+  const handleOppCreate = async (values: OpportunityPayload) => {
+    try {
+      await createOpportunity({
+        ...toNumbers(values),
+        customerId: id,
+      } as OpportunityPayload).unwrap();
+      message.success("Opportunity created successfully");
+      setOppCreateOpen(false);
+      oppCreateForm.resetFields();
+    } catch {
+      message.error("Failed to create opportunity");
+    }
+  };
+
+  const handleOppUpdate = async (values: Partial<OpportunityPayload>) => {
+    if (!editingOpp) return;
+    try {
+      await updateOpportunity({
+        id: editingOpp.id,
+        body: toNumbers(values),
+      }).unwrap();
+      message.success("Opportunity updated successfully");
+      setEditingOpp(null);
+      oppEditForm.resetFields();
+    } catch {
+      message.error("Failed to update opportunity");
+    }
+  };
+
+  const handleOppDelete = (oppId: string) => {
+    confirm({
+      title: "Delete Opportunity",
+      content: "Are you sure you want to delete this opportunity?",
+      okText: "Yes, Delete",
+      okButtonProps: { danger: true },
+      cancelText: "No",
+      onOk: async () => {
+        try {
+          await deleteOpportunity(oppId).unwrap();
+          message.success("Opportunity deleted successfully");
+        } catch {
+          message.error("Failed to delete opportunity");
+        }
+      },
+    });
+  };
+
+  const opportunityColumns = [
+    {
+      title: "Title",
+      dataIndex: "title",
+      key: "title",
+      width: 180,
+      render: (val?: string) => (
+        <span className="font-medium text-gray-800">{val || "—"}</span>
+      ),
+    },
+    {
+      title: "Organization",
+      dataIndex: "organization",
+      key: "organization",
+      width: 160,
+      render: (val?: string) =>
+        val ? (
+          <span className="inline-flex items-center gap-1 text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full border border-indigo-100">
+            {val}
+          </span>
+        ) : (
+          <span className="text-gray-300">—</span>
+        ),
+    },
+    {
+      title: "Amount",
+      dataIndex: "amount",
+      key: "amount",
+      width: 120,
+      render: (val?: number) =>
+        val != null ? (
+          <span className="font-mono text-sm text-gray-700">
+            ${val.toLocaleString()}
+          </span>
+        ) : (
+          <span className="text-gray-300">—</span>
+        ),
+    },
+    {
+      title: "Probability",
+      dataIndex: "probability",
+      key: "probability",
+      width: 110,
+      render: (val?: number) =>
+        val != null ? (
+          <span className="text-sm text-gray-600">{val}%</span>
+        ) : (
+          <span className="text-gray-300">—</span>
+        ),
+    },
+    {
+      title: "Close Date",
+      dataIndex: "closeDate",
+      key: "closeDate",
+      width: 130,
+      render: (val?: string) =>
+        val ? (
+          <span className="text-sm text-gray-600">
+            {new Date(val).toLocaleDateString()}
+          </span>
+        ) : (
+          <span className="text-gray-300">—</span>
+        ),
+    },
+    {
+      title: "RFQ/RFI",
+      dataIndex: "rfqRfiNumber",
+      key: "rfqRfiNumber",
+      width: 120,
+      render: (val?: string) => (
+        <span className="text-sm text-gray-600">{val || "—"}</span>
+      ),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 100,
+      render: (_: unknown, record: Opportunity) => (
+        <div className="flex gap-2">
+          <Button
+            variant="icon-button-1"
+            onClick={() => {
+              setEditingOpp(record);
+              oppEditForm.setFieldsValue(record);
+            }}
+          >
+            <EditOutlined />
+          </Button>
+          <Button
+            variant="icon-button-2"
+            onClick={() => handleOppDelete(record.id)}
+            className="bg-red-50! border! border-red-200! w-8! h-7!"
+          >
+            <DeleteOutlined />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  const compactOpportunityFormClass =
+    "mt-3 [&_.ant-form-item]:mb-3 [&_.ant-form-item-label]:pb-1 [&_.ant-form-item-label>label]:h-auto [&_.ant-form-item-label>label]:text-sm [&_.ant-input]:h-9 [&_.ant-input]:text-sm";
+
+  const compactOpportunityModalStyles = {
+    header: {
+      padding: "0 12px 10px",
+      marginBottom: 0,
+      borderBottom: "1px solid #f1f5f9",
+    },
+    body: {
+      padding: "12px 12px 4px",
+      backgroundColor: "#ffffff",
+      maxHeight: "calc(100vh - 180px)",
+      overflowY: "auto" as const,
+    },
+    footer: {
+      padding: "10px 12px 12px",
+      borderTop: "1px solid #f1f5f9",
+      backgroundColor: "#ffffff",
+      borderRadius: "0 0 8px 8px",
+    },
+  };
+
+  const opportunityFormFields = (
+    <Form.Item noStyle>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3">
+        <Form.Item label="Title" name="title">
+          <Input placeholder="Opportunity title" />
+        </Form.Item>
+        <Form.Item label="Organization" name="organization">
+          <Input placeholder="Organization" />
+        </Form.Item>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3">
+        <Form.Item label="Amount" name="amount">
+          <Input placeholder="e.g. 50000" type="number" />
+        </Form.Item>
+        <Form.Item label="Probability (%)" name="probability">
+          <Input placeholder="0 - 100" type="number" />
+        </Form.Item>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3">
+        <Form.Item label="Close Date" name="closeDate">
+          <Input placeholder="YYYY-MM-DD" />
+        </Form.Item>
+        <Form.Item label="Expected Price" name="expectedPrice">
+          <Input placeholder="e.g. 45000" type="number" />
+        </Form.Item>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3">
+        <Form.Item label="RFQ/RFI Number" name="rfqRfiNumber">
+          <Input placeholder="RFQ/RFI #" />
+        </Form.Item>
+      </div>
+      <Form.Item label="Description" name="description">
+        <Input placeholder="Description" />
+      </Form.Item>
+    </Form.Item>
+  );
 
   // ─── Contact state ────────────────────────────────────────────────
   const [contactOpen, setContactOpen] = useState(false);
@@ -258,26 +505,44 @@ const CustomerProfile = () => {
     );
 
   // BOTH type address appears in both BILLING and SHIPPING tabs
- const filteredAddresses = addresses.filter((a) => a.type === addrFilter);
+  const filteredAddresses = addresses.filter((a) => a.type === addrFilter);
   const addrColumns = [
-    { title: 'Type', dataIndex: 'type', key: 'type', width: 200,
-  render: (type: string, addr: Address) => {
-    const isDefaultForFilter = addrFilter === 'BILLING' ? addr.isDefaultBilling : addr.isDefaultShipping;
-    return (
-      <div className="flex flex-wrap gap-1 items-center">
-        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-          type === 'BILLING' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-green-600'
-        }`}>{type}</span>
-        {isDefaultForFilter && (
-          <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1 ${
-            addrFilter === 'BILLING' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
-          }`}>
-            <CheckOutlined />
-          </span>
-        )}
-      </div>
-    );
-  } },
+    {
+      title: "Type",
+      dataIndex: "type",
+      key: "type",
+      width: 200,
+      render: (type: string, addr: Address) => {
+        const isDefaultForFilter =
+          addrFilter === "BILLING"
+            ? addr.isDefaultBilling
+            : addr.isDefaultShipping;
+        return (
+          <div className="flex flex-wrap gap-1 items-center">
+            <span
+              className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                type === "BILLING"
+                  ? "bg-blue-50 text-blue-600"
+                  : "bg-green-50 text-green-600"
+              }`}
+            >
+              {type}
+            </span>
+            {isDefaultForFilter && (
+              <span
+                className={`text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                  addrFilter === "BILLING"
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-green-100 text-green-700"
+                }`}
+              >
+                <CheckOutlined />
+              </span>
+            )}
+          </div>
+        );
+      },
+    },
     { title: "Address", dataIndex: "addressLine", key: "addressLine" },
     { title: "City", dataIndex: "city", key: "city" },
     { title: "State", dataIndex: "state", key: "state" },
@@ -397,28 +662,55 @@ const CustomerProfile = () => {
           a.id !== editingAddr?.id && (a.isDefaultBilling || a.type === "BOTH"),
       );
 
-     if (sameAsShipping) {
-  const shippingValues = await shippingForm.validateFields().catch(() => null);
-  if (!shippingValues?.addressLine) { message.warning('Please fill in the shipping address'); return; }
+      if (sameAsShipping) {
+        const shippingValues = await shippingForm
+          .validateFields()
+          .catch(() => null);
+        if (!shippingValues?.addressLine) {
+          message.warning("Please fill in the shipping address");
+          return;
+        }
 
-  const shippingBody = buildAddressPayload(
-    { ...shippingValues, isDefault: (noDefaultShipping || lockShippingAddressDefault) ? true : shippingValues.isDefault },
-    'SHIPPING',
-  );
-  const billingBody = buildAddressPayload(
-    { ...shippingValues, isDefault: (noDefaultBilling || lockBillingAddressDefault) ? true : shippingValues.isDefault },
-    'BILLING',
-  );
+        const shippingBody = buildAddressPayload(
+          {
+            ...shippingValues,
+            isDefault:
+              noDefaultShipping || lockShippingAddressDefault
+                ? true
+                : shippingValues.isDefault,
+          },
+          "SHIPPING",
+        );
+        const billingBody = buildAddressPayload(
+          {
+            ...shippingValues,
+            isDefault:
+              noDefaultBilling || lockBillingAddressDefault
+                ? true
+                : shippingValues.isDefault,
+          },
+          "BILLING",
+        );
 
-  if (editingAddr) {
-    // editingAddr was a single record — once split, we only update the one being edited
-    // and create the counterpart if it doesn't exist yet
-    saves.push(() => updateAddress({ customerId: id, addressId: editingAddr.id, body: editingAddr.type === 'BILLING' ? billingBody : shippingBody }).unwrap());
-  } else {
-    saves.push(() => createAddress({ customerId: id, body: shippingBody }).unwrap());
-    saves.push(() => createAddress({ customerId: id, body: billingBody }).unwrap());
-  }
-} else {
+        if (editingAddr) {
+          // editingAddr was a single record — once split, we only update the one being edited
+          // and create the counterpart if it doesn't exist yet
+          saves.push(() =>
+            updateAddress({
+              customerId: id,
+              addressId: editingAddr.id,
+              body: editingAddr.type === "BILLING" ? billingBody : shippingBody,
+            }).unwrap(),
+          );
+        } else {
+          saves.push(() =>
+            createAddress({ customerId: id, body: shippingBody }).unwrap(),
+          );
+          saves.push(() =>
+            createAddress({ customerId: id, body: billingBody }).unwrap(),
+          );
+        }
+      } else {
         // Separate shipping
         const shippingValues = await shippingForm
           .validateFields()
@@ -529,24 +821,20 @@ const CustomerProfile = () => {
   const primaryBilling = contacts.find((c) => c.isPrimaryBillingContact);
   const primaryShipping = contacts.find((c) => c.isPrimaryShippingContact);
   // BOTH type address counts as default for both shipping and billing
- const defaultShipping = addresses.find((a) => a.isDefaultShipping);
-const defaultBilling = addresses.find((a) => a.isDefaultBilling);
+  const defaultShipping = addresses.find((a) => a.isDefaultShipping);
+  const defaultBilling = addresses.find((a) => a.isDefaultBilling);
 
   return (
     <div className="ml-0 flex flex-col lg:flex-row pt-2 lg:h-[calc(100vh-var(--navbar-height)-0.5rem)] lg:overflow-hidden">
       {/* Main two-column layout: left = fixed profile panel, right = scrollable tables */}
       <div className="flex flex-col lg:flex-row w-full lg:h-full">
-
         {/* ── LEFT: Fixed Profile Panel ── */}
         <div
           className="w-full lg:w-[320px] xl:w-90 shrink-0 flex flex-col gap-4 px-4 pt-0 pb-4
           lg:fixed lg:left-[var(--sidebar-width,92px)] lg:top-[calc(var(--navbar-height)+0.5rem)] lg:self-start lg:max-h-[calc(100vh-var(--navbar-height)-0.5rem)] lg:overflow-hidden"
         >
-
           {/* Profile Overview Card */}
-          <div
-            className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
-          >
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="h-14 bg-linear-to-r from-indigo-500 to-violet-500 rounded-t-xl" />
             <div className="flex flex-col items-center -mt-7 pb-3 px-4">
               <div className="w-16 h-16 rounded-full bg-linear-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-xl font-bold border-4 border-white">
@@ -591,7 +879,7 @@ const defaultBilling = addresses.find((a) => a.isDefaultBilling);
                 Contact Information
               </p>
               <Button
-                variant="icon-button-1"
+                variant="eye-button"
                 icon={<EyeOutlined />}
                 aria-label="View contact information"
                 onClick={() => setContactInfoOpen(true)}
@@ -640,7 +928,8 @@ const defaultBilling = addresses.find((a) => a.isDefaultBilling);
                       PRIMARY SHIPPING CONTACT
                     </p>
                     <p className="text-sm font-medium text-gray-800">
-                      {primaryShipping.firstName} {primaryShipping.lastName ?? ""}
+                      {primaryShipping.firstName}{" "}
+                      {primaryShipping.lastName ?? ""}
                     </p>
                     <p className="text-xs text-gray-400">
                       {primaryShipping.primaryContact}
@@ -658,7 +947,7 @@ const defaultBilling = addresses.find((a) => a.isDefaultBilling);
                 Address Information
               </p>
               <Button
-                variant="icon-button-1"
+                variant="eye-button"
                 icon={<EyeOutlined />}
                 aria-label="View address information"
                 onClick={() => setAddressInfoOpen(true)}
@@ -728,19 +1017,21 @@ const defaultBilling = addresses.find((a) => a.isDefaultBilling);
               )}
             </div>
           </div>
-
         </div>
         {/* ── END LEFT Panel ── */}
 
         {/* ── RIGHT: Scrollable Tables ── */}
-        <div className="flex-1 min-w-0 flex flex-col gap-6 px-4 pt-2 pb-6 lg:ml-[352px] xl:ml-[392px]
+        <div
+          className="flex-1 min-w-0 flex flex-col gap-6 px-4 pt-2 pb-6 lg:ml-[352px] xl:ml-[392px]
           lg:h-full lg:overflow-y-auto
-          [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full">
-
+          [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full"
+        >
           {/* Addresses Table Section */}
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-              <span className="text-base font-semibold text-gray-800">Addresses</span>
+              <span className="text-base font-semibold text-gray-800">
+                Addresses
+              </span>
               <div className="flex items-center gap-2">
                 <Select
                   value={addrFilter}
@@ -763,19 +1054,21 @@ const defaultBilling = addresses.find((a) => a.isDefaultBilling);
               </div>
             </div>
             <Table
-                dataSource={filteredAddresses}
-                columns={addrColumns}
-                rowKey="id"
-                pagination={false}
-                locale={{ emptyText: "No addresses yet" }}
-                scroll={{ x: "max-content" }}
-              />
+              dataSource={filteredAddresses}
+              columns={addrColumns}
+              rowKey="id"
+              pagination={false}
+              locale={{ emptyText: "No addresses yet" }}
+              scroll={{ x: "max-content" }}
+            />
           </div>
 
           {/* Contacts Table Section */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-base font-semibold text-gray-800">Contacts</span>
+              <span className="text-base font-semibold text-gray-800">
+                Contacts
+              </span>
               <Button
                 type="primary"
                 onClick={() => {
@@ -787,22 +1080,50 @@ const defaultBilling = addresses.find((a) => a.isDefaultBilling);
               </Button>
             </div>
             <Table
-                dataSource={contacts}
-                columns={contactColumns}
-                rowKey="id"
-                pagination={false}
-                locale={{ emptyText: "No contacts yet" }}
-                scroll={{ x: "max-content" }}
-              />
+              dataSource={contacts}
+              columns={contactColumns}
+              rowKey="id"
+              pagination={false}
+              locale={{ emptyText: "No contacts yet" }}
+              scroll={{ x: "max-content" }}
+            />
           </div>
 
+          {/* Opportunities Table Section */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-base font-semibold text-gray-800">
+                Opportunities
+              </span>
+              <Button
+                type="primary"
+                onClick={() => {
+                  oppCreateForm.resetFields();
+                  setOppCreateOpen(true);
+                }}
+              >
+                + Create Opportunity
+              </Button>
+            </div>
+            <Table
+              dataSource={opportunities}
+              columns={opportunityColumns}
+              rowKey="id"
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: false,
+              }}
+              locale={{ emptyText: "No opportunities yet" }}
+              scroll={{ x: "max-content" }}
+            />
+          </div>
         </div>
         {/* ── END RIGHT Panel ── */}
-
       </div>
 
       <Modal
         title="Contact Information"
+        rootClassName="customer-profile-modal"
         open={contactInfoOpen}
         onCancel={() => setContactInfoOpen(false)}
         width="min(460px, 95vw)"
@@ -827,7 +1148,9 @@ const defaultBilling = addresses.find((a) => a.isDefaultBilling);
                 </p>
               </>
             ) : (
-              <p className="text-sm text-gray-400">No primary billing contact set</p>
+              <p className="text-sm text-gray-400">
+                No primary billing contact set
+              </p>
             )}
           </div>
           <div>
@@ -842,7 +1165,9 @@ const defaultBilling = addresses.find((a) => a.isDefaultBilling);
                 </p>
               </>
             ) : (
-              <p className="text-sm text-gray-400">No primary shipping contact set</p>
+              <p className="text-sm text-gray-400">
+                No primary shipping contact set
+              </p>
             )}
           </div>
         </div>
@@ -850,6 +1175,7 @@ const defaultBilling = addresses.find((a) => a.isDefaultBilling);
 
       <Modal
         title="Address Information"
+        rootClassName="customer-profile-modal"
         open={addressInfoOpen}
         onCancel={() => setAddressInfoOpen(false)}
         width="min(460px, 95vw)"
@@ -875,7 +1201,9 @@ const defaultBilling = addresses.find((a) => a.isDefaultBilling);
                 </p>
               </>
             ) : (
-              <p className="text-sm text-gray-400">No default shipping address set</p>
+              <p className="text-sm text-gray-400">
+                No default shipping address set
+              </p>
             )}
           </div>
           <div>
@@ -897,7 +1225,9 @@ const defaultBilling = addresses.find((a) => a.isDefaultBilling);
                 </p>
               </>
             ) : (
-              <p className="text-sm text-gray-400">No default billing address set</p>
+              <p className="text-sm text-gray-400">
+                No default billing address set
+              </p>
             )}
           </div>
         </div>
@@ -905,10 +1235,12 @@ const defaultBilling = addresses.find((a) => a.isDefaultBilling);
 
       <Modal
         title={editingContact ? "Edit Contact" : "Add Contact"}
+        rootClassName="customer-profile-modal"
         open={contactOpen}
         onCancel={() => setContactOpen(false)}
         afterOpenChange={handleContactAfterOpenChange}
         width="min(480px, 95vw)"
+        style={{ top: 16 }}
         styles={{
           container: { padding: "16px 0 0" },
           header: {
@@ -916,7 +1248,12 @@ const defaultBilling = addresses.find((a) => a.isDefaultBilling);
             marginBottom: 0,
             borderBottom: "1px solid #f1f5f9",
           },
-          body: { padding: "16px", backgroundColor: "#ffffff" },
+          body: {
+            padding: "16px",
+            backgroundColor: "#ffffff",
+            maxHeight: "calc(100vh - 180px)",
+            overflowY: "auto",
+          },
           footer: {
             padding: "12px 16px 16px",
             borderTop: "1px solid #f1f5f9",
@@ -985,10 +1322,12 @@ const defaultBilling = addresses.find((a) => a.isDefaultBilling);
 
       <Modal
         title={editingAddr ? "Edit Address" : "Add Address"}
+        rootClassName="customer-profile-modal"
         open={addrOpen}
         onCancel={() => setAddrOpen(false)}
         afterOpenChange={handleAddrAfterOpenChange}
         width="min(540px, 95vw)"
+        style={{ top: 16 }}
         styles={{
           container: { padding: "16px 0 0" },
           header: {
@@ -996,7 +1335,12 @@ const defaultBilling = addresses.find((a) => a.isDefaultBilling);
             marginBottom: 0,
             borderBottom: "1px solid #f1f5f9",
           },
-          body: { padding: "0 16px", backgroundColor: "#ffffff" },
+          body: {
+            padding: "0 16px",
+            backgroundColor: "#ffffff",
+            maxHeight: "calc(100vh - 180px)",
+            overflowY: "auto",
+          },
           footer: {
             padding: "12px 16px 16px",
             borderTop: "1px solid #f1f5f9",
@@ -1018,7 +1362,7 @@ const defaultBilling = addresses.find((a) => a.isDefaultBilling);
           </div>
         }
       >
-        <div className="max-h-[70vh] overflow-y-auto">
+        <div className="max-h-[calc(100vh-180px)] overflow-y-auto">
           <AddressTabs
             shippingForm={shippingForm}
             billingForm={billingForm}
@@ -1030,6 +1374,91 @@ const defaultBilling = addresses.find((a) => a.isDefaultBilling);
             billingDefaultDisabled={lockBillingAddressDefault}
           />
         </div>
+      </Modal>
+      {/* Create Opportunity Modal */}
+      <Modal
+        title={
+          <span className="text-sm font-semibold">Create New Opportunity</span>
+        }
+        rootClassName="customer-profile-modal"
+        open={oppCreateOpen}
+        onCancel={() => {
+          setOppCreateOpen(false);
+          oppCreateForm.resetFields();
+        }}
+        width="min(500px, 95vw)"
+        style={{ top: 16 }}
+        styles={compactOpportunityModalStyles}
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button
+              onClick={() => {
+                setOppCreateOpen(false);
+                oppCreateForm.resetFields();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="primary"
+              loading={isCreatingOpp}
+              onClick={() => oppCreateForm.submit()}
+            >
+              Create Opportunity
+            </Button>
+          </div>
+        }
+      >
+        <Form
+          form={oppCreateForm}
+          layout="vertical"
+          onFinish={handleOppCreate}
+          className={compactOpportunityFormClass}
+        >
+          {opportunityFormFields}
+        </Form>
+      </Modal>
+
+      {/* Edit Opportunity Modal */}
+      <Modal
+        title={<span className="text-sm font-semibold">Edit Opportunity</span>}
+        rootClassName="customer-profile-modal"
+        open={!!editingOpp}
+        onCancel={() => {
+          setEditingOpp(null);
+          oppEditForm.resetFields();
+        }}
+        width="min(500px, 95vw)"
+        style={{ top: 16 }}
+        styles={compactOpportunityModalStyles}
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button
+              onClick={() => {
+                setEditingOpp(null);
+                oppEditForm.resetFields();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="primary"
+              loading={isUpdatingOpp}
+              onClick={() => oppEditForm.submit()}
+            >
+              Save Changes
+            </Button>
+          </div>
+        }
+      >
+        <Form
+          form={oppEditForm}
+          layout="vertical"
+          onFinish={handleOppUpdate}
+          className={compactOpportunityFormClass}
+        >
+          {opportunityFormFields}
+        </Form>
       </Modal>
     </div>
   );

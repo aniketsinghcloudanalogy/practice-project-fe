@@ -14,6 +14,7 @@ export type AppButtonVariant =
   | 'soft'
   | 'ghost'
   | 'dashed'
+  | 'eye-button'
 
 export interface AppButtonProps extends Omit<ButtonProps, 'variant'> {
   variant?: AppButtonVariant

@@ -136,6 +136,19 @@ const variantStyles: Record<AppButtonVariant, CSSProperties> = {
     color: '#7c3aed',
     background: 'transparent',
   },
+    "eye-button": {
+    ...baseStyles,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 40,
+    height: 28,
+    minWidth: 40,
+    padding: 0,
+    border: 'none',
+    color: '#2563eb',
+    boxShadow: 'none',
+  },
 }
 
 export function getVariantStyles(variant: AppButtonVariant): CSSProperties {

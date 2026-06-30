@@ -29,3 +29,14 @@ body {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+.customer-profile-modal .ant-modal-body,
+.customer-profile-modal .ant-modal-body * {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.customer-profile-modal .ant-modal-body::-webkit-scrollbar,
+.customer-profile-modal .ant-modal-body *::-webkit-scrollbar {
+  display: none;
+}
