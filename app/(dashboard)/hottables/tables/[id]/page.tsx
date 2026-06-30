@@ -54,6 +54,7 @@ const isEmptyCellValue = (value: unknown) =>
 
 const MANUAL_COLUMN_LABELS = Array.from({ length: 26 }, (_, index) => String.fromCharCode(65 + index))
 const MANUAL_DEFAULT_ROWS = 15
+const MANUAL_MIN_HEADERS = 5
 
 const createManualTable = (uploadId: string): AiPdfTable => {
     const tableId = `manual-${uploadId}`
@@ -121,7 +122,7 @@ function mergeDuplicateColumnsInTable(
         const mergedRowData: Record<string, unknown> = {}
 
         mergedColumns.forEach((column) => {
-            mergedRowData[column.key] = 'NULL'
+            mergedRowData[column.key] = ''
         })
 
         Object.entries(row.rowData).forEach(([sourceKey, value]) => {
@@ -184,7 +185,7 @@ function mergeTables(tablesToMerge: AiPdfTable[]): AiPdfTable {
         table.rows.forEach((row) => {
             const normalizedRowData: Record<string, unknown> = {}
             mergedColumns.forEach((mergedCol) => {
-                normalizedRowData[mergedCol.key] = 'NULL'
+                normalizedRowData[mergedCol.key] = ''
             })
 
             Object.entries(row.rowData).forEach(([sourceKey, value]) => {
@@ -202,7 +203,7 @@ function mergeTables(tablesToMerge: AiPdfTable[]): AiPdfTable {
 
     return {
         id: `merged-${Date.now()}`,
-        title: mergedTitle || 'Table 1',
+        title: '',
         columns: mergedColumns,
         lineItemColumnMapping: null,
         rows: mergedRows,
@@ -256,11 +257,15 @@ function PdfTableGrid({
     const [bulkEditOpen, setBulkEditOpen] = useState(false)
     const [singleColumnEditOpen, setSingleColumnEditOpen] = useState(false)
     const [updateColumnsOpen, setUpdateColumnsOpen] = useState(false)
+    const [renameColumnOpen, setRenameColumnOpen] = useState(false)
+    const [isSavingColumnMappings, setIsSavingColumnMappings] = useState(false)
     const [selectedRows, setSelectedRows] = useState<number[]>([])
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
     const [rules, setRules] = useState([createEmptyRule()])
     const [columnToEdit, setColumnToEdit] = useState('')
     const [targetFieldToEdit, setTargetFieldToEdit] = useState('')
+    const [columnKeyToRename, setColumnKeyToRename] = useState('')
+    const [columnTitleToRename, setColumnTitleToRename] = useState('')
     const [columnMappings, setColumnMappings] = useState<Array<{ sourceColumnKey: string; targetField: string }>>([])
     const lastOpenedUpdateColumnsRequestRef = useRef(0)
 
@@ -347,6 +352,42 @@ function PdfTableGrid({
         Message.success(`Removed ${amount} column${amount > 1 ? 's' : ''}`)
     }
 
+    const openRenameColumnModal = (columnIndex: number) => {
+        if (!showSyncColumnHeaders) return
+
+        const targetColumn = table.columns[columnIndex]
+        if (!targetColumn) {
+            Message.error('Select a valid column to rename')
+            return
+        }
+
+        setColumnKeyToRename(targetColumn.key)
+        setColumnTitleToRename(targetColumn.title)
+        setRenameColumnOpen(true)
+    }
+
+    const closeRenameColumnModal = () => {
+        setRenameColumnOpen(false)
+        setColumnKeyToRename('')
+        setColumnTitleToRename('')
+    }
+
+    const applyRenameColumn = () => {
+        const nextTitle = columnTitleToRename.trim()
+        if (!columnKeyToRename || !nextTitle) {
+            Message.error('Enter a column name')
+            return
+        }
+
+        const updatedColumns = table.columns.map((column) =>
+            column.key === columnKeyToRename ? { ...column, title: nextTitle } : column
+        )
+
+        onUpdateColumnMappings(table.id, updatedColumns, lineItemMapping)
+        closeRenameColumnModal()
+        Message.success('Column renamed')
+    }
+
     const manualContextMenu = useMemo(() => {
         if (!showSyncColumnHeaders) return true
 
@@ -378,6 +419,14 @@ function PdfTableGrid({
                         removeColumnsAt(startCol, (endCol - startCol) + 1)
                     },
                     disabled: () => table.columns.length <= 1,
+                },
+                rename_manual_column: {
+                    name: 'Rename column',
+                    callback: (_key: string, selection: Array<{ start: { col: number } }>) => {
+                        const selectedCol = Math.max(0, selection?.[0]?.start?.col ?? 0)
+                        openRenameColumnModal(selectedCol)
+                    },
+                    disabled: () => table.columns.length === 0,
                 },
                 hsep2: { name: '---------' },
                 undo: {},
@@ -566,8 +615,14 @@ function PdfTableGrid({
     const saveColumnMappings = async () => {
         const { nextMapping, updatedColumns } = buildColumnMappingUpdate()
 
-        await onSaveColumnMappings(table.id, updatedColumns, nextMapping)
-        setUpdateColumnsOpen(false)
+        setIsSavingColumnMappings(true)
+
+        try {
+            await onSaveColumnMappings(table.id, updatedColumns, nextMapping)
+            setUpdateColumnsOpen(false)
+        } finally {
+            setIsSavingColumnMappings(false)
+        }
     }
 
     const applySingleColumnUpdate = () => {
@@ -582,20 +637,12 @@ function PdfTableGrid({
         Message.success('Column updated')
     }
 
-    const canDeleteTable = !isMergedTable && !showSyncColumnHeaders
+    const canDeleteTable = !isMergedTable && !showSyncColumnHeaders && Object.keys(lineItemMapping).length === 0
 
     return (
         <div className={index > 0 ? 'border-t-2 border-slate-200' : undefined}>
-            <div className="flex flex-col items-start justify-between gap-1 border-b border-slate-100 bg-slate-50 px-4 py- sm:px-5 lg:flex-row lg:items-center">
-                <div className="flex items-center gap-1.5">
-                    {!isMergedTable && (
-                        <Title level={5} className="mb-0 text-sm font-semibold text-[#1d1f2b]">
-                            {table.title || `Table ${index + 1}`}
-                        </Title>
-                    )}
-                </div>
-
-                <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:flex-nowrap">
+            <div className="flex flex-col items-center justify-end gap-1 border-b border-slate-100 bg-slate-50 px-4 py- sm:px-5 lg:flex-row lg:items-center">
+                <div className="flex flex-wrap items-center justify-end gap-2 lg:flex-nowrap">
                     {showSyncColumnHeaders && (
                         <Button size="small" onClick={() => onSyncColumnHeaders(table.id)}>
                             Sync Column Headers
@@ -833,12 +880,29 @@ function PdfTableGrid({
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
-                    <Button onClick={applyColumnMappings}>
+                    <Button onClick={applyColumnMappings} disabled={isSavingColumnMappings}>
                         Update and Continue
                     </Button>
-                    <Button type="primary" onClick={() => { void saveColumnMappings() }}>
+                    <Button type="primary" loading={isSavingColumnMappings} disabled={isSavingColumnMappings} onClick={() => { void saveColumnMappings() }}>
                         Update and Save
                     </Button>
+                </div>
+            </Modal>
+
+            <Modal open={renameColumnOpen} footer={null} onCancel={closeRenameColumnModal} width="min(520px, calc(100vw - 24px))">
+                <Title level={5} className="mb-4">Rename Column</Title>
+                <Text className="mb-3 block text-neutral-500">Set a new header name for this manual column.</Text>
+
+                <Input
+                    placeholder="Enter column header"
+                    value={columnTitleToRename}
+                    onChange={(e) => setColumnTitleToRename(e.target.value)}
+                    onPressEnter={applyRenameColumn}
+                />
+
+                <div className="mt-6 flex justify-end gap-3">
+                    <Button onClick={closeRenameColumnModal}>Cancel</Button>
+                    <Button type="primary" onClick={applyRenameColumn}>Rename</Button>
                 </div>
             </Modal>
 
@@ -883,6 +947,7 @@ export default function UploadDetailPage() {
     const [syncColumnsRequestToken, setSyncColumnsRequestToken] = useState(0)
     const [syncColumnsTargetTableId, setSyncColumnsTargetTableId] = useState<string | null>(null)
     const [lastSyncedPayload, setLastSyncedPayload] = useState('')
+    const [hasEditMappingCompleted, setHasEditMappingCompleted] = useState(false)
     const lastUploadIdRef = useRef<string | null>(null)
 
     useEffect(() => {
@@ -903,6 +968,10 @@ export default function UploadDetailPage() {
         }))
         setTables(normalizedTables)
         setLastSyncedPayload(JSON.stringify(buildSyncPayload(normalizedTables)))
+        // Reset mapping completion flag when data loads in edit existing mode
+        if (isFromQuote) {
+            setHasEditMappingCompleted(false)
+        }
     }, [isManualMode, upload, uploadId])
 
     const handleRowsChange = (tableId: string, rows: AiPdfTableRow[]) => {
@@ -986,6 +1055,11 @@ export default function UploadDetailPage() {
             await syncUpload({ uploadId, payload }).unwrap()
             Message.success(`Synced successfully. `)
 
+            // Mark edit mapping as completed after successful sync
+            if (isFromQuote && !isManualMode) {
+                setHasEditMappingCompleted(true)
+            }
+
             if (isManualMode) {
                 setLastSyncedPayload(JSON.stringify(payload))
                 if (isFromQuote && sourceQuoteId) {
@@ -1034,8 +1108,8 @@ export default function UploadDetailPage() {
                 dataType: column.dataType || 'text',
             }))
 
-        if (selectedColumns.length === 0) {
-            Message.error('Enter at least one header value in the first row before syncing headers')
+        if (selectedColumns.length < MANUAL_MIN_HEADERS) {
+            Message.error(`At least ${MANUAL_MIN_HEADERS} column headers are required in manual mode`)
             return
         }
 
@@ -1074,9 +1148,16 @@ export default function UploadDetailPage() {
             return false
         }
 
-        const hasAtLeastOneHeader = currentTables.some((table) =>
-            table.columns.some((column) => column.title.trim().length > 0)
-        )
+        const totalHeaders = currentTables.reduce((count, table) => (
+            count + table.columns.filter((column) => column.title.trim().length > 0).length
+        ), 0)
+
+        if (totalHeaders < MANUAL_MIN_HEADERS) {
+            Message.error(`At least ${MANUAL_MIN_HEADERS} column headers are required in manual mode`)
+            return false
+        }
+
+        const hasAtLeastOneHeader = totalHeaders > 0
 
         if (!hasAtLeastOneHeader) {
             Message.error('Please sync at least one non-empty column header before syncing changes')
@@ -1131,6 +1212,18 @@ export default function UploadDetailPage() {
     }
 
     const handleSyncButtonClick = () => {
+        if (isSyncing) {
+            return
+        }
+
+        if (isManualMode && !hasUnsyncedChanges) {
+            return
+        }
+
+        if (!isManualMode && !isFromQuote && !hasUnsyncedChanges) {
+            return
+        }
+
         if (isManualMode) {
             if (!validateManualSyncState(tables)) {
                 return
@@ -1148,11 +1241,14 @@ export default function UploadDetailPage() {
         }
 
         const mergedTable = tables.find((table) => table.id.startsWith('merged-'))
-        const singleTable = tables.length === 1 ? tables[0] : null
-        const syncColumnsTargetId = mergedTable?.id || singleTable?.id || null
+        let syncColumnsTargetId = mergedTable?.id || null
+
+        if (!syncColumnsTargetId && tables.length > 0) {
+                  syncColumnsTargetId = tables[0].id
+        }
 
         if (!syncColumnsTargetId) {
-            void handleSyncChanges()
+            Message.error('No table found for column mapping')
             return
         }
 
@@ -1177,7 +1273,10 @@ export default function UploadDetailPage() {
     }
 
     const isMergedView = tables.length === 1 && tables[0]?.id.startsWith('merged-')
-    const isSyncDisabled = !hasUnsyncedChanges
+    
+    // In edit existing mode from quote, button should be enabled until first mapping is completed
+    // In manual mode, button enabled if there are unsaved changes
+    const isSyncDisabled = isSyncing || (isManualMode ? !hasUnsyncedChanges : isFromQuote && hasEditMappingCompleted)
     const fileTagCount = isManualMode ? tables.length : upload?.tables.length ?? 0
 
     if (!isManualMode && isLoading) {

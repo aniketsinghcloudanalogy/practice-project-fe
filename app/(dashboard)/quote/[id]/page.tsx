@@ -62,6 +62,36 @@ const getRenderableTables = (file: QuoteFile) =>
         }))
         .filter((table) => table.columns.length > 0 || table.rows.length > 0)
 
+type RenderableTable = ReturnType<typeof getRenderableTables>[number]
+
+const getMergedFileTable = (renderableTables: RenderableTable[]) => {
+    // Collect all unique column names, preserving first-appearance order
+    const seenCols = new Set<string>()
+    const allColumns: string[] = []
+    for (const table of renderableTables) {
+        for (const col of table.columns) {
+            if (!seenCols.has(col.toLowerCase())) {
+                seenCols.add(col.toLowerCase())
+                allColumns.push(col)
+            }
+        }
+    }
+
+    // Merge rows from every table; fill missing columns with empty string
+    const allRows: Array<Record<string, unknown> & { id: string }> = []
+    for (const table of renderableTables) {
+        for (const row of table.rows) {
+            const mergedRow: Record<string, unknown> & { id: string } = { id: row.id as string }
+            for (const col of allColumns) {
+                mergedRow[col] = col in (row as Record<string, unknown>) ? (row as Record<string, unknown>)[col] : ''
+            }
+            allRows.push(mergedRow)
+        }
+    }
+
+    return { columns: allColumns, rows: allRows }
+}
+
 
 const QuoteDetailsPage = () => {
     const router = useRouter()
@@ -237,12 +267,7 @@ const QuoteDetailsPage = () => {
 
                         return (
                             <section key={table.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3">
-                                    <div>
-                                        <h3 className="text-sm font-semibold text-slate-900">{table.title}</h3>
-                                    </div>
-                                    <span className="text-xs font-medium text-slate-500">{table.rows.length} rows</span>
-                                </div>
+                                
 
                                 <div className="p-3 sm:p-4">
                                     {table.rows.length ? (
@@ -416,7 +441,6 @@ const QuoteDetailsPage = () => {
                         return (
                             <section key={table.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3">
-                                    <h3 className="text-sm font-semibold text-slate-900">{table.title}</h3>
                                     <span className="text-xs font-medium text-slate-500">{table.rows.length} rows</span>
                                 </div>
 
