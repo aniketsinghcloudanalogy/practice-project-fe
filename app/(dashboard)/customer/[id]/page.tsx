@@ -12,6 +12,7 @@ import {
   EditOutlined,
   DeleteOutlined,
   CheckOutlined,
+  EyeOutlined,
 } from "@/components/common/antd/icons";
 import AddressTabs, {
   buildAddressPayload,
@@ -56,6 +57,8 @@ const CustomerProfile = () => {
   const [contactForm] = Form.useForm();
 
   const [addrOpen, setAddrOpen] = useState(false);
+  const [contactInfoOpen, setContactInfoOpen] = useState(false);
+  const [addressInfoOpen, setAddressInfoOpen] = useState(false);
   const [editingAddr, setEditingAddr] = useState<Address | null>(null);
   const [addrTab, setAddrTab] = useState<AddressTab>("SHIPPING");
   const [sameAsShipping, setSameAsShipping] = useState(false);
@@ -530,243 +533,375 @@ const CustomerProfile = () => {
 const defaultBilling = addresses.find((a) => a.isDefaultBilling);
 
   return (
-    <div className="px-4 pb-6 pt-0 -ml-[92px] md:ml-0">
-      {/* Profile Info Cards — 2x2 grid: row1=(Avatar, ContactInfo), row2=(Overview, AddressInfo) */}
-      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-4 mb-6 mx-1">
-        {/* Row 1, Col 1 — Avatar */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="h-20 bg-linear-to-r from-indigo-500 to-violet-500" />
-          <div className="flex flex-col items-center -mt-8 pb-4 px-4">
-            <div className="w-16 h-16 rounded-full bg-linear-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-xl font-bold border-4 border-white">
-              {initials}
-            </div>
-            <h2 className="mt-2 text-base font-bold text-gray-900">
-              {customer.name || "—"}
-            </h2>
-          </div>
-        </div>
+    <div className="ml-0 flex flex-col lg:flex-row pt-2 lg:h-[calc(100vh-var(--navbar-height)-0.5rem)] lg:overflow-hidden">
+      {/* Main two-column layout: left = fixed profile panel, right = scrollable tables */}
+      <div className="flex flex-col lg:flex-row w-full lg:h-full">
 
-        {/* Row 1, Col 2 — Contact Information */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-          <p className="text-sm font-semibold text-gray-800">
-            Contact Information
-          </p>
-          <p className="text-xs text-gray-400 mb-4">
-            Personal and contact details
-          </p>
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 shrink-0">
-                👤
+        {/* ── LEFT: Fixed Profile Panel ── */}
+        <div
+          className="w-full lg:w-[320px] xl:w-90 shrink-0 flex flex-col gap-4 px-4 pt-0 pb-4
+          lg:fixed lg:left-[var(--sidebar-width,92px)] lg:top-[calc(var(--navbar-height)+0.5rem)] lg:self-start lg:max-h-[calc(100vh-var(--navbar-height)-0.5rem)] lg:overflow-hidden"
+        >
+
+          {/* Profile Overview Card */}
+          <div
+            className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+          >
+            <div className="h-14 bg-linear-to-r from-indigo-500 to-violet-500 rounded-t-xl" />
+            <div className="flex flex-col items-center -mt-7 pb-3 px-4">
+              <div className="w-16 h-16 rounded-full bg-linear-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-xl font-bold border-4 border-white">
+                {initials}
               </div>
-              <div>
-                <p className="text-xs text-gray-400">FULL NAME</p>
-                <p className="text-sm font-medium text-gray-800">
-                  {customer.name || "—"}
+              <h2 className="mt-2 text-base font-bold text-gray-900">
+                {customer.name || "—"}
+              </h2>
+            </div>
+
+            <div className="px-4 pb-4 pt-2">
+              <p className="text-xs font-semibold text-gray-400 tracking-widest mb-3">
+                OVERVIEW
+              </p>
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="bg-blue-50 rounded-lg p-2 text-center">
+                  <p className="text-sm font-bold text-blue-600">
+                    {contacts.length}
+                  </p>
+                  <p className="text-xs text-blue-400">Contacts</p>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-2 text-center">
+                  <p className="text-sm font-bold text-purple-600">
+                    {addresses.length}
+                  </p>
+                  <p className="text-xs text-purple-400">Addresses</p>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-lg px-3 py-2 mb-2">
+                <p className="text-xs text-gray-400">INDUSTRY</p>
+                <p className="text-sm font-medium text-gray-700">
+                  {customer.industry || "—"}
                 </p>
               </div>
             </div>
-            {primaryBilling && (
+          </div>
+
+          {/* Contact Information Card */}
+          <div className="relative mx-2 bg-white rounded-xl border border-gray-100 shadow-sm p-3">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-semibold text-gray-800">
+                Contact Information
+              </p>
+              <Button
+                variant="icon-button-1"
+                icon={<EyeOutlined />}
+                aria-label="View contact information"
+                onClick={() => setContactInfoOpen(true)}
+              />
+            </div>
+            <p className="text-xs text-gray-400">
+              Personal and contact details
+            </p>
+            <div className="hidden">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
-                  📋
+                <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 shrink-0">
+                  👤
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400">
-                    PRIMARY BILLING CONTACT
-                  </p>
+                  <p className="text-xs text-gray-400">FULL NAME</p>
                   <p className="text-sm font-medium text-gray-800">
-                    {primaryBilling.firstName} {primaryBilling.lastName ?? ""}
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    {primaryBilling.primaryContact}
+                    {customer.name || "—"}
                   </p>
                 </div>
               </div>
-            )}
-            {primaryShipping && (
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-500 shrink-0">
-                  🚚
+              {primaryBilling && (
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
+                    📋
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">
+                      PRIMARY BILLING CONTACT
+                    </p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {primaryBilling.firstName} {primaryBilling.lastName ?? ""}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {primaryBilling.primaryContact}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-400">
-                    PRIMARY SHIPPING CONTACT
-                  </p>
-                  <p className="text-sm font-medium text-gray-800">
-                    {primaryShipping.firstName} {primaryShipping.lastName ?? ""}
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    {primaryShipping.primaryContact}
-                  </p>
+              )}
+              {primaryShipping && (
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-500 shrink-0">
+                    🚚
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">
+                      PRIMARY SHIPPING CONTACT
+                    </p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {primaryShipping.firstName} {primaryShipping.lastName ?? ""}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {primaryShipping.primaryContact}
+                    </p>
+                  </div>
                 </div>
+              )}
+            </div>
+          </div>
+
+          {/* Address Information Card */}
+          <div className="relative mx-2 bg-white rounded-xl border border-gray-100 shadow-sm p-3">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-semibold text-gray-800">
+                Address Information
+              </p>
+              <Button
+                variant="icon-button-1"
+                icon={<EyeOutlined />}
+                aria-label="View address information"
+                onClick={() => setAddressInfoOpen(true)}
+              />
+            </div>
+            <p className="text-xs text-gray-400">
+              Default billing and shipping addresses
+            </p>
+            <div className="hidden">
+              {defaultShipping ? (
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-500 shrink-0">
+                    📦
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">
+                      DEFAULT SHIPPING ADDRESS
+                    </p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {defaultShipping.addressLine}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {[
+                        defaultShipping.city,
+                        defaultShipping.state,
+                        defaultShipping.zipCode,
+                        defaultShipping.country,
+                      ]
+                        .filter(Boolean)
+                        .join(", ")}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400">
+                  No default shipping address set
+                </p>
+              )}
+              {defaultBilling ? (
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
+                    💳
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">
+                      DEFAULT BILLING ADDRESS
+                    </p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {defaultBilling.addressLine}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {[
+                        defaultBilling.city,
+                        defaultBilling.state,
+                        defaultBilling.zipCode,
+                        defaultBilling.country,
+                      ]
+                        .filter(Boolean)
+                        .join(", ")}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400">
+                  No default billing address set
+                </p>
+              )}
+            </div>
+          </div>
+
+        </div>
+        {/* ── END LEFT Panel ── */}
+
+        {/* ── RIGHT: Scrollable Tables ── */}
+        <div className="flex-1 min-w-0 flex flex-col gap-6 px-4 pt-2 pb-6 lg:ml-[352px] xl:ml-[392px]
+          lg:h-full lg:overflow-y-auto
+          [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full">
+
+          {/* Addresses Table Section */}
+          <div>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <span className="text-base font-semibold text-gray-800">Addresses</span>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={addrFilter}
+                  onChange={(v) => setAddrFilter(v as "BILLING" | "SHIPPING")}
+                  options={[
+                    { label: "Billing", value: "BILLING" },
+                    { label: "Shipping", value: "SHIPPING" },
+                  ]}
+                  style={{ width: 110 }}
+                />
+                <Button
+                  type="primary"
+                  onClick={() => {
+                    setEditingAddr(null);
+                    setAddrOpen(true);
+                  }}
+                >
+                  + Add Address
+                </Button>
               </div>
+            </div>
+            <Table
+                dataSource={filteredAddresses}
+                columns={addrColumns}
+                rowKey="id"
+                pagination={false}
+                locale={{ emptyText: "No addresses yet" }}
+                scroll={{ x: "max-content" }}
+              />
+          </div>
+
+          {/* Contacts Table Section */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-base font-semibold text-gray-800">Contacts</span>
+              <Button
+                type="primary"
+                onClick={() => {
+                  setEditingContact(null);
+                  setContactOpen(true);
+                }}
+              >
+                + Add Contact
+              </Button>
+            </div>
+            <Table
+                dataSource={contacts}
+                columns={contactColumns}
+                rowKey="id"
+                pagination={false}
+                locale={{ emptyText: "No contacts yet" }}
+                scroll={{ x: "max-content" }}
+              />
+          </div>
+
+        </div>
+        {/* ── END RIGHT Panel ── */}
+
+      </div>
+
+      <Modal
+        title="Contact Information"
+        open={contactInfoOpen}
+        onCancel={() => setContactInfoOpen(false)}
+        width="min(460px, 95vw)"
+        footer={null}
+      >
+        <div className="flex flex-col gap-4 pt-2">
+          <div>
+            <p className="text-xs text-gray-400">FULL NAME</p>
+            <p className="text-sm font-medium text-gray-800">
+              {customer.name || "—"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-400">PRIMARY BILLING CONTACT</p>
+            {primaryBilling ? (
+              <>
+                <p className="text-sm font-medium text-gray-800">
+                  {primaryBilling.firstName} {primaryBilling.lastName ?? ""}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {primaryBilling.primaryContact}
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-gray-400">No primary billing contact set</p>
+            )}
+          </div>
+          <div>
+            <p className="text-xs text-gray-400">PRIMARY SHIPPING CONTACT</p>
+            {primaryShipping ? (
+              <>
+                <p className="text-sm font-medium text-gray-800">
+                  {primaryShipping.firstName} {primaryShipping.lastName ?? ""}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {primaryShipping.primaryContact}
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-gray-400">No primary shipping contact set</p>
             )}
           </div>
         </div>
+      </Modal>
 
-        {/* Row 2, Col 1 — Overview */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-          <p className="text-xs font-semibold text-gray-400 tracking-widest mb-3">
-            OVERVIEW
-          </p>
-          <div className="grid grid-cols-2 gap-3 mb-3">
-            <div className="bg-blue-50 rounded-lg p-3 text-center">
-              <p className="text-lg font-bold text-blue-600">
-                {contacts.length}
-              </p>
-              <p className="text-xs text-blue-400">Contacts</p>
-            </div>
-            <div className="bg-purple-50 rounded-lg p-3 text-center">
-              <p className="text-lg font-bold text-purple-600">
-                {addresses.length}
-              </p>
-              <p className="text-xs text-purple-400">Addresses</p>
-            </div>
-          </div>
-          <div className="bg-gray-50 rounded-lg px-3 py-2 mb-2">
-            <p className="text-xs text-gray-400">INDUSTRY</p>
-            <p className="text-sm font-medium text-gray-700">
-              {customer.industry || "—"}
-            </p>
-          </div>
-          <div className="bg-gray-50 rounded-lg px-3 py-2">
-            <p className="text-xs text-gray-400">CUSTOMER ID</p>
-            <p className="text-xs font-mono text-gray-500 truncate">
-              {customer.id}
-            </p>
-          </div>
-        </div>
-
-        {/* Row 2, Col 2 — Address Information */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-          <p className="text-sm font-semibold text-gray-800">
-            Address Information
-          </p>
-          <p className="text-xs text-gray-400 mb-4">
-            Default billing and shipping addresses
-          </p>
-          <div className="flex flex-col gap-3">
+      <Modal
+        title="Address Information"
+        open={addressInfoOpen}
+        onCancel={() => setAddressInfoOpen(false)}
+        width="min(460px, 95vw)"
+        footer={null}
+      >
+        <div className="flex flex-col gap-4 pt-2">
+          <div>
+            <p className="text-xs text-gray-400">DEFAULT SHIPPING ADDRESS</p>
             {defaultShipping ? (
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-500 shrink-0">
-                  📦
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400">
-                    DEFAULT SHIPPING ADDRESS
-                  </p>
-                  <p className="text-sm font-medium text-gray-800">
-                    {defaultShipping.addressLine}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {[
-                      defaultShipping.city,
-                      defaultShipping.state,
-                      defaultShipping.zipCode,
-                      defaultShipping.country,
-                    ]
-                      .filter(Boolean)
-                      .join(", ")}
-                  </p>
-                </div>
-              </div>
+              <>
+                <p className="text-sm font-medium text-gray-800">
+                  {defaultShipping.addressLine}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {[
+                    defaultShipping.city,
+                    defaultShipping.state,
+                    defaultShipping.zipCode,
+                    defaultShipping.country,
+                  ]
+                    .filter(Boolean)
+                    .join(", ")}
+                </p>
+              </>
             ) : (
-              <p className="text-xs text-gray-400">
-                No default shipping address set
-              </p>
+              <p className="text-sm text-gray-400">No default shipping address set</p>
             )}
+          </div>
+          <div>
+            <p className="text-xs text-gray-400">DEFAULT BILLING ADDRESS</p>
             {defaultBilling ? (
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
-                  💳
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400">
-                    DEFAULT BILLING ADDRESS
-                  </p>
-                  <p className="text-sm font-medium text-gray-800">
-                    {defaultBilling.addressLine}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {[
-                      defaultBilling.city,
-                      defaultBilling.state,
-                      defaultBilling.zipCode,
-                      defaultBilling.country,
-                    ]
-                      .filter(Boolean)
-                      .join(", ")}
-                  </p>
-                </div>
-              </div>
+              <>
+                <p className="text-sm font-medium text-gray-800">
+                  {defaultBilling.addressLine}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {[
+                    defaultBilling.city,
+                    defaultBilling.state,
+                    defaultBilling.zipCode,
+                    defaultBilling.country,
+                  ]
+                    .filter(Boolean)
+                    .join(", ")}
+                </p>
+              </>
             ) : (
-              <p className="text-xs text-gray-400">
-                No default billing address set
-              </p>
+              <p className="text-sm text-gray-400">No default billing address set</p>
             )}
           </div>
         </div>
-      </div>
-
-      {/* Addresses Section */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3 mx-1">
-        <span className="text-base font-semibold text-gray-800">Addresses</span>
-        <div className="flex items-center gap-2">
-          <Select
-            value={addrFilter}
-            onChange={(v) => setAddrFilter(v as "BILLING" | "SHIPPING")}
-            options={[
-              { label: "Billing", value: "BILLING" },
-              { label: "Shipping", value: "SHIPPING" },
-            ]}
-            style={{ width: 110 }}
-          />
-          <Button
-            type="primary"
-            onClick={() => {
-              setEditingAddr(null);
-              setAddrOpen(true);
-            }}
-          >
-            + Add Address
-          </Button>
-        </div>
-      </div>
-
-      <div className="overflow-x-auto mx-1">
-        <Table
-          dataSource={filteredAddresses}
-          columns={addrColumns}
-          rowKey="id"
-          pagination={false}
-          locale={{ emptyText: "No addresses yet" }}
-        />
-      </div>
-
-      {/* Contacts Section */}
-      <div className="flex items-center justify-between mb-3 mt-6 mx-1">
-        <span className="text-base font-semibold text-gray-800">Contacts</span>
-        <Button
-          type="primary"
-          onClick={() => {
-            setEditingContact(null);
-            setContactOpen(true);
-          }}
-        >
-          + Add Contact
-        </Button>
-      </div>
-
-      <div className="overflow-x-auto mx-1">
-        <Table
-          dataSource={contacts}
-          columns={contactColumns}
-          rowKey="id"
-          pagination={false}
-          locale={{ emptyText: "No contacts yet" }}
-        />
-      </div>
+      </Modal>
 
       <Modal
         title={editingContact ? "Edit Contact" : "Add Contact"}
