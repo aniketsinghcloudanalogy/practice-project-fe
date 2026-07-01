@@ -11,7 +11,7 @@ const Page = () => {
   } = dashboard
 
   return (
-    <section className="mx-auto flex w-full max-w-full flex-1 flex-col gap-6 px-px pb-6 pt-0 sm:px-2 lg:px-3 lg:pb-8 xl:max-w-7xl">
+    <section className="mx-auto flex w-full max-w-full flex-1 flex-col gap-6 px-px pb-6 pt-0 sm:px-2 lg:px-3 lg:pb-8 xl:max-w-7xl m-7">
       <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(96,165,250,0.18),_transparent_45%),linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)] p-6 shadow-sm shadow-slate-200/60 sm:p-8">
         <div className="max-w-3xl space-y-3">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-sky-500">

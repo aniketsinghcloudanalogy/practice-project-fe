@@ -196,7 +196,7 @@ const CustomerPage = () => {
     );
 
     return (
-        <div className="px-2 pb-3 pt-0 sm:px-4 sm:pb-6">
+        <div className="px-2 pb-3 pt-0 sm:px-4 sm:pb-6 m-7">
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-6">
                 <div className="text-center sm:text-left">
                     <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Customers</h1>

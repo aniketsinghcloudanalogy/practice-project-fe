@@ -271,7 +271,7 @@ const OpportunityPage = () => {
     );
 
     return (
-        <div className="px-2 pb-3 pt-0 sm:px-4 sm:pb-6">
+        <div className="px-2 pb-3 pt-0 sm:px-4 sm:pb-6 m-7">
             {/* Header */}
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-6">
                 <div>

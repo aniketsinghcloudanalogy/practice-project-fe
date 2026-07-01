@@ -30,6 +30,7 @@ interface AddressTabsProps {
   onSameAsShippingChange: (val: boolean) => void;
   shippingDefaultDisabled?: boolean;
   billingDefaultDisabled?: boolean;
+  singleTab?: AddressTab;
 }
 
 const AddressFields = ({
@@ -81,12 +82,13 @@ const AddressTabs = ({
   onSameAsShippingChange,
   shippingDefaultDisabled,
   billingDefaultDisabled,
+  singleTab,
 }: AddressTabsProps) => {
-  const [activeTabState, setActiveTabState] = React.useState<ActiveTab>(activeTab);
+  const [activeTabState, setActiveTabState] = React.useState<ActiveTab>(singleTab ?? activeTab);
 
   React.useEffect(() => {
-    setActiveTabState(activeTab);
-  }, [activeTab]);
+    setActiveTabState(singleTab ?? activeTab);
+  }, [activeTab, singleTab]);
 
   const handleTabChange = (tab: ActiveTab) => {
     setActiveTabState(tab);
@@ -105,22 +107,24 @@ const AddressTabs = ({
   return (
     <div>
       {/* Tab bar */}
-      <div className="flex gap-1 border-b border-gray-200 mb-4">
-        {(['SHIPPING', 'BILLING', ...(contactForm ? ['CONTACT'] : [])] as ActiveTab[]).map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => handleTabChange(tab)}
-            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
-              activeTabState === tab
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            {tab === 'SHIPPING' ? 'Shipping Address' : tab === 'BILLING' ? 'Billing Address' : 'Contact'}
-          </button>
-        ))}
-      </div>
+      {!singleTab && (
+        <div className="flex gap-1 border-b border-gray-200 mb-4">
+          {(['SHIPPING', 'BILLING', ...(contactForm ? ['CONTACT'] : [])] as ActiveTab[]).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => handleTabChange(tab)}
+              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                activeTabState === tab
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {tab === 'SHIPPING' ? 'Shipping Address' : tab === 'BILLING' ? 'Billing Address' : 'Contact'}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Shipping tab */}
       <div className={activeTabState === 'SHIPPING' ? 'block' : 'hidden'}>

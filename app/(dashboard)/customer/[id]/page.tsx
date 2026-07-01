@@ -308,6 +308,7 @@ const CustomerProfile = () => {
   const [addressInfoOpen, setAddressInfoOpen] = useState(false);
   const [editingAddr, setEditingAddr] = useState<Address | null>(null);
   const [addrTab, setAddrTab] = useState<AddressTab>("SHIPPING");
+  const [addrSingleTab, setAddrSingleTab] = useState<AddressTab | undefined>(undefined);
   const [sameAsShipping, setSameAsShipping] = useState(false);
   const [shippingForm] = Form.useForm<AddressFormValues>();
   const [billingForm] = Form.useForm<AddressFormValues>();
@@ -581,6 +582,7 @@ const CustomerProfile = () => {
       billingForm.resetFields();
       setSameAsShipping(false);
       setAddrTab("SHIPPING");
+      setAddrSingleTab(undefined);
       setEditingAddr(null);
       return;
     }
@@ -831,10 +833,10 @@ const CustomerProfile = () => {
         {/* ── LEFT: Fixed Profile Panel ── */}
         <div
           className="w-full lg:w-[320px] xl:w-90 shrink-0 flex flex-col gap-4 px-4 pt-0 pb-4
-          lg:fixed lg:left-[var(--sidebar-width,92px)] lg:top-[calc(var(--navbar-height)+0.5rem)] lg:self-start lg:max-h-[calc(100vh-var(--navbar-height)-0.5rem)] lg:overflow-hidden"
+          lg:fixed lg:left-(--sidebar-width,92px) lg:top-[calc(var(--navbar-height)+0.5rem)] lg:self-start lg:max-h-[calc(100vh-var(--navbar-height)-0.5rem)] lg:overflow-hidden"
         >
           {/* Profile Overview Card */}
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mt-3">
             <div className="h-14 bg-linear-to-r from-indigo-500 to-violet-500 rounded-t-xl" />
             <div className="flex flex-col items-center -mt-7 pb-3 px-4">
               <div className="w-16 h-16 rounded-full bg-linear-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-xl font-bold border-4 border-white">
@@ -873,7 +875,7 @@ const CustomerProfile = () => {
           </div>
 
           {/* Contact Information Card */}
-          <div className="relative mx-2 bg-white rounded-xl border border-gray-100 shadow-sm p-3">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3">
             <div className="flex items-center gap-2">
               <p className="text-sm font-semibold text-gray-800">
                 Contact Information
@@ -941,7 +943,7 @@ const CustomerProfile = () => {
           </div>
 
           {/* Address Information Card */}
-          <div className="relative mx-2 bg-white rounded-xl border border-gray-100 shadow-sm p-3">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3">
             <div className="flex items-center gap-2">
               <p className="text-sm font-semibold text-gray-800">
                 Address Information
@@ -1022,7 +1024,7 @@ const CustomerProfile = () => {
 
         {/* ── RIGHT: Scrollable Tables ── */}
         <div
-          className="flex-1 min-w-0 flex flex-col gap-6 px-4 pt-2 pb-6 lg:ml-[352px] xl:ml-[392px]
+          className="m-3 flex-1 min-w-0 flex flex-col gap-6 px-4 pt-2 pb-6 lg:ml-80 xl:ml-87.5
           lg:h-full lg:overflow-y-auto
           [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full"
         >
@@ -1129,45 +1131,71 @@ const CustomerProfile = () => {
         width="min(460px, 95vw)"
         footer={null}
       >
-        <div className="flex flex-col gap-4 pt-2">
-          <div>
-            <p className="text-xs text-gray-400">FULL NAME</p>
-            <p className="text-sm font-medium text-gray-800">
-              {customer.name || "—"}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-400">PRIMARY BILLING CONTACT</p>
-            {primaryBilling ? (
-              <>
-                <p className="text-sm font-medium text-gray-800">
-                  {primaryBilling.firstName} {primaryBilling.lastName ?? ""}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {primaryBilling.primaryContact}
-                </p>
-              </>
-            ) : (
-              <p className="text-sm text-gray-400">
-                No primary billing contact set
+        <div className="flex flex-col gap-3 pt-2">
+          <div className="bg-gray-50 rounded-lg px-3 py-2 flex items-start justify-between">
+            <div>
+              <p className="text-xs text-gray-400 mb-0.5">FULL NAME</p>
+              <p className="text-sm font-medium text-gray-800">
+                {customer.name || "—"}
               </p>
+            </div>
+          </div>
+          <div className="bg-blue-50 rounded-lg px-3 py-2 flex items-start justify-between">
+            <div>
+              <p className="text-xs text-blue-400 mb-0.5">PRIMARY BILLING CONTACT</p>
+              {primaryBilling ? (
+                <>
+                  <p className="text-sm font-medium text-gray-800">
+                    {primaryBilling.firstName} {primaryBilling.lastName ?? ""}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {primaryBilling.primaryContact}
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-gray-400">No primary billing contact set</p>
+              )}
+            </div>
+            {primaryBilling && (
+              <span
+                className="w-6 h-6 flex items-center justify-center rounded border border-sky-200 bg-sky-100 cursor-pointer shrink-0"
+                onClick={() => {
+                  setContactInfoOpen(false);
+                  setEditingContact(primaryBilling);
+                  setContactOpen(true);
+                }}
+              >
+                <EditOutlined className="text-blue-500 text-xs" />
+              </span>
             )}
           </div>
-          <div>
-            <p className="text-xs text-gray-400">PRIMARY SHIPPING CONTACT</p>
-            {primaryShipping ? (
-              <>
-                <p className="text-sm font-medium text-gray-800">
-                  {primaryShipping.firstName} {primaryShipping.lastName ?? ""}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {primaryShipping.primaryContact}
-                </p>
-              </>
-            ) : (
-              <p className="text-sm text-gray-400">
-                No primary shipping contact set
-              </p>
+          <div className="bg-green-50 rounded-lg px-3 py-2 flex items-start justify-between">
+            <div>
+              <p className="text-xs text-green-500 mb-0.5">PRIMARY SHIPPING CONTACT</p>
+              {primaryShipping ? (
+                <>
+                  <p className="text-sm font-medium text-gray-800">
+                    {primaryShipping.firstName} {primaryShipping.lastName ?? ""}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {primaryShipping.primaryContact}
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-gray-400">No primary shipping contact set</p>
+              )}
+            </div>
+            {primaryShipping && (
+              <span
+                className="w-6 h-6 flex items-center justify-center rounded border border-sky-200 bg-sky-100 cursor-pointer shrink-0"
+                onClick={() => {
+                  setContactInfoOpen(false);
+                  setEditingContact(primaryShipping);
+                  setContactOpen(true);
+                }}
+              >
+                <EditOutlined className="text-blue-500 text-xs" />
+              </span>
             )}
           </div>
         </div>
@@ -1181,53 +1209,79 @@ const CustomerProfile = () => {
         width="min(460px, 95vw)"
         footer={null}
       >
-        <div className="flex flex-col gap-4 pt-2">
-          <div>
-            <p className="text-xs text-gray-400">DEFAULT SHIPPING ADDRESS</p>
-            {defaultShipping ? (
-              <>
-                <p className="text-sm font-medium text-gray-800">
-                  {defaultShipping.addressLine}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {[
-                    defaultShipping.city,
-                    defaultShipping.state,
-                    defaultShipping.zipCode,
-                    defaultShipping.country,
-                  ]
-                    .filter(Boolean)
-                    .join(", ")}
-                </p>
-              </>
-            ) : (
-              <p className="text-sm text-gray-400">
-                No default shipping address set
-              </p>
+        <div className="flex flex-col gap-3 pt-2">
+          <div className="bg-green-50 rounded-lg px-3 py-2 flex items-start justify-between">
+            <div>
+              <p className="text-xs text-green-500 mb-0.5">DEFAULT SHIPPING ADDRESS</p>
+              {defaultShipping ? (
+                <>
+                  <p className="text-sm font-medium text-gray-800">
+                    {defaultShipping.addressLine}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {[
+                      defaultShipping.city,
+                      defaultShipping.state,
+                      defaultShipping.zipCode,
+                      defaultShipping.country,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-gray-400">No default shipping address set</p>
+              )}
+            </div>
+            {defaultShipping && (
+              <span
+                className="w-6 h-6 flex items-center justify-center rounded border border-sky-200 bg-sky-100 cursor-pointer shrink-0"
+                onClick={() => {
+                  setAddressInfoOpen(false);
+                  setEditingAddr(defaultShipping);
+                  setAddrSingleTab("SHIPPING");
+                  setAddrOpen(true);
+                }}
+              >
+                <EditOutlined className="text-blue-500 text-xs" />
+              </span>
             )}
           </div>
-          <div>
-            <p className="text-xs text-gray-400">DEFAULT BILLING ADDRESS</p>
-            {defaultBilling ? (
-              <>
-                <p className="text-sm font-medium text-gray-800">
-                  {defaultBilling.addressLine}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {[
-                    defaultBilling.city,
-                    defaultBilling.state,
-                    defaultBilling.zipCode,
-                    defaultBilling.country,
-                  ]
-                    .filter(Boolean)
-                    .join(", ")}
-                </p>
-              </>
-            ) : (
-              <p className="text-sm text-gray-400">
-                No default billing address set
-              </p>
+          <div className="bg-blue-50 rounded-lg px-3 py-2 flex items-start justify-between">
+            <div>
+              <p className="text-xs text-blue-400 mb-0.5">DEFAULT BILLING ADDRESS</p>
+              {defaultBilling ? (
+                <>
+                  <p className="text-sm font-medium text-gray-800">
+                    {defaultBilling.addressLine}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {[
+                      defaultBilling.city,
+                      defaultBilling.state,
+                      defaultBilling.zipCode,
+                      defaultBilling.country,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-gray-400">No default billing address set</p>
+              )}
+            </div>
+            {defaultBilling && (
+              <span
+                className="w-6 h-6 flex items-center justify-center rounded border border-sky-200 bg-sky-100 cursor-pointer shrink-0"
+                onClick={() => {
+                  setAddressInfoOpen(false);
+                  setEditingAddr(defaultBilling);
+                  setAddrSingleTab("BILLING");
+                  setAddrOpen(true);
+                }}
+              >
+                <EditOutlined className="text-blue-500 text-xs" />
+              </span>
             )}
           </div>
         </div>
@@ -1372,6 +1426,7 @@ const CustomerProfile = () => {
             onSameAsShippingChange={setSameAsShipping}
             shippingDefaultDisabled={lockShippingAddressDefault}
             billingDefaultDisabled={lockBillingAddressDefault}
+            singleTab={addrSingleTab}
           />
         </div>
       </Modal>
