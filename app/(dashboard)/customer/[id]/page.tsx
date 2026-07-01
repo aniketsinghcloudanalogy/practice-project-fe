@@ -506,7 +506,9 @@ const CustomerProfile = () => {
     );
 
   // BOTH type address appears in both BILLING and SHIPPING tabs
-  const filteredAddresses = addresses.filter((a) => a.type === addrFilter);
+  const filteredAddresses = addresses.filter(
+    (a) => a.type === addrFilter || a.type === "BOTH",
+  );
   const addrColumns = [
     {
       title: "Type",
@@ -1391,7 +1393,7 @@ const CustomerProfile = () => {
             borderBottom: "1px solid #f1f5f9",
           },
           body: {
-            padding: "0 16px",
+            padding: "16px",
             backgroundColor: "#ffffff",
             maxHeight: "calc(100vh - 180px)",
             overflowY: "auto",
