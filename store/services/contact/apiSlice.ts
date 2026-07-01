@@ -2,6 +2,7 @@ import { baseApi } from '../baseApi'
 import type {
     Contact,
     ContactPayload,
+    ContactMessagePayload,
     ApiResponse,
 } from '../types'
 
@@ -66,6 +67,13 @@ export const contactApi = baseApi.injectEndpoints({
                 'Customer' as const,
             ],
         }),
+        submitContactMessage: builder.mutation<ApiResponse<null>, ContactMessagePayload>({
+            query: (body) => ({
+                url: '/api/contact/message',
+                method: 'POST',
+                body,
+            }),
+        }),
         deleteContact: builder.mutation<ApiResponse<null>, string>({
             query: (contactId) => ({
                 url: `/api/contacts/${contactId}`,
@@ -99,4 +107,5 @@ export const {
     useCreateContactMutation,
     useUpdateContactMutation,
     useDeleteContactMutation,
+    useSubmitContactMessageMutation,
 } = contactApi

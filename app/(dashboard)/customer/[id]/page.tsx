@@ -559,6 +559,7 @@ const CustomerProfile = () => {
             variant="icon-button-1"
             onClick={() => {
               setEditingAddr(addr);
+              setAddrSingleTab(addr.type === 'BILLING' ? 'BILLING' : 'SHIPPING');
               setAddrOpen(true);
             }}
           >
@@ -823,8 +824,8 @@ const CustomerProfile = () => {
   const primaryBilling = contacts.find((c) => c.isPrimaryBillingContact);
   const primaryShipping = contacts.find((c) => c.isPrimaryShippingContact);
   // BOTH type address counts as default for both shipping and billing
-  const defaultShipping = addresses.find((a) => a.isDefaultShipping);
-  const defaultBilling = addresses.find((a) => a.isDefaultBilling);
+  const defaultShipping = addresses.find((a) => a.isDefaultShipping || a.type === "BOTH");
+  const defaultBilling = addresses.find((a) => a.isDefaultBilling || a.type === "BOTH");
 
   return (
     <div className="ml-0 flex flex-col lg:flex-row pt-2 lg:h-[calc(100vh-var(--navbar-height)-0.5rem)] lg:overflow-hidden">

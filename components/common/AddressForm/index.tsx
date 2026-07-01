@@ -138,11 +138,13 @@ const AddressTabs = ({
 
       {/* Billing tab */}
       <div className={activeTabState === 'BILLING' ? 'block' : 'hidden'}>
-        <div className="mb-4">
-          <Checkbox checked={sameAsShipping} onChange={(e) => handleSameAsShipping(e.target.checked)}>
-            Same as Shipping Address
-          </Checkbox>
-        </div>
+        {!singleTab && (
+          <div className="mb-4">
+            <Checkbox checked={sameAsShipping} onChange={(e) => handleSameAsShipping(e.target.checked)}>
+              Same as Shipping Address
+            </Checkbox>
+          </div>
+        )}
         <Form form={billingForm} layout="vertical">
           <AddressFields
             defaultLabel="Should this be your default billing address?"

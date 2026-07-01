@@ -12,6 +12,16 @@ export type ContactPayload = {
 	customerId?: string | null
 }
 
+export type ContactMessagePayload = {
+	firstName: string
+	lastName?: string
+	email: string
+	primaryContact: string
+	secondaryContact?: string
+	subject: string
+	message: string
+}
+
 export type Contact = ContactPayload & {
 	id: string
 	customerId?: string | null
